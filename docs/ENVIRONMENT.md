@@ -1,0 +1,19 @@
+# Environment Variables — Tamirkar (تعمیرکار)
+
+```env
+# Google Gemini AI Key
+GEMINI_API_KEY=AIzaSy...
+
+# Application Version & Environment
+APP_VERSION=1.0.0
+APP_ENV=production
+
+# Business Economics
+ESCROW_RATE=0.15
+COMMISSION_RATE_APPRENTICE=0.20
+COMMISSION_RATE_SPECIALIST=0.16
+COMMISSION_RATE_MASTER=0.14
+COMMISSION_RATE_SUPERSTAR=0.12
+DEFAULT_WARRANTY_DAYS=30
+MAX_SEARCH_RADIUS_KM=15
+```
