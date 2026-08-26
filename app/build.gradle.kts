@@ -1,4 +1,8 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.TestListener
+import org.gradle.api.tasks.testing.TestDescriptor
+import org.gradle.api.tasks.testing.TestResult
 
 plugins {
   alias(libs.plugins.android.application)
@@ -132,4 +136,20 @@ dependencies {
   debugImplementation(libs.androidx.compose.ui.tooling)
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
+}
+
+// Surface unit-test failures as GitHub Actions annotations so CI failures are
+// diagnosable from run metadata even when raw logs cannot be fetched.
+tasks.withType<Test>().configureEach {
+  addTestListener(object : TestListener {
+    override fun beforeSuite(suite: TestDescriptor) {}
+    override fun afterSuite(suite: TestDescriptor, result: TestResult) {}
+    override fun beforeTest(test: TestDescriptor) {}
+    override fun afterTest(test: TestDescriptor, result: TestResult) {
+      if (result.resultType == TestResult.ResultType.FAILURE) {
+        val detail = result.exception?.message?.lineSequence()?.take(6)?.joinToString(" | ") ?: "test failed"
+        println("::error title=${test.className ?: "unknown"}.${test.name}::$detail")
+      }
+    }
+  })
 }
