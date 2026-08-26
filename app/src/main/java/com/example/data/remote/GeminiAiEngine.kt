@@ -61,6 +61,8 @@ data class AiSupportResponse(
 
 class GeminiAiEngine {
 
+    private val providerRouter = AiProviderRouter()
+
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
@@ -76,6 +78,10 @@ class GeminiAiEngine {
         }
     }
 
+    private fun hasConfiguredProvider(): Boolean = listOf("GEMINI_API_KEY", "GROQ_API_KEY", "CEREBRAS_API_KEY", "OPENROUTER_API_KEY", "HF_TOKEN").any { name ->
+        try { (BuildConfig::class.java.getField(name).get(null) as? String).orEmpty().let { it.isNotBlank() && !it.startsWith("MY_") } } catch (_: Exception) { false }
+    }
+
     /**
      * Agent 1: Smart Repair Diagnosis
      */
@@ -85,7 +91,7 @@ class GeminiAiEngine {
         imageBase64List: List<String> = emptyList()
     ): AiDiagnosisResult = withContext(Dispatchers.IO) {
         val apiKey = getApiKey()
-        if (apiKey.isBlank()) {
+        if (!hasConfiguredProvider()) {
             return@withContext getFallbackDiagnosis(category, symptomDescription)
         }
 
@@ -110,7 +116,7 @@ class GeminiAiEngine {
                 }
             """.trimIndent()
 
-            val responseJson = callGeminiRestApi("gemini-3.5-flash", prompt, imageBase64List, apiKey)
+            val responseJson = providerRouter.complete(AiTask.DIAGNOSIS, prompt, imageBase64List).text
             parseDiagnosisJson(responseJson, category, symptomDescription)
         } catch (e: Exception) {
             Log.e("GeminiAiEngine", "Diagnosis error: ${e.message}", e)
@@ -128,7 +134,7 @@ class GeminiAiEngine {
         beforeAfterImages: List<String> = emptyList()
     ): AiDisputeResult = withContext(Dispatchers.IO) {
         val apiKey = getApiKey()
-        if (apiKey.isBlank()) {
+        if (!hasConfiguredProvider()) {
             return@withContext AiDisputeResult(
                 verdictSummaryFa = "طبق بررسی مستندات و چک‌لیست SOP، عیب مجدد در قطعه تعویض‌شده بوده و تحت پوشش ضمانت ۶۰ روزه قرار دارد.",
                 faultTechnicianPercent = 85,
@@ -160,7 +166,7 @@ class GeminiAiEngine {
                 }
             """.trimIndent()
 
-            val responseJson = callGeminiRestApi("gemini-3.5-flash", prompt, beforeAfterImages, apiKey)
+            val responseJson = providerRouter.complete(AiTask.DISPUTE, prompt, beforeAfterImages).text
             val json = JSONObject(extractCleanJson(responseJson))
             AiDisputeResult(
                 verdictSummaryFa = json.optString("verdict_summary_fa", "بررسی انجام شد"),
@@ -195,7 +201,7 @@ class GeminiAiEngine {
         afterImages: List<String> = emptyList()
     ): AiQualityCheckResult = withContext(Dispatchers.IO) {
         val apiKey = getApiKey()
-        if (apiKey.isBlank()) {
+        if (!hasConfiguredProvider()) {
             return@withContext AiQualityCheckResult(
                 qualityScore = 96,
                 checklistVerified = true,
@@ -223,7 +229,7 @@ class GeminiAiEngine {
                 }
             """.trimIndent()
 
-            val responseJson = callGeminiRestApi("gemini-3.5-flash", prompt, afterImages, apiKey)
+            val responseJson = providerRouter.complete(AiTask.QUALITY_CHECK, prompt, afterImages).text
             val json = JSONObject(extractCleanJson(responseJson))
             AiQualityCheckResult(
                 qualityScore = json.optInt("quality_score", 95),
@@ -285,7 +291,7 @@ class GeminiAiEngine {
         chatHistory: List<Pair<String, String>> = emptyList()
     ): AiSupportResponse = withContext(Dispatchers.IO) {
         val apiKey = getApiKey()
-        if (apiKey.isBlank()) {
+        if (!hasConfiguredProvider()) {
             return@withContext getFallbackSupportReply(userMessage)
         }
 
@@ -308,7 +314,7 @@ class GeminiAiEngine {
             """.trimIndent()
 
             val fullPrompt = "$systemInstruction\n\nHistory:\n$historyBuilder\nکاربر: $userMessage"
-            val responseJson = callGeminiRestApi("gemini-3.5-flash", fullPrompt, emptyList(), apiKey)
+            val responseJson = providerRouter.complete(AiTask.SUPPORT, fullPrompt).text
             val json = JSONObject(extractCleanJson(responseJson))
 
             val actions = mutableListOf<String>()
