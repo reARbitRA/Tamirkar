@@ -1,18 +1,3 @@
-# Android APK build workflow (reference copy).
-#
-# NOTE: This file must live at `.github/workflows/android-apk.yml` to be active.
-# The GitHub App currently installed on this repository (`arena-ai-coding-agent[bot]`)
-# lacks the `workflows` permission, so GitHub rejects any push that creates or
-# updates a file under `.github/workflows/`:
-#
-#   ! [remote rejected] ... (refusing to allow a GitHub App to create or update
-#     workflow `.github/workflows/android-apk.yml` without `workflows` permission)
-#
-# Once an integration with `workflows: write` is available, copy this file to
-# .github/workflows/android-apk.yml and push to the arena branch to build the APK.
-#
-# Compatibility (from developer.android.com/build/releases/agp-9-1-0-release-notes):
-#   AGP 9.1  -> Gradle 9.3.1 (min), JDK 17 (min), SDK Build Tools 36.0.0
 name: Android APK Build
 
 on:
@@ -22,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: android-apk-${{ github.ref }}
@@ -45,12 +30,6 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Show available API 36 SDK platforms
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          sdkmanager --list 2>/dev/null | grep -E "platforms;android-3[67]" || true
-
       - name: Install SDK platform 36.1 + build-tools 36.0.0
         run: |
           yes | sdkmanager --licenses > /dev/null 2>&1 || true
@@ -62,10 +41,38 @@ jobs:
           ./gradlew --version
 
       - name: Run unit tests
-        run: ./gradlew test --stacktrace --no-daemon --console=plain
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew test --stacktrace --no-daemon --console=plain 2>&1 | tee /tmp/test.log
+
+      - name: Dump test log as annotations (on failure)
+        if: failure()
+        shell: bash
+        run: |
+          tail -n 250 /tmp/test.log | tr '\n' '|' | head -c 50000 | sed 's/^/::error title=TEST_LOG::/'
+
+      - name: Publish test suite summary
+        if: always()
+        shell: bash
+        run: |
+          for f in app/build/test-results/testDebugUnitTest/*.xml; do
+            [ -f "$f" ] || continue
+            grep -ho 'testsuite name="[^"]*" tests="[0-9]*" skipped="[0-9]*" failures="[0-9]*" errors="[0-9]*"' "$f" | head -3 | sed 's/^/::notice title=TESTSUITE::/'
+            grep -h '<failure' "$f" | head -5 | cut -c1-1000 | sed 's/^/::error title=TESTFAIL::/' || true
+          done || true
 
       - name: Assemble debug APK
-        run: ./gradlew assembleDebug --stacktrace --no-daemon --console=plain
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew assembleDebug --stacktrace --no-daemon --console=plain 2>&1 | tee /tmp/build.log
+
+      - name: Dump build log as annotations (on failure)
+        if: failure()
+        shell: bash
+        run: |
+          tail -n 250 /tmp/build.log | tr '\n' '|' | head -c 50000 | sed 's/^/::error title=BUILD_LOG::/'
 
       - name: Verify APK exists
         run: |
@@ -76,8 +83,9 @@ jobs:
         run: |
           APK=app/build/outputs/apk/debug/app-debug.apk
           AAPT2="$ANDROID_HOME/build-tools/36.0.0/aapt2"
-          "$AAPT2" dump badging "$APK" | grep -E "^package|^sdkVersion|^targetSdkVersion|^application-label" || true
-          "$AAPT2" dump badging "$APK" | head -8
+          "$AAPT2" dump badging "$APK" > /tmp/badging.txt
+          head -8 /tmp/badging.txt
+          grep -E "^package|sdkVersion|targetSdkVersion|application-label:" /tmp/badging.txt | sed 's/^/::notice title=APK::/'
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -97,3 +105,21 @@ jobs:
             app/build/test-results/**
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Publish APK to apk-artifacts branch
+        if: success()
+        shell: bash
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk /tmp/app-debug.apk
+          git config user.name "CI Bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          BRANCH=apk-artifacts
+          git fetch origin "$BRANCH" 2>/dev/null || true
+          git checkout -B "$BRANCH" "origin/$BRANCH" 2>/dev/null || git checkout --orphan "$BRANCH"
+          git rm -r -q --cached . 2>/dev/null || true
+          find . -maxdepth 1 -type f ! -name '.gitignore' -delete 2>/dev/null || true
+          mkdir -p apk
+          cp /tmp/app-debug.apk apk/app-debug.apk
+          git add apk/app-debug.apk
+          git commit -q -m "Debug APK from ${GITHUB_SHA}" || true
+          git push -f origin "$BRANCH"
