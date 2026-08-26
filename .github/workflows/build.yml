@@ -18,54 +18,16 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
 
-      - name: Auto-Detect and Build APK
-        run: |
-          echo "=== 1. Checking files in repo ==="
-          ls -la
-
-          # چک کردن آیا gradlew در ریشه است
-          if [ -f "./gradlew" ]; then
-            echo "Found gradlew in root directory."
-            chmod +x ./gradlew
-            ./gradlew assembleDebug
-
-          # چک کردن آیا پروژه داخل پوشه android است
-          elif [ -f "./android/gradlew" ]; then
-            echo "Found gradlew in android/ directory."
-            cd android
-            chmod +x ./gradlew
-            ./gradlew assembleDebug
-
-          # اگر پوشه android وجود دارد ولی gradlew ندارد
-          elif [ -d "./android" ]; then
-            echo "Entering android/ directory and building..."
-            cd android
-            gradle assembleDebug
-
-          # اگر در ریشه فایل build.gradle دارد
-          elif [ -f "./build.gradle" ] || [ -f "./build.gradle.kts" ]; then
-            echo "Building with system gradle..."
-            gradle assembleDebug
-
-          # در غیر این صورت جستجوی عمیق‌تر
-          else
-            GRADLE_DIR=$(find . -name "build.gradle" -o -name "build.gradle.kts" | head -n 1 | xargs dirname)
-            if [ -n "$GRADLE_DIR" ]; then
-              echo "Found Gradle project in: $GRADLE_DIR"
-              cd "$GRADLE_DIR"
-              gradle assembleDebug
-            else
-              echo "ERROR: No Android project found!"
-              find . -maxdepth 2 -not -path '*/.*'
-              exit 1
-            fi
-          fi
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
+        if: success()
         with:
-          name: Tamirkar-APK
-          path: '**/*.apk'
+          name: Tamirkar-APK-Debug
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 30
