@@ -1,0 +1,125 @@
+name: Android APK Build
+
+on:
+  push:
+    branches:
+      - "arena/01a03c31-tamirkar"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & test debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK platform 36.1 + build-tools 36.0.0
+        run: |
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platforms;android-36" "platforms;android-36.1" "build-tools;36.0.0" "platform-tools"
+
+      - name: Verify toolchain
+        run: |
+          java -version
+          ./gradlew --version
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew test --stacktrace --no-daemon --console=plain 2>&1 | tee /tmp/test.log
+
+      - name: Dump test log as annotations (on failure)
+        if: failure()
+        shell: bash
+        run: |
+          tail -n 250 /tmp/test.log | tr '\n' '|' | head -c 50000 | sed 's/^/::error title=TEST_LOG::/'
+
+      - name: Publish test suite summary
+        if: always()
+        shell: bash
+        run: |
+          for f in app/build/test-results/testDebugUnitTest/*.xml; do
+            [ -f "$f" ] || continue
+            grep -ho 'testsuite name="[^"]*" tests="[0-9]*" skipped="[0-9]*" failures="[0-9]*" errors="[0-9]*"' "$f" | head -3 | sed 's/^/::notice title=TESTSUITE::/'
+            grep -h '<failure' "$f" | head -5 | cut -c1-1000 | sed 's/^/::error title=TESTFAIL::/' || true
+          done || true
+
+      - name: Assemble debug APK
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew assembleDebug --stacktrace --no-daemon --console=plain 2>&1 | tee /tmp/build.log
+
+      - name: Dump build log as annotations (on failure)
+        if: failure()
+        shell: bash
+        run: |
+          tail -n 250 /tmp/build.log | tr '\n' '|' | head -c 50000 | sed 's/^/::error title=BUILD_LOG::/'
+
+      - name: Verify APK exists
+        run: |
+          find app/build/outputs -type f -name "*.apk" -ls
+          ls -la app/build/outputs/apk/debug/
+
+      - name: Dump APK metadata (applicationId / versionName)
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          AAPT2="$ANDROID_HOME/build-tools/36.0.0/aapt2"
+          "$AAPT2" dump badging "$APK" > /tmp/badging.txt
+          head -8 /tmp/badging.txt
+          grep -E "^package|sdkVersion|targetSdkVersion|application-label:" /tmp/badging.txt | sed 's/^/::notice title=APK::/'
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tamirkar-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload unit-test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports
+          path: |
+            app/build/reports/tests/**
+            app/build/test-results/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Publish APK to apk-artifacts branch
+        if: success()
+        shell: bash
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk /tmp/app-debug.apk
+          git config user.name "CI Bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          BRANCH=apk-artifacts
+          git fetch origin "$BRANCH" 2>/dev/null || true
+          git checkout -B "$BRANCH" "origin/$BRANCH" 2>/dev/null || git checkout --orphan "$BRANCH"
+          git rm -r -q --cached . 2>/dev/null || true
+          find . -maxdepth 1 -type f ! -name '.gitignore' -delete 2>/dev/null || true
+          mkdir -p apk
+          cp /tmp/app-debug.apk apk/app-debug.apk
+          git add apk/app-debug.apk
+          git commit -q -m "Debug APK from ${GITHUB_SHA}" || true
+          git push -f origin "$BRANCH"

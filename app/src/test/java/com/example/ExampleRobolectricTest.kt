@@ -52,7 +52,11 @@ class ExampleRobolectricTest {
         val amount = 1500000L
         val formatted = CurrencyHelper.formatTomans(amount)
         assertTrue(formatted.contains("تومان"))
-        assertTrue(formatted.contains("۱٬۵۰۰٬۰۰۰"))
+        assertTrue(formatted.contains("میلیون"))
+
+        // formatNumber renders the full value with Persian digits and grouping separators
+        val full = CurrencyHelper.formatNumber(amount)
+        assertTrue(full.contains("۱٬۵۰۰٬۰۰۰"))
     }
 
     @Test

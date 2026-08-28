@@ -1,0 +1,99 @@
+# Android APK build workflow (reference copy).
+#
+# NOTE: This file must live at `.github/workflows/android-apk.yml` to be active.
+# The GitHub App currently installed on this repository (`arena-ai-coding-agent[bot]`)
+# lacks the `workflows` permission, so GitHub rejects any push that creates or
+# updates a file under `.github/workflows/`:
+#
+#   ! [remote rejected] ... (refusing to allow a GitHub App to create or update
+#     workflow `.github/workflows/android-apk.yml` without `workflows` permission)
+#
+# Once an integration with `workflows: write` is available, copy this file to
+# .github/workflows/android-apk.yml and push to the arena branch to build the APK.
+#
+# Compatibility (from developer.android.com/build/releases/agp-9-1-0-release-notes):
+#   AGP 9.1  -> Gradle 9.3.1 (min), JDK 17 (min), SDK Build Tools 36.0.0
+name: Android APK Build
+
+on:
+  push:
+    branches:
+      - "arena/01a03c31-tamirkar"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & test debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Show available API 36 SDK platforms
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          sdkmanager --list 2>/dev/null | grep -E "platforms;android-3[67]" || true
+
+      - name: Install SDK platform 36.1 + build-tools 36.0.0
+        run: |
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platforms;android-36" "platforms;android-36.1" "build-tools;36.0.0" "platform-tools"
+
+      - name: Verify toolchain
+        run: |
+          java -version
+          ./gradlew --version
+
+      - name: Run unit tests
+        run: ./gradlew test --stacktrace --no-daemon --console=plain
+
+      - name: Assemble debug APK
+        run: ./gradlew assembleDebug --stacktrace --no-daemon --console=plain
+
+      - name: Verify APK exists
+        run: |
+          find app/build/outputs -type f -name "*.apk" -ls
+          ls -la app/build/outputs/apk/debug/
+
+      - name: Dump APK metadata (applicationId / versionName)
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          AAPT2="$ANDROID_HOME/build-tools/36.0.0/aapt2"
+          "$AAPT2" dump badging "$APK" | grep -E "^package|^sdkVersion|^targetSdkVersion|^application-label" || true
+          "$AAPT2" dump badging "$APK" | head -8
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tamirkar-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload unit-test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports
+          path: |
+            app/build/reports/tests/**
+            app/build/test-results/**
+          if-no-files-found: ignore
+          retention-days: 7
