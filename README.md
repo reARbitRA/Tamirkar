@@ -37,4 +37,12 @@ The project is a Kotlin/Jetpack Compose Android app. The expected local test com
 ./gradlew testDebugUnitTest
 ```
 
-See [docs/README.md](docs/README.md) for product and architecture notes. CI provisions JDK 17 and Android SDK components in [`.github/workflows/build.yml`](.github/workflows/build.yml).
+Run the evidence-first automated readiness check before a release:
+
+```bash
+scripts/launch-readiness-audit.sh
+# static-only mode for a workstation without Java/Android tooling
+scripts/launch-readiness-audit.sh --no-build
+```
+
+It writes a timestamped report under `audit-output/` and exits `2` when it finds launch blockers. See [docs/README.md](docs/README.md) for product and architecture notes. CI provisions JDK 17 and Android SDK components in [`.github/workflows/build.yml`](.github/workflows/build.yml).
