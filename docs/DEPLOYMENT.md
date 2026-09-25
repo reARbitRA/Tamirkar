@@ -1,4 +1,4 @@
-# Deployment & Distribution — Tamirkar (تعمیرکار)
+# Deployment & Distribution — Oosta (اوستا)
 
 ## 🚀 Build Artifacts
 - **Platform**: Android 7.0+ (API level 24 to 36).

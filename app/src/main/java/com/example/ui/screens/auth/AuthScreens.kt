@@ -96,8 +96,8 @@ fun SplashScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.tamirkar_logo_1787136747199),
-                    contentDescription = "تعمیرکار",
+                    painter = painterResource(id = R.drawable.oosta_ostad_mascot),
+                    contentDescription = "اوستا",
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
@@ -107,7 +107,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "تعمیرکار",
+                text = "اوستا",
                 style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.White
@@ -116,7 +116,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "هر وسیله یک پرونده، هر تعمیر یک ضمانت",
+                text = "تشخیص درست، قیمت منصفانه",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.White.copy(alpha = 0.85f),
                 textAlign = TextAlign.Center
@@ -172,7 +172,7 @@ fun PhoneAuthScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "ورود یا ثبت‌نام در تعمیرکار",
+                text = "ورود یا ثبت‌نام در اوستا",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground

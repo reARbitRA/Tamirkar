@@ -211,7 +211,7 @@ class TamirkarRepository(
             deviceName = order.deviceId?.let { dao.getDeviceById(it)?.name } ?: "دستگاه سرویس‌شده",
             customerId = order.customerId,
             technicianId = order.technicianId ?: "tech_1",
-            technicianName = tech?.fullName ?: "استادکار تعمیرکار",
+            technicianName = tech?.fullName ?: "استادکار اوستا",
             warrantyDays = order.warrantyDays,
             escrowAmount = escrowAmount,
             status = "active"

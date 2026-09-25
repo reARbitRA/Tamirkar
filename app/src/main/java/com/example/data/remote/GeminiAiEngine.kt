@@ -148,7 +148,7 @@ class GeminiAiEngine {
 
         try {
             val prompt = """
-                You are a senior technical arbitrator for the Tamirkar repair warranty platform.
+                You are a senior technical arbitrator for the Oosta repair warranty platform.
                 Order: $orderSummary
                 Customer complaint: "$customerComplaint"
                 Technician defense & SOP notes: "$technicianNotes"
@@ -298,11 +298,11 @@ class GeminiAiEngine {
         try {
             val historyBuilder = StringBuilder()
             chatHistory.takeLast(6).forEach { (role, msg) ->
-                historyBuilder.append(if (role == "user") "کاربر: " else "پشتیبان تعمیرکار: ").append(msg).append("\n")
+                historyBuilder.append(if (role == "user") "کاربر: " else "پشتیبان اوستا: ").append(msg).append("\n")
             }
 
             val systemInstruction = """
-                You are 'پشتیبان هوشمند تعمیرکار' (Tamirkar Smart Support Assistant), a friendly, highly competent Iranian repair concierge.
+                You are 'پشتیبان هوشمند اوستا' (Oosta Smart Support Assistant), a friendly, highly competent Iranian repair concierge.
                 You help customers with appliance faults, warranty terms (15% escrow protection for 30-180 days), finding technicians in Tehran, tracking orders, and transparent pricing in Tomans.
                 
                 Respond ONLY with JSON:
@@ -501,14 +501,14 @@ class GeminiAiEngine {
         return when {
             lower.contains("ضمانت") || lower.contains("گارانتی") || lower.contains("امانی") -> {
                 AiSupportResponse(
-                    replyFa = "در سامانه تعمیرکار، کلیه خدمات دارای ۱۵٪ ضمانت امانی (Escrow) هستند. یعنی ۱۵٪ از دستمزد تا اتمام مهلت گارانتی (۳۰ الی ۱۸۰ روز) در صندوق امن نگهداری می‌شود و در صورت بروز هرگونه عیب مجدد، تعمیرکار موظف به رفع رایگان یا استرداد وجه است.",
+                    replyFa = "در سامانه اوستا، کلیه خدمات دارای ۱۵٪ ضمانت امانی (Escrow) هستند. یعنی ۱۵٪ از دستمزد تا اتمام مهلت گارانتی (۳۰ الی ۱۸۰ روز) در صندوق امن نگهداری می‌شود و در صورت بروز هرگونه عیب مجدد، تعمیرکار موظف به رفع رایگان یا استرداد وجه است.",
                     suggestedActions = listOf("مشاهده شرایط ضمانت‌نامه", "ثبت درخواست استفاده از گارانتی", "ارتباط با داوری فنی"),
                     shouldEscalateToHuman = false
                 )
             }
             lower.contains("هزینه") || lower.contains("قیمت") || lower.contains("تومان") -> {
                 AiSupportResponse(
-                    replyFa = "قیمت‌گذاری در تعمیرکار کاملاً شفاف است! هوش مصنوعی ما قبل از اعزام تعمیرکار، بازه قیمت دقیق قطعه و دستمزد را به تومان محاسبه می‌کند. شما می‌توانید بین اعزام سریع یا مناقصه انتخاب کنید.",
+                    replyFa = "قیمت‌گذاری در اوستا کاملاً شفاف است! هوش مصنوعی ما قبل از اعزام تعمیرکار، بازه قیمت دقیق قطعه و دستمزد را به تومان محاسبه می‌کند. شما می‌توانید بین اعزام سریع یا مناقصه انتخاب کنید.",
                     suggestedActions = listOf("محاسبه هوشمند هزینه تعمیر", "استعلام قیمت قطعات یدکی", "ثبت سفارش جدید"),
                     shouldEscalateToHuman = false
                 )
@@ -522,7 +522,7 @@ class GeminiAiEngine {
             }
             else -> {
                 AiSupportResponse(
-                    replyFa = "سلام! من پشتیبان هوشمند تعمیرکار هستم. چطور می‌توانم در زمینه عیب‌یابی لوازم خانگی، خودرو، موبایل، بررسی ضمانت‌نامه یا اعزام استادکار به شما کمک کنم؟",
+                    replyFa = "سلام! من پشتیبان هوشمند اوستا هستم. چطور می‌توانم در زمینه عیب‌یابی لوازم خانگی، خودرو، موبایل، بررسی ضمانت‌نامه یا اعزام استادکار به شما کمک کنم؟",
                     suggestedActions = listOf("عیب‌یابی هوشمند با عکس", "ثبت سفارش تعمیر فوری", "پاسپورت دیجیتال وسایل"),
                     shouldEscalateToHuman = false
                 )

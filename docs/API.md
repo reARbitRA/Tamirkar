@@ -1,4 +1,4 @@
-# API Specification & Endpoints — Tamirkar (تعمیرکار)
+# API Specification & Endpoints — Oosta (اوستا)
 
 ## 📡 1. Gemini AI REST Engine
 - **Endpoint**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent`

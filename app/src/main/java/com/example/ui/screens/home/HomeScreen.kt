@@ -108,7 +108,7 @@ fun HomeScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
-                            painter = painterResource(id = R.drawable.tamirkar_logo_1787136747199),
+                            painter = painterResource(id = R.drawable.oosta_ostad_mascot),
                             contentDescription = "پروفایل",
                             modifier = Modifier
                                 .size(44.dp)

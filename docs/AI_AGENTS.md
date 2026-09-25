@@ -1,8 +1,8 @@
-# AI Agents Architecture — Tamirkar (تعمیرکار)
+# AI Agents Architecture — Oosta (اوستا)
 
 ## 🤖 Overview of the 8 Autonomous Gemini Agents
 
-Tamirkar integrates 8 specialized Gemini AI agents powered by `gemini-3.5-flash` for high-throughput operational tasks and `gemini-3.1-pro-preview` for high-precision diagnostic and dispute arbitration tasks.
+Oosta integrates 8 specialized Gemini AI agents powered by `gemini-3.5-flash` for high-throughput operational tasks and `gemini-3.1-pro-preview` for high-precision diagnostic and dispute arbitration tasks.
 
 ---
 

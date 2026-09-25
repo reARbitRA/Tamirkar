@@ -1,11 +1,11 @@
-# تعمیرکار (Tamirkar) — Super-App Documentation
-> **هر وسیله یک پرونده، هر تعمیر یک ضمانت**
+# اوستا (Oosta) — Super-App Documentation
+> **تشخیص درست، قیمت منصفانه**
 > Version: 1.0.0-MVP | Market: Iran (Tehran & Major Cities) | Language: Persian UI + English Codebase
 
 ---
 
 ## 📌 Executive Summary
-**تعمیرکار (Tamirkar)** is an AI-powered end-to-end device maintenance and repair super-platform. It bridges customers with verified technical masters, provides a **Digital Passport (پاسپورت دیجیتال)** for every appliance and vehicle, enforces a **15% Escrow Warranty Guarantee (ضمانت اجرایی)**, operates a **Transparent Spare Parts Marketplace (بازار قطعه شفاف)**, and leverages **Google Gemini AI** across 8 specialized autonomous agents.
+**اوستا (Oosta)** is an AI-powered end-to-end device maintenance and repair super-platform. It bridges customers with verified technical masters, provides a **Digital Passport (پاسپورت دیجیتال)** for every appliance and vehicle, enforces a **15% Escrow Warranty Guarantee (ضمانت اجرایی)**, operates a **Transparent Spare Parts Marketplace (بازار قطعه شفاف)**, and leverages **Google Gemini AI** across 8 specialized autonomous agents.
 
 ---
 

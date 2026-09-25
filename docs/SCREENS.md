@@ -1,4 +1,4 @@
-# Screens & Navigation Catalog — Tamirkar (تعمیرکار)
+# Screens & Navigation Catalog — Oosta (اوستا)
 
 ## 📱 Screen Navigation Directory
 

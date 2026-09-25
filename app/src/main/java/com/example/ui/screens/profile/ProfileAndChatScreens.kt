@@ -119,8 +119,8 @@ fun ProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.tamirkar_logo_1787136747199),
-                            contentDescription = "User Avatar",
+                            painter = painterResource(id = R.drawable.oosta_ostad_mascot),
+                            contentDescription = "نماد اوستا",
                             modifier = Modifier
                                 .size(60.dp)
                                 .clip(CircleShape)
@@ -250,7 +250,7 @@ fun SupportChatScreen(
             .background(MaterialTheme.colorScheme.background)
             .testTag("screen_chat")
     ) {
-        PersianTopBar(title = "دستیار هوشمند و پشتیبانی تعمیرکار", onBack = onBack)
+        PersianTopBar(title = "دستیار هوشمند و پشتیبانی اوستا", onBack = onBack)
 
         LazyColumn(
             modifier = Modifier

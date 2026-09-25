@@ -1,4 +1,4 @@
-# Database Schema & Data Models — Tamirkar (تعمیرکار)
+# Database Schema & Data Models — Oosta (اوستا)
 
 ## 📊 Overview
 All financial transactions are stored in **Tomans (تومان)** as 64-bit integers (`Long` in Kotlin / `bigint` in SQL) to prevent floating-point inaccuracies. All timestamps are UTC with Asia/Tehran timezone formatting.

@@ -4,7 +4,7 @@ import java.text.NumberFormat
 import java.util.Locale
 
 /**
- * Core Domain Enums & Models for Tamirkar (تعمیرکار)
+ * Core Domain Enums & Models for Oosta (اوستا)
  * All prices are represented in Tomans (تومان) as Long integers.
  */
 

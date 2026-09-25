@@ -2,30 +2,30 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Core Tamirkar Color Palette (Deep Teal, Emerald, Warm Gold, Slate Navy)
-val TealPrimary = Color(0xFF0D9488)       // Dominant Brand Teal
-val TealPrimaryDark = Color(0xFF115E59)   // Dark Teal Header
-val TealContainer = Color(0xFFCCFBF1)     // Light Teal Surface Tint
-val OnTealContainer = Color(0xFF134E4A)
+// Oosta / اوستا material palette. Physical objects are tungsten-lit; cyan is data only.
+val TealPrimary = Color(0xFF10B39A)       // Emerald teal — primary action / repair stitch
+val TealPrimaryDark = Color(0xFF087D6B)   // Deep teal for dark action surfaces
+val TealContainer = Color(0xFFCFEFE8)     // Light teal surface tint
+val OnTealContainer = Color(0xFF063F38)
 
-val GoldAccent = Color(0xFFF59E0B)        // Escrow & Master Badges
-val GoldLight = Color(0xFFFEF3C7)
-val GoldDark = Color(0xFFB45309)
+val GoldAccent = Color(0xFFD8A24A)        // Brass — escrow & guild trust
+val GoldLight = Color(0xFFF6E7C4)
+val GoldDark = Color(0xFF8C5A17)
 
-val EmeraldSuccess = Color(0xFF10B981)    // Active Warranty & High Health
-val EmeraldLight = Color(0xFFD1FAE5)
+val EmeraldSuccess = Color(0xFF4ADE80)    // Signal green — active warranty / healthy device
+val EmeraldLight = Color(0xFFDCFCE7)
 
-val RoseAlert = Color(0xFFF43F5E)         // Urgent Alert & Dispute
+val RoseAlert = Color(0xFFF43F5E)         // Urgent alert & dispute
 val RoseLight = Color(0xFFFFE4E6)
 
-val SlateNavyDark = Color(0xFF0F172A)     // Dark Background
-val SlateNavySurface = Color(0xFF1E293B)  // Dark Card Surface
-val SlateNavyCard = Color(0xFF334155)
+val SlateNavyDark = Color(0xFF080D16)     // Oosta night navy
+val SlateNavySurface = Color(0xFF141A22)  // Graphite surface
+val SlateNavyCard = Color(0xFF22303A)
 
-val LightBackground = Color(0xFFF8FAFC)   // Crisp Off-White Background
-val LightSurface = Color(0xFFFFFFFF)      // Pure White Card
-val LightSurfaceVariant = Color(0xFFF1F5F9)
-val TextPrimary = Color(0xFF0F172A)
-val TextSecondary = Color(0xFF64748B)
-val TextMuted = Color(0xFF94A3B8)
-val BorderLight = Color(0xFFE2E8F0)
+val LightBackground = Color(0xFFEDE6D6)   // Bone paper
+val LightSurface = Color(0xFFFFFCF4)
+val LightSurfaceVariant = Color(0xFFF2ECE0)
+val TextPrimary = Color(0xFF080D16)
+val TextSecondary = Color(0xFF53626A)
+val TextMuted = Color(0xFF7C8B93)
+val BorderLight = Color(0xFFD8D0BF)

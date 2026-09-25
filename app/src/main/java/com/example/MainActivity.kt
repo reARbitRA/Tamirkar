@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                TamirkarApp()
+                OostaApp()
             }
         }
     }
@@ -121,7 +121,7 @@ sealed class Screen(val route: String, val title: String = "", val icon: android
 }
 
 @Composable
-fun TamirkarApp(
+fun OostaApp(
     viewModel: TamirkarViewModel = viewModel()
 ) {
     val navController = rememberNavController()
