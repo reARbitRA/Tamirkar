@@ -53,6 +53,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.data.remote.AuthSession
+import com.example.data.remote.OtpRequestResult
+import com.example.ui.viewmodel.UiState
 import com.example.ui.theme.EmeraldSuccess
 import com.example.ui.theme.GoldAccent
 import com.example.ui.theme.SlateNavyDark
@@ -134,14 +137,20 @@ fun SplashScreen(
 }
 
 /**
- * Phone Auth Screen (09xxxxxxxxx validation)
+ * Phone authentication. The server owns code generation, delivery, expiry and rate limits.
  */
 @Composable
 fun PhoneAuthScreen(
-    onSendOtp: (String) -> Unit
+    requestState: UiState<OtpRequestResult>,
+    onSendOtp: (String) -> Unit,
+    onOtpSent: (String) -> Unit
 ) {
-    var phoneNumber by remember { mutableStateOf("09123456789") }
-    var isError by remember { mutableStateOf(false) }
+    var phoneNumber by remember { mutableStateOf("") }
+    val isLoading = requestState is UiState.Loading
+
+    LaunchedEffect(requestState) {
+        if (requestState is UiState.Success) onOtpSent(requestState.data.phone)
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -181,7 +190,7 @@ fun PhoneAuthScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "شماره موبایل خود را وارد نمایید تا کد تأیید ارسال شود.",
+                text = "شماره موبایل خود را وارد کنید تا کد تأیید برایتان ارسال شود.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -191,17 +200,14 @@ fun PhoneAuthScreen(
 
             OutlinedTextField(
                 value = phoneNumber,
-                onValueChange = {
-                    phoneNumber = it
-                    isError = false
-                },
+                onValueChange = { phoneNumber = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("input_phone"),
                 label = { Text("شماره موبایل") },
-                placeholder = { Text("۰۹xxxxxxxxx") },
+                placeholder = { Text("۰۹۱۲۱۲۳۴۵۶۷") },
                 singleLine = true,
-                isError = isError,
+                isError = requestState is UiState.Error,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -210,25 +216,21 @@ fun PhoneAuthScreen(
                 )
             )
 
-            if (isError) {
-                Spacer(modifier = Modifier.height(4.dp))
+            if (requestState is UiState.Error) {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "لطفاً شماره موبایل ۱۱ رقمی معتبر با پیش‌شماره ۰۹ وارد کنید.",
+                    text = requestState.message,
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.labelSmall
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = {
-                    if (phoneNumber.trim().length >= 11 && phoneNumber.startsWith("09")) {
-                        onSendOtp(phoneNumber.trim())
-                    } else {
-                        isError = true
-                    }
-                },
+                onClick = { onSendOtp(phoneNumber.trim()) },
+                enabled = phoneNumber.isNotBlank() && !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -236,12 +238,16 @@ fun PhoneAuthScreen(
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
             ) {
-                Text(
-                    text = "دریافت کد تأیید پیامکی",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(
+                        text = "دریافت کد تأیید پیامکی",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -258,7 +264,7 @@ fun PhoneAuthScreen(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "تضمین امنیت اطلاعات و ضمانت ۱۵٪ امانی در تمام خدمات",
+                    text = "کد تأیید فقط برای ورود امن به حساب شما استفاده می‌شود.",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -268,21 +274,28 @@ fun PhoneAuthScreen(
 }
 
 /**
- * OTP Screen
+ * OTP verification. A code is never pre-filled and only the server can validate it.
  */
 @Composable
 fun OtpScreen(
     phoneNumber: String,
+    verificationState: UiState<AuthSession>,
+    onVerify: (String) -> Unit,
+    onResend: () -> Unit,
     onVerifySuccess: () -> Unit
 ) {
-    var otpCode by remember { mutableStateOf("123456") }
+    var otpCode by remember { mutableStateOf("") }
     var timerSeconds by remember { mutableIntStateOf(60) }
+    val isLoading = verificationState is UiState.Loading
 
-    LaunchedEffect(Unit) {
-        while (timerSeconds > 0) {
+    LaunchedEffect(timerSeconds) {
+        if (timerSeconds > 0) {
             delay(1000)
             timerSeconds -= 1
         }
+    }
+    LaunchedEffect(verificationState) {
+        if (verificationState is UiState.Success) onVerifySuccess()
     }
 
     Surface(
@@ -305,7 +318,7 @@ fun OtpScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "کد ارسالی به شماره $phoneNumber را وارد نمایید.",
+                text = "کد ارسالی به شماره $phoneNumber را وارد کنید.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -315,29 +328,52 @@ fun OtpScreen(
 
             OutlinedTextField(
                 value = otpCode,
-                onValueChange = { if (it.length <= 6) otpCode = it },
+                onValueChange = { value ->
+                    otpCode = value.filter { it.isDigit() }.take(6)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("input_otp"),
                 label = { Text("کد تأیید") },
                 singleLine = true,
+                isError = verificationState is UiState.Error,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = TealPrimary)
             )
 
+            if (verificationState is UiState.Error) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = verificationState.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = if (timerSeconds > 0) "ارسال مجدد کد تا $timerSeconds ثانیه دیگر" else "ارسال مجدد کد",
-                style = MaterialTheme.typography.labelSmall,
-                color = if (timerSeconds > 0) MaterialTheme.colorScheme.outline else TealPrimary
-            )
+            if (timerSeconds > 0) {
+                Text(
+                    text = "ارسال مجدد کد تا $timerSeconds ثانیه دیگر",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            } else {
+                TextButton(onClick = {
+                    timerSeconds = 60
+                    onResend()
+                }) {
+                    Text("ارسال مجدد کد")
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = onVerifySuccess,
+                onClick = { onVerify(otpCode) },
+                enabled = otpCode.length == 6 && !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
@@ -345,12 +381,16 @@ fun OtpScreen(
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
             ) {
-                Text(
-                    text = "تأیید و ورود به برنامه",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(
+                        text = "تأیید و ورود به برنامه",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
             }
         }
     }

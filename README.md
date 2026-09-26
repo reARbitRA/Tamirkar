@@ -29,6 +29,12 @@ Read the full story in [docs/LORE.md](docs/LORE.md).
 
 The primary **Apron Shield** app mark, Ostad Kaveh poster, social preview, palette, and production prompts live in [`brand/`](brand/). Start at [`brand/BRAND.md`](brand/BRAND.md).
 
+## First real backend step: OTP login
+
+The first production increment is deliberately small: `services/auth-api` handles Iranian mobile OTP through **Kavenegar Verify Lookup**. It is the only new backend service in this increment—payments, escrow, KYC, and AI remain out of scope.
+
+Set up the Kavenegar template and local secrets using [`services/auth-api/README.md`](services/auth-api/README.md). The Android app reads only the non-secret `AUTH_API_BASE_URL`; Kavenegar credentials, the OTP pepper, JWT secret, and PostgreSQL password stay in the service environment.
+
 ## Development
 
 The project is a Kotlin/Jetpack Compose Android app. The expected local test command is:

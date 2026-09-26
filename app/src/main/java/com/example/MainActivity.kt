@@ -127,6 +127,8 @@ fun OostaApp(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val otpRequestState by viewModel.otpRequestState.collectAsState()
+    val authSessionState by viewModel.authSessionState.collectAsState()
 
     val bottomBarScreens = listOf(
         Screen.Home,
@@ -193,17 +195,22 @@ fun OostaApp(
         ) {
             NavHost(
                 navController = navController,
-                startDestination = Screen.Home.route
+                startDestination = Screen.AuthPhone.route
             ) {
                 composable(Screen.Splash.route) {
                     SplashScreen(
-                        onNavigateNext = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Splash.route) { inclusive = true } } }
+                        onNavigateNext = { navController.navigate(Screen.AuthPhone.route) { popUpTo(Screen.Splash.route) { inclusive = true } } }
                     )
                 }
 
                 composable(Screen.AuthPhone.route) {
                     PhoneAuthScreen(
-                        onSendOtp = { phone -> navController.navigate(Screen.AuthOtp.createRoute(phone)) }
+                        requestState = otpRequestState,
+                        onSendOtp = viewModel::requestOtp,
+                        onOtpSent = { phone ->
+                            viewModel.resetOtpRequest()
+                            navController.navigate(Screen.AuthOtp.createRoute(phone))
+                        }
                     )
                 }
 
@@ -214,7 +221,18 @@ fun OostaApp(
                     val phone = entry.arguments?.getString("phone") ?: ""
                     OtpScreen(
                         phoneNumber = phone,
-                        onVerifySuccess = { navController.navigate(Screen.Home.route) { popUpTo(Screen.AuthPhone.route) { inclusive = true } } }
+                        verificationState = authSessionState,
+                        onVerify = { code -> viewModel.verifyOtp(phone, code) },
+                        onResend = {
+                            viewModel.resetAuthSessionState()
+                            viewModel.requestOtp(phone)
+                        },
+                        onVerifySuccess = {
+                            viewModel.resetAuthSessionState()
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.AuthPhone.route) { inclusive = true }
+                            }
+                        }
                     )
                 }
 
