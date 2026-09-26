@@ -5,4 +5,4 @@ RUN npm ci --omit=dev
 COPY src ./src
 EXPOSE 8080
 USER node
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npm run migrate && npm start"]

@@ -198,7 +198,7 @@ fun ProfileScreen(
                     Column {
                         ProfileMenuItem(icon = Icons.Default.DeviceHub, title = "پاسپورت دیجیتال وسایل من", onClick = onNavigateToDevices)
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                        ProfileMenuItem(icon = Icons.Default.Security, title = "صندوق ضمانت امانی و گارانتی‌ها", onClick = onNavigateToWarranties)
+                        ProfileMenuItem(icon = Icons.Default.Security, title = "پیگیری ضمانت و گارانتی", onClick = onNavigateToWarranties)
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                         ProfileMenuItem(icon = Icons.Default.Inventory2, title = "بازار قطعات یدکی استاندارد", onClick = onNavigateToParts)
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))

@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in services/auth-api/.env}
     volumes:
       - auth-db-data:/var/lib/postgresql/data
-      - ./services/auth-api/db/schema.sql:/docker-entrypoint-initdb.d/001_auth.sql:ro
+      - ./services/auth-api/db:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U oosta_auth -d oosta_auth"]
       interval: 5s

@@ -124,7 +124,7 @@ fun HomeScreen(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "موجودی: ${CurrencyHelper.formatTomans(user?.walletBalance ?: 3200000L)}",
+                                text = "حساب شما با شمارهٔ موبایل تأیید شده است",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TealPrimary,
                                 fontWeight = FontWeight.Bold
@@ -135,7 +135,7 @@ fun HomeScreen(
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = TealContainer,
-                        modifier = Modifier.clickable { onNavigateToWallet() }
+                        modifier = Modifier
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -149,7 +149,7 @@ fun HomeScreen(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "صندوق امانی ۱۵٪",
+                                text = "حساب تأییدشده",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = TealPrimary
@@ -207,7 +207,7 @@ fun HomeScreen(
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
-                                            text = "موتور هوش مصنوعی جمینای",
+                                            text = "تشخیص اولیه",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = Color.White,
                                             fontWeight = FontWeight.Bold
@@ -215,13 +215,17 @@ fun HomeScreen(
                                     }
                                 }
 
-                                EscrowStampBadge(30)
+                                Text(
+                                    text = "غیرالزام‌آور",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White.copy(alpha = 0.9f)
+                                )
                             }
 
                             Spacer(modifier = Modifier.height(14.dp))
 
                             Text(
-                                text = "عیب‌یابی هوشمند با ارسال عکس و صدا",
+                                text = "تشخیص اولیه با توضیح و عکس",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -230,7 +234,7 @@ fun HomeScreen(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "تشخیص فوری علت خرابی، راهنمای تعمیر شخصی، استعلام قیمت قطعات در بازار تهران",
+                                text = "نتیجه فقط برای راهنمایی اولیه است و جای بررسی حضوری و پیش‌فاکتور را نمی‌گیرد.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.White.copy(alpha = 0.9f)
                             )
@@ -402,7 +406,7 @@ fun HomeScreen(
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "ضمانت‌نامه رسمی و حق بیمه امانی",
+                                text = "شرایط خدمات پیش از ثبت سفارش اعلام می‌شود",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = GoldDark

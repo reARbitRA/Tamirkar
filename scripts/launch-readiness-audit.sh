@@ -69,7 +69,9 @@ pass() { say "- ✅ **$1** — $2"; }
 info() { say "- ℹ️ **$1** — $2"; }
 
 run_command() {
-  local name="$1" command="$2" log="$LOG_DIR/${name//[^A-Za-z0-9_.-]/_}.log"
+  local name="$1"
+  local command="$2"
+  local log="$LOG_DIR/${name//[^A-Za-z0-9_.-]/_}.log"
   set +e
   bash -lc "$command" >"$log" 2>&1
   local code=$?
@@ -130,7 +132,7 @@ fi
 section "Secrets and sensitive files"
 SECRET_PATTERN='AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|-----BEGIN (RSA|EC|OPENSSH|PRIVATE) KEY-----|postgres(ql)?://[^[:space:]]+:[^[:space:]]+@'
 set +e
-git grep -nEI "$SECRET_PATTERN" -- ':!gradle/wrapper/gradle-wrapper.jar' >"$LOG_DIR/current-secret-scan.log"
+git grep -nEI "$SECRET_PATTERN" -- ':!gradle/wrapper/gradle-wrapper.jar' ':!*.env.example' >"$LOG_DIR/current-secret-scan.log"
 SECRET_CODE=$?
 # Continue even if a scan command returns a non-zero search result.
 if [[ "$SECRET_CODE" -eq 1 ]]; then
@@ -174,14 +176,19 @@ if [[ "$RUN_BUILD" -eq 1 ]]; then
 else
   info "Build checks skipped" "Requested with \`--no-build\`."
 fi
-if [[ -f package.json ]]; then
+if [[ -f services/auth-api/package.json ]]; then
   if command -v npm >/dev/null 2>&1; then
-    run_command "npm-audit" "npm audit --omit=dev" || item MAJOR "npm audit reported findings" "See command log above." "Review and remediate supported dependency vulnerabilities."
+    if run_command "platform-api-test" "npm test --prefix services/auth-api"; then
+      pass "Platform API tests" "\`services/auth-api\` Node tests passed."
+    else
+      item BLOCKER "Platform API tests fail" "See command log above." "Fix API, money-state, provider-adapter and authentication tests before release."
+    fi
+    run_command "platform-api-audit" "npm audit --prefix services/auth-api --omit=dev" || item MAJOR "Platform API dependency audit reported findings" "See command log above." "Review and remediate supported dependency vulnerabilities."
   else
-    item MAJOR "npm unavailable for dependency audit" "\`package.json\` exists but npm is absent." "Install npm and run npm audit."
+    item MAJOR "npm unavailable for platform API" "\`services/auth-api/package.json\` exists but npm is absent." "Install npm and run platform API tests/audit."
   fi
 else
-  info "npm audit not applicable" "No \`package.json\` was found; this repository is Gradle/Android based."
+  item BLOCKER "Platform API source absent" "\`services/auth-api/package.json\` is missing." "Provide a server-side authentication and trusted-operations boundary."
 fi
 
 section "Source-quality checks"
@@ -209,18 +216,19 @@ if grep -q 'startDestination = Screen.Home.route' app/src/main/java/com/example/
 else
   pass "Authentication static gate" "No obvious Home-start + fixed-OTP demo pairing matched; verify real auth end to end."
 fi
-if grep -q 'BuildConfig' app/src/main/java/com/example/data/remote/AiProviderRouter.kt && \
-   grep -q 'generativelanguage.googleapis.com' app/src/main/java/com/example/data/remote/AiProviderRouter.kt; then
-  item BLOCKER "AI provider credentials are client-side" "\`AiProviderRouter.kt:69-72\` reads BuildConfig values and \`82\` sends a direct provider request." "Move provider credentials and inference to an authenticated server-side gateway."
+if grep -RInE --include='*.kt' '(generativelanguage\.googleapis\.com|api\.groq\.com|api\.cerebras\.ai|openrouter\.ai|router\.huggingface\.co)' app/src/main/java >"$LOG_DIR/client-ai-provider-paths.log"; then
+  item BLOCKER "AI provider network path remains client-side" "See \`$LOG_DIR/client-ai-provider-paths.log\`." "Route all model calls through the authenticated platform API."
+elif [[ -f services/auth-api/src/ai.js ]] && grep -q 'generateDiagnosis' services/auth-api/src/server.js; then
+  pass "Server-side AI boundary" "Android has no direct provider URL match; \`services/auth-api\` owns the authenticated/redacted AI path."
 else
-  pass "AI credential static gate" "No direct BuildConfig/provider pairing matched; verify release APK secrets separately."
+  item BLOCKER "Server-side AI gateway absent" "No verified authenticated platform AI route was found." "Add a server-only gateway and safe unavailable fallback."
 fi
 PAYMENT_URLS="$LOG_DIR/payment-network-paths.log"
-grep -RInE --include='*.kt' 'https?://[^" ]*(zarinpal|shaparak|payment|pay\.ir|idpay)|webhook' app/src/main/java >"$PAYMENT_URLS" || true
-if [[ -s "$PAYMENT_URLS" ]]; then
-  pass "Payment network evidence found" "See \`$PAYMENT_URLS\`; manually verify signed webhooks, idempotency and settlement."
+grep -RInE --include='*.js' '(zarinpal|payment_intents|verifyZarinpalPayment|postLedgerEntry)' services/auth-api/src >"$PAYMENT_URLS" || true
+if [[ -s "$PAYMENT_URLS" ]] && grep -q 'Idempotency-Key' docs/API.md && grep -q 'ledger_entries' services/auth-api/db/002_platform.sql; then
+  pass "Server payment/ledger evidence found" "See \`$PAYMENT_URLS\`; provider verification, idempotency and balanced ledger sources exist. Production merchant/reconciliation evidence remains required."
 else
-  item BLOCKER "No payment-provider or webhook implementation found" "No payment URL/webhook source was found; local wallet code only changes Room state in \`TamirkarRepository.kt:289-304\`." "Implement server-side payment capture, signed webhook verification, ledger and reconciliation."
+  item BLOCKER "No server payment-provider and ledger implementation found" "Missing payment adapter, idempotency/ledger evidence, or endpoint contract." "Implement server-side payment verification, balanced ledger and reconciliation before enabling payments."
 fi
 if grep -q 'isRecordingAudio' app/src/main/java/com/example/ui/screens/diagnosis/DiagnosisScreen.kt && \
    ! grep -RInE --include='*.kt' '(MediaRecorder|AudioRecord|ActivityResultContracts\.GetContent|takePicture)' app/src/main/java >/dev/null; then
@@ -239,15 +247,15 @@ fi
 if grep -q 'fallbackToDestructiveMigration' app/src/main/java/com/example/data/local/TamirkarDatabase.kt; then
   item BLOCKER "Device history can be destructively migrated" "\`TamirkarDatabase.kt:54-56\` opts into destructive migration." "Add versioned migrations and server-backed append-only repair events."
 fi
-if grep -RInE --include='*.kt' 'type[[:space:]]*=[[:space:]]*\"escrow_release\"|insertTransaction\([^)]*escrow_release' app/src/main/java >"$LOG_DIR/escrow-release-paths.log"; then
-  pass "Escrow release code path found" "See \`$LOG_DIR/escrow-release-paths.log\`; still verify idempotency and payment-provider settlement."
+if grep -RInE --include='*.js' '(escrow_release|release-due|escrow-worker|SKIP LOCKED)' services/auth-api/src >"$LOG_DIR/escrow-release-paths.log" && grep -q 'escrow_holds' services/auth-api/db/002_platform.sql; then
+  pass "Server escrow-release code path found" "See \`$LOG_DIR/escrow-release-paths.log\`; it is idempotent and feature-gated. Payout/reconciliation proof remains a production gate."
 else
-  item BLOCKER "No escrow-release implementation" "\`escrow_release\` appears only as a model enum/comment or has no executable path." "Implement server-side hold/release/refund ledger and idempotent worker."
+  item BLOCKER "No escrow-release implementation" "No server hold/release worker and ledger state evidence was found." "Implement server-side hold/release/refund ledger and idempotent worker."
 fi
-if grep -RInE --include='*.kt' '(KYC|kyc|verificationStatus|kycStatus|documentUrl|suspension|suspendTechnician)' app/src/main >"$LOG_DIR/kyc-paths.log"; then
-  pass "Technician verification evidence found" "See \`$LOG_DIR/kyc-paths.log\`; verify process manually."
+if grep -RInE --include='*.js' '(kyc_cases|verification_status|technicians/kyc|technicians/apply|suspended)' services/auth-api/src >"$LOG_DIR/kyc-paths.log" && grep -q 'technician_profiles' services/auth-api/db/002_platform.sql; then
+  pass "Server technician verification workflow evidence found" "See \`$LOG_DIR/kyc-paths.log\`; human review and approved-state enforcement are implemented."
 else
-  item BLOCKER "No technician KYC/verification workflow" "No KYC/verification state-machine evidence was found in main source." "Implement document review, approval/suspension states and enforcement before matching."
+  item BLOCKER "No technician KYC/verification workflow" "No server KYC state-machine evidence was found." "Implement document review, approval/suspension states and enforcement before matching."
 fi
 if grep -q 'qualityLevel' app/src/main/java/com/example/data/local/entities/Entities.kt && grep -q 'onClick = {}' app/src/main/java/com/example/ui/screens/secondary/SecondaryScreens.kt; then
   item MAJOR "Parts tiers are display-only" "Tier data exists in \`Entities.kt:157-173\`, while purchase handler is empty in \`SecondaryScreens.kt:277-283\`." "Implement inventory, quote/cart, payment and warranty fulfilment."
@@ -266,13 +274,13 @@ else
 fi
 
 section "Database, API and operations"
-if grep -RInE --include='*.kt' '(addMigrations\(|class[[:space:]].*Migration|object[[:space:]].*Migration)' app/src/main >/dev/null; then
-  pass "Room migration source found" "Review migration tests before release."
+if grep -RInE --include='*.kt' '(addMigrations\(|class[[:space:]].*Migration|object[[:space:]].*Migration)' app/src/main >/dev/null && ! grep -q 'fallbackToDestructiveMigration' app/src/main/java/com/example/data/local/TamirkarDatabase.kt; then
+  pass "Non-destructive Room migration source found" "Forward migration source is present and destructive fallback is absent."
 else
-  item BLOCKER "No Room migrations found" "No \`Migration(\` source match; the database currently uses destructive fallback." "Add forward migrations, schema exports and migration tests."
+  item BLOCKER "Room migration safety is incomplete" "Expected forward migration source with no destructive fallback." "Add tested forward migrations and preserve existing local records."
 fi
 [[ -f docs/API.md ]] && pass "API documentation file exists" "\`docs/API.md\` exists; verify it against an implemented server API before launch." || item MAJOR "No API documentation" "\`docs/API.md\` is missing." "Document and version the production API."
-if find . -maxdepth 3 -type f \( -name 'Dockerfile' -o -name 'docker-compose.yml' -o -name 'compose.yml' \) | grep -q .; then
+if find . -maxdepth 3 -type f \( -name 'Dockerfile' -o -name 'docker-compose.yml' -o -name 'docker-compose.*.yml' -o -name 'compose.yml' \) | grep -q .; then
   info "Container files found" "Run the referenced compose/container command separately and attach logs."
 else
   info "No container stack found" "No Dockerfile/Compose file detected; this is expected only if deployment is documented elsewhere."

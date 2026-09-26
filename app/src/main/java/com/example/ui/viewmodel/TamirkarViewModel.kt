@@ -15,6 +15,7 @@ import com.example.data.local.entities.WarrantyEntity
 import com.example.data.remote.AiDiagnosisResult
 import com.example.data.remote.AuthApi
 import com.example.data.remote.AuthSession
+import com.example.data.remote.AuthSessionStore
 import com.example.data.remote.OtpRequestResult
 import com.example.data.remote.AiDisputeResult
 import com.example.data.remote.AiQualityCheckResult
@@ -93,6 +94,8 @@ class TamirkarViewModel(application: Application) : AndroidViewModel(application
             _authSessionState.value = UiState.Loading
             try {
                 val session = authApi.verifyOtp(phone, code)
+                AuthSessionStore.set(session)
+                repository.activateAuthenticatedUser(session)
                 _activeSession.value = session
                 _authSessionState.value = UiState.Success(session)
             } catch (e: Exception) {

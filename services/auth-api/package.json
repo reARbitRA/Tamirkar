@@ -5,6 +5,7 @@
   "description": "Small server-side OTP authentication API for Oosta using Kavenegar Verify Lookup.",
   "type": "module",
   "scripts": {
+    "migrate": "node src/migrate.js",
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test": "node --test"

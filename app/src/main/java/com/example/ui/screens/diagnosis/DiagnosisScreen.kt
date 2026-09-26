@@ -41,6 +41,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -52,10 +54,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.util.Base64
+import android.net.Uri
 import com.example.domain.model.CurrencyHelper
 import com.example.domain.model.DeviceCategory
 import com.example.ui.components.CategoryCard
@@ -88,8 +93,19 @@ fun DiagnosisScreen(
             else "دستگاه به درستی کار نمی‌کند و صدای غیرعادی دارد."
         )
     }
-    var isRecordingAudio by remember { mutableStateOf(false) }
-    var hasPhotoAttached by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+    var photoBase64 by remember { mutableStateOf<String?>(null) }
+    var attachmentError by remember { mutableStateOf<String?>(null) }
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val image = uri?.let { readDiagnosticImage(context.contentResolver, it) }
+        if (uri != null && image == null) {
+            photoBase64 = null
+            attachmentError = "عکس باید کمتر از ۲ مگابایت باشد."
+        } else {
+            photoBase64 = image
+            attachmentError = null
+        }
+    }
 
     val diagnosisState by viewModel.diagnosisState.collectAsState()
 
@@ -156,68 +172,37 @@ fun DiagnosisScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Audio & Photo Attachment row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (photoBase64 != null) TealContainer else MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { photoPicker.launch("image/*") }
+                                .testTag("btn_attach_photo")
                         ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (hasPhotoAttached) TealContainer else MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clickable { hasPhotoAttached = !hasPhotoAttached }
-                                    .testTag("btn_attach_photo")
+                            Row(
+                                modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.AddPhotoAlternate,
-                                        contentDescription = null,
-                                        tint = if (hasPhotoAttached) TealPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = if (hasPhotoAttached) "عکس پیوست شد ✓" else "پیوست عکس دستگاه",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (hasPhotoAttached) TealPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                                Icon(
+                                    imageVector = Icons.Default.AddPhotoAlternate,
+                                    contentDescription = null,
+                                    tint = if (photoBase64 != null) TealPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (photoBase64 != null) "عکس برای تشخیص اولیه پیوست شد ✓" else "پیوست عکس دستگاه (اختیاری، حداکثر ۲ مگابایت)",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (photoBase64 != null) TealPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
-
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isRecordingAudio) RoseLight else MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clickable { isRecordingAudio = !isRecordingAudio }
-                                    .testTag("btn_record_audio")
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Mic,
-                                        contentDescription = null,
-                                        tint = if (isRecordingAudio) RoseAlert else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = if (isRecordingAudio) "صدا ضبط شد ✓" else "ضبط صدای موتور/کمپرسور",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isRecordingAudio) RoseAlert else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
+                        }
+                        attachmentError?.let { message ->
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(message, color = RoseAlert, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -227,7 +212,7 @@ fun DiagnosisScreen(
             item {
                 Button(
                     onClick = {
-                        viewModel.runDiagnosis(selectedCategory, symptomText)
+                        viewModel.runDiagnosis(selectedCategory, symptomText, photoBase64?.let { listOf(it) } ?: emptyList())
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -244,7 +229,7 @@ fun DiagnosisScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "پردازش و عیب‌یابی با هوش مصنوعی جمینای",
+                        text = "دریافت تشخیص اولیه",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -270,14 +255,14 @@ fun DiagnosisScreen(
                                 CircularProgressIndicator(color = TealPrimary)
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "در حال تحلیل الگوهای خرابی و استعلام قیمت بازار تهران...",
+                                    text = "در حال ارسال درخواست تشخیص اولیه...",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = TealPrimary
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "مدل جمینای در حال بررسی علائم و قطعات یدکی استاندارد",
+                                    text = "نتیجه غیرالزام‌آور است و جای بررسی حضوری را نمی‌گیرد.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -312,7 +297,7 @@ fun DiagnosisScreen(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "نتیجه کارشناسی هوش مصنوعی",
+                                            text = "تشخیص اولیه",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = TealPrimary
@@ -470,7 +455,7 @@ fun DiagnosisScreen(
                                     colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
                                 ) {
                                     Text(
-                                        text = "اعزام متخصص با ۱۵٪ ضمانت امانی",
+                                        text = "ثبت درخواست بررسی حضوری (پس از فعال‌سازی سرویس)",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = SlateNavyDark
@@ -499,3 +484,10 @@ fun DiagnosisScreen(
         }
     }
 }
+
+private fun readDiagnosticImage(contentResolver: android.content.ContentResolver, uri: Uri): String? = runCatching {
+    contentResolver.openInputStream(uri)?.use { stream ->
+        val bytes = stream.readBytes()
+        if (bytes.isEmpty() || bytes.size > 2 * 1024 * 1024) null else Base64.encodeToString(bytes, Base64.NO_WRAP)
+    }
+}.getOrNull()
