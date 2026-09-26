@@ -78,7 +78,7 @@ fun WarrantyScreen(
             .background(MaterialTheme.colorScheme.background)
             .testTag("screen_warranties")
     ) {
-        PersianTopBar(title = "صندوق ضمانت امانی و گارانتی‌ها", onBack = onBack)
+        PersianTopBar(title = "پیگیری ضمانت و گارانتی", onBack = onBack)
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -96,7 +96,7 @@ fun WarrantyScreen(
                             Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(28.dp))
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
-                                text = "ضمانت اجرایی ۱۵٪ امانی چیست؟",
+                                text = "وضعیت ضمانت خدمات",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF78350F)
@@ -104,7 +104,7 @@ fun WarrantyScreen(
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "۱۵٪ از کل دستمزد تعمیرکار به مدت ۳۰ تا ۹۰ روز در حساب امانی پلتفرم بلوکه می‌ماند. در صورت بروز هرگونه نقص مجدد، استادکار موظف به اعزام فوری رایگان یا عودت وجه است.",
+                            text = "شرایط ضمانت، بازپرداخت و هرگونه نگه‌داشت وجه پیش از فعال‌سازی پرداخت و ثبت سفارش، به‌صورت شفاف اعلام می‌شود. تا آن زمان هیچ ادعایی دربارهٔ نگه‌داشت یا آزادسازی وجه مطرح نمی‌شود.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF92400E)
                         )
@@ -275,11 +275,12 @@ fun PartsMarketplaceScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Button(
-                                onClick = {},
+                                onClick = { /* Online parts fulfilment is not enabled yet. */ },
+                                enabled = false,
                                 shape = RoundedCornerShape(10.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
                             ) {
-                                Text("خرید قطعه", style = MaterialTheme.typography.labelSmall)
+                                Text("فروش آنلاین هنوز فعال نیست", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -329,7 +330,7 @@ fun WalletScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = CurrencyHelper.formatTomans(user?.walletBalance ?: 3200000L),
+                            text = "پرداخت سروری هنوز فعال نشده است",
                             style = MaterialTheme.typography.displayLarge,
                             fontWeight = FontWeight.Bold,
                             color = Color.White

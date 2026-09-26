@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2000" height="3000" viewBox="0 0 2000 3000" role="img" aria-labelledby="title description">
+  <title id="title">Ostad Kaveh — Oosta poster</title>
+  <desc id="description">A poster of Ostad Kaveh in his impossible Tehran repair workshop.</desc>
+  <defs>
+    <linearGradient id="bottom" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#080D16" stop-opacity="0"/><stop offset=".38" stop-color="#080D16" stop-opacity=".7"/><stop offset="1" stop-color="#080D16" stop-opacity=".98"/></linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3D68F"/><stop offset=".45" stop-color="#D8A24A"/><stop offset="1" stop-color="#986122"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000" flood-opacity=".75"/></filter>
+  </defs>
+  <image x="0" y="0" width="2000" height="3000" preserveAspectRatio="xMidYMid slice" xlink:href="poster-ostad-kaveh-source.png"/>
+  <rect x="0" y="1770" width="2000" height="1230" fill="url(#bottom)"/>
+  <g text-anchor="middle" filter="url(#shadow)">
+    <text x="1000" y="2100" font-family="DejaVu Sans, sans-serif" font-weight="700" font-size="47" letter-spacing="6" fill="#D8A24A" direction="rtl" unicode-bidi="bidi-override">کارگاهِ استاد کاوه</text>
+    <line x1="735" y1="2152" x2="1265" y2="2152" stroke="#10B39A" stroke-width="3" opacity=".8"/>
+    <text x="1000" y="2360" font-family="DejaVu Sans, sans-serif" font-weight="900" font-size="190" letter-spacing="18" fill="url(#brass)">OOSTA</text>
+    <text x="1000" y="2485" font-family="DejaVu Sans, sans-serif" font-weight="800" font-size="105" fill="#10B39A" direction="rtl" unicode-bidi="bidi-override">اوستا</text>
+    <text x="1000" y="2635" font-family="DejaVu Sans, sans-serif" font-weight="700" font-size="58" fill="#EDE6D6" direction="rtl" unicode-bidi="bidi-override">اول تشخیص، بعد هزینه.</text>
+    <text x="1000" y="2735" font-family="DejaVu Sans Mono, monospace" font-size="25" letter-spacing="4" fill="#91A29E">A REPAIR ECONOMY PICTURE · OPEN SOURCE · TEHRAN</text>
+  </g>
+  <g transform="translate(740 2824)"><path d="M0 0h520" stroke="#22D3EE" stroke-opacity=".6" stroke-width="2"/><circle cx="-15" cy="0" r="5" fill="#10B39A"/><circle cx="535" cy="0" r="5" fill="#10B39A"/></g>
+</svg>

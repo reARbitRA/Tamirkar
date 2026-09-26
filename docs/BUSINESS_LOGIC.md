@@ -1,7 +1,7 @@
-# Business Logic & Financial Mechanics — Tamirkar (تعمیرکار)
+# Business Logic & Financial Mechanics — Oosta (اوستا)
 
 ## 💰 1. The 15% Warranty Escrow Model (ضمانت اجرایی)
-To eliminate poor workmanship and lack of post-repair accountability in the Iranian market, Tamirkar implements an automated escrow vault:
+To eliminate poor workmanship and lack of post-repair accountability in the Iranian market, Oosta implements an automated escrow vault:
 
 1. **Customer Checkout**: Customer pays the agreed order total $P_{\text{total}}$ in Tomans.
 2. **Immediate Split upon AI QC Approval**:

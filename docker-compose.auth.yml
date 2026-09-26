@@ -1,0 +1,31 @@
+services:
+  auth-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: oosta_auth
+      POSTGRES_USER: oosta_auth
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in services/auth-api/.env}
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+      - ./services/auth-api/db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oosta_auth -d oosta_auth"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  auth-api:
+    build:
+      context: ./services/auth-api
+    env_file:
+      - ./services/auth-api/.env
+    environment:
+      DATABASE_URL: postgres://oosta_auth:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in services/auth-api/.env}@auth-db:5432/oosta_auth
+    ports:
+      - "8080:8080"
+    depends_on:
+      auth-db:
+        condition: service_healthy
+
+volumes:
+  auth-db-data:

@@ -1,4 +1,4 @@
-# Changelog — Tamirkar (تعمیرکار)
+# Changelog — Oosta (اوستا)
 
 ## [1.0.0-MVP] - 2026-08-19
 ### Initial Release

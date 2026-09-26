@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.BuildConfig
 import com.example.data.local.dao.TamirkarDao
 import com.example.data.local.entities.BidEntity
 import com.example.data.local.entities.DeviceEntity
@@ -33,7 +35,7 @@ import kotlinx.coroutines.launch
         DisputeEntity::class,
         SopChecklistEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class TamirkarDatabase : RoomDatabase() {
@@ -51,20 +53,33 @@ abstract class TamirkarDatabase : RoomDatabase() {
                     TamirkarDatabase::class.java,
                     "tamirkar_database"
                 )
+                    .addMigrations(MIGRATION_1_2)
                     .addCallback(DatabaseCallback())
-                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance
             }
         }
 
+        /**
+         * Version 1 and 2 have the same Room entity columns. This explicit forward
+         * migration replaces destructive fallback and guarantees existing passport
+         * data is retained when users update to this release.
+         */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) = Unit
+        }
+
         private class DatabaseCallback : Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
-                INSTANCE?.let { database ->
-                    CoroutineScope(Dispatchers.IO).launch {
-                        populateInitialSeedData(database.tamirkarDao())
+                // Production starts empty and is populated only from authenticated APIs.
+                // Fixture data remains available for debug-only visual development.
+                if (BuildConfig.DEBUG) {
+                    INSTANCE?.let { database ->
+                        CoroutineScope(Dispatchers.IO).launch {
+                            populateInitialSeedData(database.tamirkarDao())
+                        }
                     }
                 }
             }

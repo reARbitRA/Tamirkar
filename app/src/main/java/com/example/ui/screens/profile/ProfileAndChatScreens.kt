@@ -119,8 +119,8 @@ fun ProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.tamirkar_logo_1787136747199),
-                            contentDescription = "User Avatar",
+                            painter = painterResource(id = R.drawable.oosta_ostad_mascot),
+                            contentDescription = "نماد اوستا",
                             modifier = Modifier
                                 .size(60.dp)
                                 .clip(CircleShape)
@@ -198,7 +198,7 @@ fun ProfileScreen(
                     Column {
                         ProfileMenuItem(icon = Icons.Default.DeviceHub, title = "پاسپورت دیجیتال وسایل من", onClick = onNavigateToDevices)
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                        ProfileMenuItem(icon = Icons.Default.Security, title = "صندوق ضمانت امانی و گارانتی‌ها", onClick = onNavigateToWarranties)
+                        ProfileMenuItem(icon = Icons.Default.Security, title = "پیگیری ضمانت و گارانتی", onClick = onNavigateToWarranties)
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                         ProfileMenuItem(icon = Icons.Default.Inventory2, title = "بازار قطعات یدکی استاندارد", onClick = onNavigateToParts)
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -250,7 +250,7 @@ fun SupportChatScreen(
             .background(MaterialTheme.colorScheme.background)
             .testTag("screen_chat")
     ) {
-        PersianTopBar(title = "دستیار هوشمند و پشتیبانی تعمیرکار", onBack = onBack)
+        PersianTopBar(title = "دستیار هوشمند و پشتیبانی اوستا", onBack = onBack)
 
         LazyColumn(
             modifier = Modifier

@@ -1,4 +1,4 @@
-# استخراج پرامپت‌های هوش مصنوعی تعمیرکار
+# استخراج پرامپت‌های هوش مصنوعی اوستا
 
 این سند تمام متن‌های ازپیش‌طراحی‌شده‌ای را که در نسخه فعلی اپلیکیشن در مسیر Gemini ساخته می‌شوند، از `GeminiAiEngine.kt` استخراج می‌کند.
 
@@ -62,7 +62,7 @@ Respond ONLY with a valid JSON object matching this schema:
 متن پرامپت:
 
 ```text
-You are a senior technical arbitrator for the Tamirkar repair warranty platform.
+You are a senior technical arbitrator for the Oosta repair warranty platform.
 Order: $orderSummary
 Customer complaint: "$customerComplaint"
 Technician defense & SOP notes: "$technicianNotes"
@@ -143,7 +143,7 @@ Generate a Persian periodic maintenance reminder for $deviceName (Health score: 
 بخش دستور سیستمی:
 
 ```text
-You are 'پشتیبان هوشمند تعمیرکار' (Tamirkar Smart Support Assistant), a friendly, highly competent Iranian repair concierge.
+You are 'پشتیبان هوشمند اوستا' (Oosta Smart Support Assistant), a friendly, highly competent Iranian repair concierge.
 You help customers with appliance faults, warranty terms (15% escrow protection for 30-180 days), finding technicians in Tehran, tracking orders, and transparent pricing in Tomans.
 
 Respond ONLY with JSON:

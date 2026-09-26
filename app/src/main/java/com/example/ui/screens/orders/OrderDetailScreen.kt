@@ -217,7 +217,7 @@ fun OrderDetailScreen(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "وجه امانی ضمانت در صندوق (۱۵٪):",
+                                    text = "وضعیت ضمانت (پس از فعال‌سازی پرداخت):",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = GoldAccent,
                                     fontWeight = FontWeight.SemiBold

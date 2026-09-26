@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
+  <title id="title">Oosta — diagnose first, pay fair</title>
+  <desc id="description">Oosta social preview with Ostad Kaveh listening to a refrigerator, repairable machines in orbit, and the brand promise.</desc>
+  <defs>
+    <linearGradient id="scrim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#080D16" stop-opacity="0.10"/>
+      <stop offset="0.29" stop-color="#080D16" stop-opacity="0.52"/>
+      <stop offset="0.46" stop-color="#080D16" stop-opacity="0.92"/>
+      <stop offset="0.68" stop-color="#080D16" stop-opacity="0.93"/>
+      <stop offset="1" stop-color="#080D16" stop-opacity="0.12"/>
+    </linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F3D68F"/>
+      <stop offset="0.45" stop-color="#D8A24A"/>
+      <stop offset="1" stop-color="#986122"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#000" flood-opacity=".54"/></filter>
+  </defs>
+  <image x="0" y="0" width="1280" height="640" preserveAspectRatio="xMidYMid slice" xlink:href="social-bg.png"/>
+  <rect width="1280" height="640" fill="url(#scrim)"/>
+  <g text-anchor="middle" filter="url(#shadow)">
+    <text x="646" y="231" font-family="DejaVu Sans, sans-serif" font-weight="900" font-size="76" letter-spacing="10" fill="#F2F5F7">OOSTA</text>
+    <text x="646" y="298" font-family="DejaVu Sans, sans-serif" font-weight="800" font-size="55" fill="#10B39A" direction="rtl" unicode-bidi="bidi-override">اوستا</text>
+    <line x1="465" y1="327" x2="827" y2="327" stroke="url(#brass)" stroke-width="2" opacity=".9"/>
+    <circle cx="450" cy="327" r="4" fill="#D8A24A"/><circle cx="842" cy="327" r="4" fill="#D8A24A"/>
+    <text x="646" y="380" font-family="DejaVu Sans, sans-serif" font-weight="700" font-size="32" fill="#EDE6D6" direction="rtl" unicode-bidi="bidi-override">اول تشخیص، بعد هزینه.</text>
+    <text x="646" y="421" font-family="DejaVu Sans, sans-serif" font-size="20" fill="#BFD0CC" direction="rtl" unicode-bidi="bidi-override">تشخیص درست و قیمت منصفانه، برای روزهایی که همه‌چیز گران است.</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="302" y="460" width="688" height="56" rx="28" fill="#101A20" fill-opacity=".88" stroke="#10B39A" stroke-opacity=".42"/>
+    <text x="646" y="495" font-family="DejaVu Sans, sans-serif" font-size="16" fill="#BFD0CC" text-anchor="middle" direction="rtl" unicode-bidi="bidi-override">ضمانت امانی ۱۵٪  ·  شناسنامهٔ دیجیتال دستگاه  ·  تشخیص هوشمند از روی صدا  ·  استادکارِ تأییدشده</text>
+  </g>
+  <text x="646" y="563" font-family="DejaVu Sans Mono, monospace" font-size="13" letter-spacing="2.1" fill="#9AABA8" text-anchor="middle">DIAGNOSE FIRST · PAY FAIR · REPAIR, DON'T REPLACE · OPEN SOURCE</text>
+  <g transform="translate(549 582)"><path d="M0 14h194" stroke="#22D3EE" stroke-opacity=".5"/><circle cx="-11" cy="14" r="3" fill="#10B39A"/><circle cx="205" cy="14" r="3" fill="#10B39A"/></g>
+</svg>

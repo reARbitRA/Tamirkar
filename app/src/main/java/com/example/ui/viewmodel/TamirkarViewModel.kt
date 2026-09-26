@@ -13,6 +13,10 @@ import com.example.data.local.entities.TransactionEntity
 import com.example.data.local.entities.UserEntity
 import com.example.data.local.entities.WarrantyEntity
 import com.example.data.remote.AiDiagnosisResult
+import com.example.data.remote.AuthApi
+import com.example.data.remote.AuthSession
+import com.example.data.remote.AuthSessionStore
+import com.example.data.remote.OtpRequestResult
 import com.example.data.remote.AiDisputeResult
 import com.example.data.remote.AiQualityCheckResult
 import com.example.data.remote.AiReminderResult
@@ -43,6 +47,7 @@ data class ChatMessage(
 class TamirkarViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: TamirkarRepository
+    private val authApi = AuthApi()
 
     init {
         val db = TamirkarDatabase.getDatabase(application)
@@ -55,6 +60,52 @@ class TamirkarViewModel(application: Application) : AndroidViewModel(application
 
     fun setAppMode(mode: String) {
         _appMode.value = mode
+    }
+
+    // --- OTP authentication ---
+    private val _otpRequestState = MutableStateFlow<UiState<OtpRequestResult>>(UiState.Idle)
+    val otpRequestState: StateFlow<UiState<OtpRequestResult>> = _otpRequestState.asStateFlow()
+
+    private val _authSessionState = MutableStateFlow<UiState<AuthSession>>(UiState.Idle)
+    val authSessionState: StateFlow<UiState<AuthSession>> = _authSessionState.asStateFlow()
+
+    // This is intentionally in-memory for the first OTP increment. Persisting a refresh token
+    // securely is a separate session-management step; no token is written to Room or logs.
+    private val _activeSession = MutableStateFlow<AuthSession?>(null)
+    val activeSession: StateFlow<AuthSession?> = _activeSession.asStateFlow()
+
+    fun requestOtp(phone: String) {
+        viewModelScope.launch {
+            _otpRequestState.value = UiState.Loading
+            try {
+                _otpRequestState.value = UiState.Success(authApi.requestOtp(phone))
+            } catch (e: Exception) {
+                _otpRequestState.value = UiState.Error(e.message ?: "ارسال کد تأیید ممکن نیست.")
+            }
+        }
+    }
+
+    fun resetOtpRequest() {
+        _otpRequestState.value = UiState.Idle
+    }
+
+    fun verifyOtp(phone: String, code: String) {
+        viewModelScope.launch {
+            _authSessionState.value = UiState.Loading
+            try {
+                val session = authApi.verifyOtp(phone, code)
+                AuthSessionStore.set(session)
+                repository.activateAuthenticatedUser(session)
+                _activeSession.value = session
+                _authSessionState.value = UiState.Success(session)
+            } catch (e: Exception) {
+                _authSessionState.value = UiState.Error(e.message ?: "تأیید کد ممکن نیست.")
+            }
+        }
+    }
+
+    fun resetAuthSessionState() {
+        _authSessionState.value = UiState.Idle
     }
 
     // Current User
@@ -224,7 +275,7 @@ class TamirkarViewModel(application: Application) : AndroidViewModel(application
         listOf(
             ChatMessage(
                 sender = "ai",
-                text = "سلام! من دستیار هوشمند تعمیرکار هستم. چطور می‌توانم در عیب‌یابی لوازم، استعلام قیمت، پاسپورت دیجیتال یا پیگیری ضمانت‌نامه به شما کمک کنم؟",
+                text = "سلام! من دستیار هوشمند اوستا هستم. چطور می‌توانم در عیب‌یابی لوازم، استعلام قیمت، پاسپورت دیجیتال یا پیگیری ضمانت‌نامه به شما کمک کنم؟",
                 actions = listOf("عیب‌یابی هوشمند با تصویر", "استعلام شرایط ضمانت ۱۵٪", "پاسپورت دیجیتال وسایل من")
             )
         )

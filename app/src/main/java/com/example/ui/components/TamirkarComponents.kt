@@ -446,7 +446,7 @@ fun EscrowStampBadge(days: Int = 30) {
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "ضمانت اجرایی ۱۵٪ امانی ($days روز گارانتی کتبی)",
+                text = "شرایط ضمانت پیش از ثبت سفارش اعلام می‌شود",
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 color = GoldDark

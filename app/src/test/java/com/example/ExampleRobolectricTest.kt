@@ -44,7 +44,7 @@ class ExampleRobolectricTest {
     fun testAppNamePersianResource() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val appName = context.getString(R.string.app_name)
-        assertEquals("تعمیرکار", appName)
+        assertEquals("اوستا", appName)
     }
 
     @Test

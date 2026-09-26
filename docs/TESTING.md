@@ -1,4 +1,4 @@
-# Testing Strategy — Tamirkar (تعمیرکار)
+# Testing Strategy — Oosta (اوستا)
 
 ## 🧪 Verification Architecture
 1. **Robolectric JVM Tests**: Validates business logic, escrow splits, and database CRUD.
