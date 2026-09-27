@@ -64,7 +64,6 @@ import android.net.Uri
 import com.example.domain.model.CurrencyHelper
 import com.example.domain.model.DeviceCategory
 import com.example.ui.components.CategoryCard
-import com.example.ui.components.EscrowStampBadge
 import com.example.ui.components.PersianTopBar
 import com.example.ui.theme.EmeraldLight
 import com.example.ui.theme.EmeraldSuccess
@@ -83,16 +82,12 @@ import com.example.ui.viewmodel.UiState
 fun DiagnosisScreen(
     viewModel: TamirkarViewModel,
     initialCategory: String?,
+    bookingEnabled: Boolean,
     onBack: () -> Unit,
     onProceedToBooking: (String, String) -> Unit
 ) {
     var selectedCategory by remember { mutableStateOf(initialCategory ?: "ac") }
-    var symptomText by remember {
-        mutableStateOf(
-            if (initialCategory == "ac" || initialCategory == null) "کولر گازی روشن می‌شود ولی باد سرد نمی‌زند و کمپرسور بعد از ۵ دقیقه قطع می‌کند."
-            else "دستگاه به درستی کار نمی‌کند و صدای غیرعادی دارد."
-        )
-    }
+    var symptomText by remember { mutableStateOf("") }
     val context = LocalContext.current
     var photoBase64 by remember { mutableStateOf<String?>(null) }
     var attachmentError by remember { mutableStateOf<String?>(null) }
@@ -214,6 +209,7 @@ fun DiagnosisScreen(
                     onClick = {
                         viewModel.runDiagnosis(selectedCategory, symptomText, photoBase64?.let { listOf(it) } ?: emptyList())
                     },
+                    enabled = symptomText.trim().length >= 3,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp)
@@ -447,6 +443,7 @@ fun DiagnosisScreen(
                                     onClick = {
                                         onProceedToBooking(selectedCategory, symptomText)
                                     },
+                                    enabled = bookingEnabled,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(52.dp)
@@ -455,7 +452,7 @@ fun DiagnosisScreen(
                                     colors = ButtonDefaults.buttonColors(containerColor = GoldAccent)
                                 ) {
                                     Text(
-                                        text = "ثبت درخواست بررسی حضوری (پس از فعال‌سازی سرویس)",
+                                        text = if (bookingEnabled) "ثبت درخواست بررسی حضوری" else "ثبت سفارش هنوز فعال نشده است",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = SlateNavyDark

@@ -17,6 +17,8 @@ import com.example.data.remote.AuthApi
 import com.example.data.remote.AuthSession
 import com.example.data.remote.AuthSessionStore
 import com.example.data.remote.OtpRequestResult
+import com.example.data.remote.PlatformApi
+import com.example.data.remote.PlatformFeatures
 import com.example.data.remote.AiDisputeResult
 import com.example.data.remote.AiQualityCheckResult
 import com.example.data.remote.AiReminderResult
@@ -48,6 +50,7 @@ class TamirkarViewModel(application: Application) : AndroidViewModel(application
 
     private val repository: TamirkarRepository
     private val authApi = AuthApi()
+    private val platformApi = PlatformApi()
 
     init {
         val db = TamirkarDatabase.getDatabase(application)
@@ -97,6 +100,7 @@ class TamirkarViewModel(application: Application) : AndroidViewModel(application
                 AuthSessionStore.set(session)
                 repository.activateAuthenticatedUser(session)
                 _activeSession.value = session
+                refreshPlatformFeatures()
                 _authSessionState.value = UiState.Success(session)
             } catch (e: Exception) {
                 _authSessionState.value = UiState.Error(e.message ?: "تأیید کد ممکن نیست.")
@@ -106,6 +110,20 @@ class TamirkarViewModel(application: Application) : AndroidViewModel(application
 
     fun resetAuthSessionState() {
         _authSessionState.value = UiState.Idle
+    }
+
+    // Server-owned capability flags. All capabilities remain disabled on a failed fetch.
+    private val _platformFeatures = MutableStateFlow(PlatformFeatures())
+    val platformFeatures: StateFlow<PlatformFeatures> = _platformFeatures.asStateFlow()
+
+    fun refreshPlatformFeatures() {
+        viewModelScope.launch {
+            _platformFeatures.value = try {
+                platformApi.getFeatures()
+            } catch (_: Exception) {
+                PlatformFeatures()
+            }
+        }
     }
 
     // Current User
@@ -163,6 +181,9 @@ class TamirkarViewModel(application: Application) : AndroidViewModel(application
     private val _createdOrder = MutableStateFlow<OrderEntity?>(null)
     val createdOrder: StateFlow<OrderEntity?> = _createdOrder.asStateFlow()
 
+    private val _bookingState = MutableStateFlow<UiState<OrderEntity>>(UiState.Idle)
+    val bookingState: StateFlow<UiState<OrderEntity>> = _bookingState.asStateFlow()
+
     fun createNewOrder(
         category: String,
         description: String,
@@ -173,9 +194,19 @@ class TamirkarViewModel(application: Application) : AndroidViewModel(application
         onOrderCreated: (String) -> Unit
     ) {
         viewModelScope.launch {
-            val order = repository.createOrder(category, description, mode, address, deviceId, diagnosis)
-            _createdOrder.value = order
-            onOrderCreated(order.id)
+            if (!_platformFeatures.value.newBookings) {
+                _bookingState.value = UiState.Error("ثبت سفارش هنوز فعال نشده است.")
+                return@launch
+            }
+            _bookingState.value = UiState.Loading
+            try {
+                val order = repository.createOrder(category, description, mode, address, deviceId, diagnosis)
+                _createdOrder.value = order
+                _bookingState.value = UiState.Success(order)
+                onOrderCreated(order.id)
+            } catch (e: Exception) {
+                _bookingState.value = UiState.Error(e.message ?: "ثبت درخواست ممکن نیست.")
+            }
         }
     }
 

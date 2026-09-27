@@ -129,6 +129,7 @@ fun OostaApp(
     val currentRoute = navBackStackEntry?.destination?.route
     val otpRequestState by viewModel.otpRequestState.collectAsState()
     val authSessionState by viewModel.authSessionState.collectAsState()
+    val platformFeatures by viewModel.platformFeatures.collectAsState()
 
     val bottomBarScreens = listOf(
         Screen.Home,
@@ -297,6 +298,7 @@ fun OostaApp(
                     DiagnosisScreen(
                         viewModel = viewModel,
                         initialCategory = cat,
+                        bookingEnabled = platformFeatures.newBookings,
                         onBack = { navController.popBackStack() },
                         onProceedToBooking = { chosenCat, symptom ->
                             navController.navigate(Screen.NewOrder.createRoute(chosenCat, symptom))
@@ -317,9 +319,10 @@ fun OostaApp(
                         viewModel = viewModel,
                         categoryArg = cat,
                         symptomArg = symptom,
+                        bookingEnabled = platformFeatures.newBookings,
                         onBack = { navController.popBackStack() },
                         onOrderSubmitted = { orderId ->
-                            navController.navigate(Screen.OrderMatching.createRoute(orderId)) {
+                            navController.navigate(Screen.OrderTracking.createRoute(orderId)) {
                                 popUpTo(Screen.Home.route)
                             }
                         }

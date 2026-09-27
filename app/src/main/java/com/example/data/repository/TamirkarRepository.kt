@@ -17,6 +17,7 @@ import com.example.data.remote.AiQualityCheckResult
 import com.example.data.remote.AiReminderResult
 import com.example.data.remote.AiSupportResponse
 import com.example.data.remote.GeminiAiEngine
+import com.example.data.remote.PlatformApi
 import com.example.data.remote.AuthSession
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,8 @@ import java.util.UUID
 
 class TamirkarRepository(
     private val dao: TamirkarDao,
-    private val aiEngine: GeminiAiEngine = GeminiAiEngine()
+    private val aiEngine: GeminiAiEngine = GeminiAiEngine(),
+    private val platformApi: PlatformApi = PlatformApi()
 ) {
 
     // --- User Management ---
@@ -124,9 +126,8 @@ class TamirkarRepository(
     suspend fun getOrderById(orderId: String): OrderEntity? = dao.getOrderById(orderId)
 
     /**
-     * Booking, matching, quote acceptance, payment and settlement are server-authoritative.
-     * The local demo implementation was deliberately removed rather than presenting simulated
-     * technicians or money movements as real marketplace activity.
+     * The API, rather than Room, creates the authoritative booking. Room receives only
+     * a non-financial display cache; quote, matching, payment and settlement remain server-only.
      */
     suspend fun createOrder(
         category: String,
@@ -135,7 +136,27 @@ class TamirkarRepository(
         address: String,
         deviceId: String?,
         aiDiagnosis: AiDiagnosisResult?
-    ): OrderEntity = throw IllegalStateException("ثبت سفارش تا فعال‌سازی سرور رزرو در دسترس نیست.")
+    ): OrderEntity {
+        val submitted = platformApi.createOrder(category, problemDescription)
+        val localOrder = OrderEntity(
+            id = submitted.id,
+            orderNumber = submitted.id.take(8),
+            customerId = requireActiveUserId(),
+            deviceId = deviceId,
+            category = category,
+            problemDescription = problemDescription,
+            aiDiagnosisSummary = aiDiagnosis?.summaryFa.orEmpty(),
+            aiConfidenceScore = aiDiagnosis?.confidenceScore ?: 0f,
+            estimatedPriceMin = 0L,
+            estimatedPriceMax = 0L,
+            status = submitted.status,
+            orderMode = orderMode,
+            customerAddress = "",
+            warrantyDays = 0
+        )
+        dao.insertOrder(localOrder)
+        return localOrder
+    }
 
     fun getBidsForOrderFlow(orderId: String): Flow<List<BidEntity>> = dao.getBidsForOrderFlow(orderId)
 
