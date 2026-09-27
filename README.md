@@ -31,9 +31,9 @@ The primary **Apron Shield** app mark, Ostad Kaveh poster, social preview, palet
 
 ## First real backend step: OTP login
 
-The first production increment is deliberately small: `services/auth-api` handles Iranian mobile OTP through **Kavenegar Verify Lookup**. It is the only new backend service in this increment—payments, escrow, KYC, and AI remain out of scope.
+The authenticated platform boundary is deliberately fail-closed: `services/auth-api` handles Iranian mobile OTP through **Kavenegar Verify Lookup** and includes feature-gated foundations for AI triage, KYC workflow state, bookings, Zarinpal verification, ledger, and escrow. Only OTP is intended for the earliest pilot; every other capability stays disabled until its documented evidence gate is satisfied.
 
-Set up the Kavenegar template and local secrets using [`services/auth-api/README.md`](services/auth-api/README.md). The Android app reads only the non-secret `AUTH_API_BASE_URL`; Kavenegar credentials, the OTP pepper, JWT secret, and PostgreSQL password stay in the service environment.
+Set up the Kavenegar template and local secrets using [`services/auth-api/README.md`](services/auth-api/README.md). The Android app reads only the non-secret `AUTH_API_BASE_URL`; Kavenegar credentials, the OTP pepper, JWT secret, and PostgreSQL password stay in the service environment. For the bilingual implementation, pilot, and public-launch sequence, start with [`docs/GO_60_ROADMAP.md`](docs/GO_60_ROADMAP.md) and [`docs/FREE_TIER_PILOT_BLUEPRINT.md`](docs/FREE_TIER_PILOT_BLUEPRINT.md).
 
 ## Development
 

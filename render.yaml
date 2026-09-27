@@ -1,0 +1,53 @@
+# Oosta private-pilot Blueprint for Render.
+# Import deliberately; do not treat this free plan as public-payment infrastructure.
+services:
+  - type: web
+    runtime: docker
+    name: oosta-auth-api-staging
+    rootDir: services/auth-api
+    plan: free
+    healthCheckPath: /health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: HOST
+        value: 0.0.0.0
+      - key: OTP_DEV_LOG_CODE
+        value: "false"
+      - key: FEATURE_AI_DIAGNOSIS
+        value: "false"
+      - key: FEATURE_NEW_BOOKINGS
+        value: "false"
+      - key: FEATURE_PAYMENTS
+        value: "false"
+      - key: FEATURE_TECHNICIAN_MATCHING
+        value: "false"
+      - key: FEATURE_ESCROW_RELEASE
+        value: "false"
+      - key: ZARINPAL_SANDBOX
+        value: "true"
+      # Render prompts for `sync: false` values during Blueprint setup.
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OTP_PEPPER
+        generateValue: true
+      - key: KAVENEGAR_API_KEY
+        sync: false
+      - key: KAVENEGAR_TEMPLATE
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      # Kept secret and disabled unless the matching feature is approved.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: ZARINPAL_MERCHANT_ID
+        sync: false
+      - key: PAYMENT_CALLBACK_BASE_URL
+        sync: false

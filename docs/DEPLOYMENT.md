@@ -8,6 +8,8 @@ Run it behind HTTPS with a managed PostgreSQL 16+ database and a reverse proxy t
 
 ## Environments and secrets
 
+For the invited, non-financial pilot only, [`../render.yaml`](../render.yaml) is an importable Render Blueprint with every marketplace/money flag set to `false` and automatic deployment off. Follow [`FREE_TIER_PILOT_BLUEPRINT.md`](FREE_TIER_PILOT_BLUEPRINT.md) before importing it; it is not a public-production architecture.
+
 Create distinct development, staging, and production secret stores. Required production values are documented in `services/auth-api/.env.example` but must be injected by the deployment platform—not committed in an `.env` file.
 
 - `KAVENEGAR_API_KEY` and an approved Verify Lookup template
@@ -26,7 +28,7 @@ npm run migrate
 npm test
 ```
 
-`src/migrate.js` records each numbered SQL file in `schema_migrations` and runs every unapplied migration transactionally. Back up the database first. Never use a destructive migration in production. For a first local stack, Docker Compose mounts `db/` for PostgreSQL initialisation and the API executes the tracked migration runner.
+`src/migrate.js` records each numbered SQL file in `schema_migrations` and runs every unapplied migration transactionally. Back up the database first. Never use a destructive migration in production. In the local stack, the API container owns migration execution; PostgreSQL does not mount SQL files for a second, untracked initialisation path.
 
 ## Local smoke stack
 
