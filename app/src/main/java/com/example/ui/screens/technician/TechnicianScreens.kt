@@ -151,7 +151,7 @@ fun TechnicianDashboardScreen(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "سطح استادکار ممتاز • کمیسیون ۱۴٪ با پوشش صندوق امانی",
+                                text = "پروفایل تکنسین — وضعیت تأیید از سرور دریافت می‌شود",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.White.copy(alpha = 0.8f)
                             )

@@ -1,7 +1,7 @@
-# Architecture — Tamirkar (تعمیرکار)
+# Architecture — Oosta (اوستا)
 
 ## 🏗️ Architectural Overview
-Tamirkar is engineered following **Clean Architecture** and **Modern Android Architecture (MVVM)** with unidirectional data flow (UDF) powered by Kotlin Coroutines and StateFlow.
+Oosta is engineered following **Clean Architecture** and **Modern Android Architecture (MVVM)** with unidirectional data flow (UDF) powered by Kotlin Coroutines and StateFlow.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

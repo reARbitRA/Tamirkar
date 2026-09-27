@@ -39,6 +39,7 @@ import androidx.navigation.navArgument
 import com.example.ui.screens.auth.OtpScreen
 import com.example.ui.screens.auth.PhoneAuthScreen
 import com.example.ui.screens.auth.SplashScreen
+import com.example.ui.screens.common.FeatureUnavailableScreen
 import com.example.ui.screens.devices.AddDeviceScreen
 import com.example.ui.screens.devices.DevicePassportScreen
 import com.example.ui.screens.devices.DevicesListScreen
@@ -66,7 +67,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                TamirkarApp()
+                OostaApp()
             }
         }
     }
@@ -121,12 +122,15 @@ sealed class Screen(val route: String, val title: String = "", val icon: android
 }
 
 @Composable
-fun TamirkarApp(
+fun OostaApp(
     viewModel: TamirkarViewModel = viewModel()
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val otpRequestState by viewModel.otpRequestState.collectAsState()
+    val authSessionState by viewModel.authSessionState.collectAsState()
+    val platformFeatures by viewModel.platformFeatures.collectAsState()
 
     val bottomBarScreens = listOf(
         Screen.Home,
@@ -193,17 +197,22 @@ fun TamirkarApp(
         ) {
             NavHost(
                 navController = navController,
-                startDestination = Screen.Home.route
+                startDestination = Screen.AuthPhone.route
             ) {
                 composable(Screen.Splash.route) {
                     SplashScreen(
-                        onNavigateNext = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Splash.route) { inclusive = true } } }
+                        onNavigateNext = { navController.navigate(Screen.AuthPhone.route) { popUpTo(Screen.Splash.route) { inclusive = true } } }
                     )
                 }
 
                 composable(Screen.AuthPhone.route) {
                     PhoneAuthScreen(
-                        onSendOtp = { phone -> navController.navigate(Screen.AuthOtp.createRoute(phone)) }
+                        requestState = otpRequestState,
+                        onSendOtp = viewModel::requestOtp,
+                        onOtpSent = { phone ->
+                            viewModel.resetOtpRequest()
+                            navController.navigate(Screen.AuthOtp.createRoute(phone))
+                        }
                     )
                 }
 
@@ -214,7 +223,18 @@ fun TamirkarApp(
                     val phone = entry.arguments?.getString("phone") ?: ""
                     OtpScreen(
                         phoneNumber = phone,
-                        onVerifySuccess = { navController.navigate(Screen.Home.route) { popUpTo(Screen.AuthPhone.route) { inclusive = true } } }
+                        verificationState = authSessionState,
+                        onVerify = { code -> viewModel.verifyOtp(phone, code) },
+                        onResend = {
+                            viewModel.resetAuthSessionState()
+                            viewModel.requestOtp(phone)
+                        },
+                        onVerifySuccess = {
+                            viewModel.resetAuthSessionState()
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.AuthPhone.route) { inclusive = true }
+                            }
+                        }
                     )
                 }
 
@@ -266,6 +286,7 @@ fun TamirkarApp(
                         onNavigateToWarranties = { navController.navigate(Screen.Warranties.route) },
                         onNavigateToParts = { navController.navigate(Screen.Parts.route) },
                         onNavigateToChat = { navController.navigate(Screen.Chat.route) },
+                        technicianWorkspaceEnabled = platformFeatures.technicianMatching,
                         onSwitchToTechnicianMode = { navController.navigate(Screen.TechnicianDashboard.route) }
                     )
                 }
@@ -279,6 +300,7 @@ fun TamirkarApp(
                     DiagnosisScreen(
                         viewModel = viewModel,
                         initialCategory = cat,
+                        bookingEnabled = platformFeatures.newBookings,
                         onBack = { navController.popBackStack() },
                         onProceedToBooking = { chosenCat, symptom ->
                             navController.navigate(Screen.NewOrder.createRoute(chosenCat, symptom))
@@ -299,9 +321,10 @@ fun TamirkarApp(
                         viewModel = viewModel,
                         categoryArg = cat,
                         symptomArg = symptom,
+                        bookingEnabled = platformFeatures.newBookings,
                         onBack = { navController.popBackStack() },
                         onOrderSubmitted = { orderId ->
-                            navController.navigate(Screen.OrderMatching.createRoute(orderId)) {
+                            navController.navigate(Screen.OrderTracking.createRoute(orderId)) {
                                 popUpTo(Screen.Home.route)
                             }
                         }
@@ -313,12 +336,21 @@ fun TamirkarApp(
                     arguments = listOf(navArgument("orderId") { type = NavType.StringType })
                 ) { entry ->
                     val orderId = entry.arguments?.getString("orderId") ?: ""
-                    OrderMatchingScreen(
-                        viewModel = viewModel,
-                        orderId = orderId,
-                        onBack = { navController.popBackStack() },
-                        onNavigateToTracking = { id -> navController.navigate(Screen.OrderTracking.createRoute(id)) }
-                    )
+                    if (!platformFeatures.technicianMatching) {
+                        FeatureUnavailableScreen(
+                            title = "پیشنهادهای تکنسین",
+                            message = "نمایش و پذیرش پیش‌فاکتور پس از تکمیل KYC، پشتیبانی و فعال‌سازی سرور در دسترس خواهد بود.",
+                            onBack = { navController.popBackStack() },
+                            screenTag = "screen_matching_unavailable"
+                        )
+                    } else {
+                        OrderMatchingScreen(
+                            viewModel = viewModel,
+                            orderId = orderId,
+                            onBack = { navController.popBackStack() },
+                            onNavigateToTracking = { id -> navController.navigate(Screen.OrderTracking.createRoute(id)) }
+                        )
+                    }
                 }
 
                 composable(
@@ -384,13 +416,22 @@ fun TamirkarApp(
                     )
                 }
 
-                // --- Technician Workspace ---
+                // Technician routes remain unavailable until the server enables matching after KYC review.
                 composable(Screen.TechnicianDashboard.route) {
-                    TechnicianDashboardScreen(
-                        viewModel = viewModel,
-                        onNavigateToJobDetail = { orderId -> navController.navigate(Screen.TechnicianJobDetail.createRoute(orderId)) },
-                        onSwitchToCustomerMode = { navController.navigate(Screen.Home.route) }
-                    )
+                    if (!platformFeatures.technicianMatching) {
+                        FeatureUnavailableScreen(
+                            title = "میز کار تکنسین",
+                            message = "این بخش فقط برای تکنسین‌های تأییدشده و پس از فعال‌سازی سرور نمایش داده می‌شود.",
+                            onBack = { navController.navigate(Screen.Home.route) },
+                            screenTag = "screen_technician_unavailable"
+                        )
+                    } else {
+                        TechnicianDashboardScreen(
+                            viewModel = viewModel,
+                            onNavigateToJobDetail = { orderId -> navController.navigate(Screen.TechnicianJobDetail.createRoute(orderId)) },
+                            onSwitchToCustomerMode = { navController.navigate(Screen.Home.route) }
+                        )
+                    }
                 }
 
                 composable(
@@ -398,12 +439,21 @@ fun TamirkarApp(
                     arguments = listOf(navArgument("orderId") { type = NavType.StringType })
                 ) { entry ->
                     val orderId = entry.arguments?.getString("orderId") ?: ""
-                    TechnicianJobDetailScreen(
-                        viewModel = viewModel,
-                        orderId = orderId,
-                        onBack = { navController.popBackStack() },
-                        onJobFinished = { navController.navigate(Screen.TechnicianDashboard.route) { popUpTo(Screen.TechnicianDashboard.route) { inclusive = true } } }
-                    )
+                    if (!platformFeatures.technicianMatching) {
+                        FeatureUnavailableScreen(
+                            title = "جزئیات کار تکنسین",
+                            message = "انجام کار، کنترل کیفیت و تسویه تا فعال‌سازی فرایند سروری در دسترس نیست.",
+                            onBack = { navController.popBackStack() },
+                            screenTag = "screen_technician_job_unavailable"
+                        )
+                    } else {
+                        TechnicianJobDetailScreen(
+                            viewModel = viewModel,
+                            orderId = orderId,
+                            onBack = { navController.popBackStack() },
+                            onJobFinished = { navController.navigate(Screen.TechnicianDashboard.route) { popUpTo(Screen.TechnicianDashboard.route) { inclusive = true } } }
+                        )
+                    }
                 }
             }
         }

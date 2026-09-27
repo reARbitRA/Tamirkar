@@ -1,0 +1,20 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "brand": "Oosta",
+  "brandFa": "اوستا",
+  "palette": {
+    "nightNavy": { "value": "#080D16", "role": "base" },
+    "graphite": { "value": "#141A22", "role": "surface" },
+    "emeraldTeal": { "value": "#10B39A", "role": "primary" },
+    "cyanData": { "value": "#22D3EE", "role": "data-accent" },
+    "electricGreen": { "value": "#4ADE80", "role": "signal" },
+    "brass": { "value": "#D8A24A", "role": "trust" },
+    "oxblood": { "value": "#6B3A2A", "role": "material" },
+    "bone": { "value": "#EDE6D6", "role": "paper" }
+  },
+  "usage": {
+    "physicalObjects": "Tungsten-lit; no neon or glow.",
+    "glow": "Reserved for diagnostic data lines and the escrow box.",
+    "fallback": "Use nightNavy or graphite beneath the primary mark."
+  }
+}

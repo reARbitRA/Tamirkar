@@ -88,10 +88,12 @@ fun ProfileScreen(
     onNavigateToWarranties: () -> Unit,
     onNavigateToParts: () -> Unit,
     onNavigateToChat: () -> Unit,
+    technicianWorkspaceEnabled: Boolean,
     onSwitchToTechnicianMode: () -> Unit
 ) {
     val user by viewModel.currentUser.collectAsState()
     val appMode by viewModel.appMode.collectAsState()
+    val canOpenTechnicianWorkspace = technicianWorkspaceEnabled && user?.role == "technician"
 
     Column(
         modifier = Modifier
@@ -119,8 +121,8 @@ fun ProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.tamirkar_logo_1787136747199),
-                            contentDescription = "User Avatar",
+                            painter = painterResource(id = R.drawable.oosta_ostad_mascot),
+                            contentDescription = "نماد اوستا",
                             modifier = Modifier
                                 .size(60.dp)
                                 .clip(CircleShape)
@@ -148,14 +150,16 @@ fun ProfileScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(enabled = canOpenTechnicianWorkspace) {
                             viewModel.setAppMode(if (appMode == "customer") "technician" else "customer")
                             onSwitchToTechnicianMode()
                         }
                         .testTag("card_switch_mode"),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = TealContainer),
-                    border = BorderStroke(1.dp, TealPrimary)
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (canOpenTechnicianWorkspace) TealContainer else MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    border = BorderStroke(1.dp, if (canOpenTechnicianWorkspace) TealPrimary else MaterialTheme.colorScheme.outline)
                 ) {
                     Row(
                         modifier = Modifier
@@ -169,16 +173,16 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = "ورود به میز کار تکنسین و استادکاران",
+                                    text = if (canOpenTechnicianWorkspace) "ورود به میز کار تکنسین و استادکاران" else "میز کار تکنسین هنوز فعال نشده است",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = TealPrimaryDark
+                                    color = if (canOpenTechnicianWorkspace) TealPrimaryDark else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "مدیریت سفارش‌ها، چک‌لیست SOP و دریافت کارمزد",
+                                    text = if (canOpenTechnicianWorkspace) "مدیریت سفارش‌ها، چک‌لیست SOP و دریافت کارمزد" else "پس از تأیید انسانی KYC و فعال‌سازی سرور در دسترس خواهد بود.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = TealPrimaryDark.copy(alpha = 0.8f)
+                                    color = if (canOpenTechnicianWorkspace) TealPrimaryDark.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -198,7 +202,7 @@ fun ProfileScreen(
                     Column {
                         ProfileMenuItem(icon = Icons.Default.DeviceHub, title = "پاسپورت دیجیتال وسایل من", onClick = onNavigateToDevices)
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                        ProfileMenuItem(icon = Icons.Default.Security, title = "صندوق ضمانت امانی و گارانتی‌ها", onClick = onNavigateToWarranties)
+                        ProfileMenuItem(icon = Icons.Default.Security, title = "پیگیری ضمانت و گارانتی", onClick = onNavigateToWarranties)
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                         ProfileMenuItem(icon = Icons.Default.Inventory2, title = "بازار قطعات یدکی استاندارد", onClick = onNavigateToParts)
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -250,7 +254,7 @@ fun SupportChatScreen(
             .background(MaterialTheme.colorScheme.background)
             .testTag("screen_chat")
     ) {
-        PersianTopBar(title = "دستیار هوشمند و پشتیبانی تعمیرکار", onBack = onBack)
+        PersianTopBar(title = "دستیار هوشمند و پشتیبانی اوستا", onBack = onBack)
 
         LazyColumn(
             modifier = Modifier

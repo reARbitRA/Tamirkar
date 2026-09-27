@@ -1,4 +1,4 @@
-# Environment Variables — Tamirkar (تعمیرکار)
+# Environment Variables — Oosta (اوستا)
 
 ```env
 # Google Gemini AI Key

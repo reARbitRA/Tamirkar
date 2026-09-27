@@ -51,7 +51,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.model.DeviceCategory
 import com.example.domain.model.OrderMode
-import com.example.ui.components.EscrowStampBadge
 import com.example.ui.components.PersianTopBar
 import com.example.ui.theme.EmeraldSuccess
 import com.example.ui.theme.GoldAccent
@@ -68,19 +67,19 @@ fun NewOrderScreen(
     viewModel: TamirkarViewModel,
     categoryArg: String?,
     symptomArg: String?,
+    bookingEnabled: Boolean,
     onBack: () -> Unit,
     onOrderSubmitted: (String) -> Unit
 ) {
     var selectedCategory by remember { mutableStateOf(categoryArg ?: "ac") }
-    var problemDescription by remember { mutableStateOf(symptomArg ?: "سرویس و عیب‌یابی دستگاه") }
+    var problemDescription by remember { mutableStateOf(symptomArg.orEmpty()) }
     var orderMode by remember { mutableStateOf("fast") } // "fast" or "bidding"
-    var addressText by remember { mutableStateOf("تهران، سعادت‌آباد، خیابان سرو غربی، پلاک ۲۴، واحد ۶") }
-    var scheduledTime by remember { mutableStateOf("همین حالا (اعزام فوری)") }
 
     val devices by viewModel.devices.collectAsState()
     var selectedDeviceId by remember { mutableStateOf(devices.firstOrNull { it.category == selectedCategory }?.id) }
     val diagnosisState by viewModel.diagnosisState.collectAsState()
     val diagnosisData = (diagnosisState as? UiState.Success)?.data
+    val bookingState by viewModel.bookingState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -148,7 +147,7 @@ fun NewOrderScreen(
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "اعزام نزدیک‌ترین متخصص برتر در کمتر از ۳۰ دقیقه با تضمین قیمت مصوب",
+                                text = "پس از فعال‌سازی سرویس، درخواست شما برای بررسی انسانی ثبت می‌شود.",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -196,7 +195,7 @@ fun NewOrderScreen(
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "دریافت پیشنهادات رقابتی از چندین استادکار و انتخاب بر اساس قیمت و امتیاز",
+                                text = "پیش‌فاکتورهای سروری فقط پس از تأیید تکنسین‌های واجد شرایط نمایش داده می‌شوند.",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -222,7 +221,7 @@ fun NewOrderScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "آدرس محل خدمت:",
+                                text = "هماهنگی محل خدمت",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -231,8 +230,9 @@ fun NewOrderScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = addressText,
-                            onValueChange = { addressText = it },
+                            value = "نشانی پس از فعال‌سازی هماهنگی سروری دریافت می‌شود.",
+                            onValueChange = {},
+                            enabled = false,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("input_address"),
@@ -251,7 +251,7 @@ fun NewOrderScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "زمان مراجعه متخصص:",
+                                text = "زمان مراجعه",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -260,8 +260,9 @@ fun NewOrderScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = scheduledTime,
-                            onValueChange = { scheduledTime = it },
+                            value = "زمان‌بندی پس از تأیید درخواست انجام می‌شود.",
+                            onValueChange = {},
+                            enabled = false,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("input_time"),
@@ -272,9 +273,22 @@ fun NewOrderScreen(
                 }
             }
 
-            // Escrow Assurance Notice
             item {
-                EscrowStampBadge(30)
+                Text(
+                    text = if (bookingEnabled) "ثبت درخواست، قیمت یا پرداخت را تضمین نمی‌کند؛ پیش‌فاکتور سروری پیش از هر پرداخت نمایش داده می‌شود." else "ثبت سفارش تا تکمیل عملیات و فعال‌سازی سرور در دسترس نیست.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (bookingState is UiState.Error) {
+                item {
+                    Text(
+                        text = (bookingState as UiState.Error).message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
 
             // Submit Button
@@ -285,7 +299,7 @@ fun NewOrderScreen(
                             category = selectedCategory,
                             description = problemDescription,
                             mode = orderMode,
-                            address = addressText,
+                            address = "",
                             deviceId = selectedDeviceId,
                             diagnosis = diagnosisData,
                             onOrderCreated = { orderId ->
@@ -293,6 +307,7 @@ fun NewOrderScreen(
                             }
                         )
                     },
+                    enabled = bookingEnabled && problemDescription.trim().length >= 3,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp)
@@ -301,7 +316,7 @@ fun NewOrderScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
                 ) {
                     Text(
-                        text = if (orderMode == "fast") "تأیید و جستجوی نزدیک‌ترین متخصص" else "تأیید و شروع استعلام قیمت",
+                        text = if (bookingEnabled) "ثبت درخواست برای بررسی" else "ثبت سفارش هنوز فعال نشده است",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
