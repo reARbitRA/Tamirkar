@@ -88,10 +88,12 @@ fun ProfileScreen(
     onNavigateToWarranties: () -> Unit,
     onNavigateToParts: () -> Unit,
     onNavigateToChat: () -> Unit,
+    technicianWorkspaceEnabled: Boolean,
     onSwitchToTechnicianMode: () -> Unit
 ) {
     val user by viewModel.currentUser.collectAsState()
     val appMode by viewModel.appMode.collectAsState()
+    val canOpenTechnicianWorkspace = technicianWorkspaceEnabled && user?.role == "technician"
 
     Column(
         modifier = Modifier
@@ -148,14 +150,16 @@ fun ProfileScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(enabled = canOpenTechnicianWorkspace) {
                             viewModel.setAppMode(if (appMode == "customer") "technician" else "customer")
                             onSwitchToTechnicianMode()
                         }
                         .testTag("card_switch_mode"),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = TealContainer),
-                    border = BorderStroke(1.dp, TealPrimary)
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (canOpenTechnicianWorkspace) TealContainer else MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    border = BorderStroke(1.dp, if (canOpenTechnicianWorkspace) TealPrimary else MaterialTheme.colorScheme.outline)
                 ) {
                     Row(
                         modifier = Modifier
@@ -169,16 +173,16 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = "ورود به میز کار تکنسین و استادکاران",
+                                    text = if (canOpenTechnicianWorkspace) "ورود به میز کار تکنسین و استادکاران" else "میز کار تکنسین هنوز فعال نشده است",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = TealPrimaryDark
+                                    color = if (canOpenTechnicianWorkspace) TealPrimaryDark else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "مدیریت سفارش‌ها، چک‌لیست SOP و دریافت کارمزد",
+                                    text = if (canOpenTechnicianWorkspace) "مدیریت سفارش‌ها، چک‌لیست SOP و دریافت کارمزد" else "پس از تأیید انسانی KYC و فعال‌سازی سرور در دسترس خواهد بود.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = TealPrimaryDark.copy(alpha = 0.8f)
+                                    color = if (canOpenTechnicianWorkspace) TealPrimaryDark.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }

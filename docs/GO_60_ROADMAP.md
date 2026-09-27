@@ -30,6 +30,7 @@
 - No direct Android calls or API keys for AI providers; the server owns a redacted preliminary-AI boundary.
 - Feature flags default to off and are fetched by Android after login.
 - Server foundations for customer orders, immutable quotes, quote acceptance, KYC states, evidence references, Zarinpal Verify, idempotency, append-only balanced ledger entries, and gated escrow release.
+- Minimal JWT claims (user ID + role only), pseudonymous OTP-provider failure logs, and an HTTP-level fail-closed/CORS regression test.
 - Non-destructive Room migration; release builds no longer seed demo users/orders.
 - API, deployment, legal-draft, security, contribution, and rollback documentation.
 - Static audit: zero static blockers; Node service tests and dependency audit pass.

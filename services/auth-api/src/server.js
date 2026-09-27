@@ -1,6 +1,5 @@
 import crypto from 'node:crypto';
 import Fastify from 'fastify';
-import jwt from 'jsonwebtoken';
 import pg from 'pg';
 import { generateDiagnosis, AiUnavailableError } from './ai.js';
 import { authenticatedUser, requireUser } from './auth.js';
@@ -8,6 +7,7 @@ import { loadConfig } from './config.js';
 import { publicFeatures } from './feature-flags.js';
 import { sendKavenegarOtp } from './kavenegar.js';
 import { audit, postLedgerEntry } from './ledger.js';
+import { issueAccessToken } from './session.js';
 import { latinDigits, normalizeIranMobile } from './phone.js';
 import { generateOtp, hashOtp, otpMatches } from './otp.js';
 import { createZarinpalPayment, verifyZarinpalPayment } from './zarinpal.js';
@@ -17,10 +17,13 @@ const OTP_RESEND_COOLDOWN_SECONDS = 60;
 const OTP_MAX_SENDS_PER_WINDOW = 3;
 const OTP_SEND_WINDOW_MINUTES = 15;
 const DEFAULT_ESCROW_DAYS = 30;
+// Two accepted 2 MiB binary images become about 5.34 MiB after base64 encoding plus JSON.
+// The AI module still validates each image and caps the count before it reaches a provider.
+const MAX_REQUEST_BODY_BYTES = 6 * 1024 * 1024;
 
 const config = loadConfig();
 const pool = new pg.Pool({ connectionString: config.databaseUrl, max: 10 });
-const app = Fastify({ logger: true, bodyLimit: 3 * 1024 * 1024 });
+const app = Fastify({ logger: true, bodyLimit: MAX_REQUEST_BODY_BYTES });
 
 app.addHook('onRequest', async (request, reply) => {
   const origin = request.headers.origin;
@@ -89,14 +92,12 @@ function callbackUrl() {
   return `${config.paymentCallbackBaseUrl}/v1/payments/zarinpal/callback`;
 }
 
-function issueAccessToken(user) {
-  const expiresInSeconds = 60 * 60;
-  return {
-    expiresInSeconds,
-    accessToken: jwt.sign({ sub: user.id, role: user.role, phone: user.phone_e164 }, config.jwtSecret, {
-      algorithm: 'HS256', expiresIn: expiresInSeconds, issuer: 'oosta-auth-api', audience: 'oosta-android'
-    })
-  };
+function issueSession(user) {
+  return issueAccessToken({ userId: user.id, role: user.role, jwtSecret: config.jwtSecret });
+}
+
+function phoneLogReference(phone) {
+  return crypto.createHmac('sha256', config.otpPepper).update(phone).digest('hex').slice(0, 16);
 }
 
 function parseAmountTomans(value) {
@@ -186,7 +187,7 @@ app.post('/v1/auth/request-otp', async (request, reply) => {
   try {
     let providerMessageId = 'development';
     if (config.devLogCode) {
-      request.log.warn({ phone, code }, 'OTP development mode — code is deliberately logged only locally');
+      request.log.warn({ phoneRef: phoneLogReference(phone), code }, 'OTP development mode — code is deliberately logged only locally');
     } else {
       providerMessageId = await sendKavenegarOtp({
         apiKey: config.kavenegarApiKey,
@@ -198,7 +199,7 @@ app.post('/v1/auth/request-otp', async (request, reply) => {
     await pool.query(`UPDATE otp_challenges SET status = 'pending', sent_at = NOW(), provider_message_id = $2 WHERE id = $1`, [challengeId, providerMessageId]);
   } catch (error) {
     await pool.query(`UPDATE otp_challenges SET status = 'failed', failure_reason = $2 WHERE id = $1`, [challengeId, String(error.message).slice(0, 500)]);
-    request.log.error({ err: error, phone }, 'OTP provider delivery failed');
+    request.log.error({ err: error, phoneRef: phoneLogReference(phone) }, 'OTP provider delivery failed');
     return reply.code(502).send({ error: 'sms_unavailable', message: 'ارسال پیامک موقتاً ممکن نیست. لطفاً چند دقیقه دیگر دوباره تلاش کنید.' });
   }
 
@@ -257,7 +258,7 @@ app.post('/v1/auth/verify-otp', async (request, reply) => {
     client.release();
   }
 
-  const session = issueAccessToken(user);
+  const session = issueSession(user);
   return reply.send({ access_token: session.accessToken, token_type: 'Bearer', expires_in_seconds: session.expiresInSeconds, user: { id: user.id, phone: user.phone_e164, role: user.role } });
 });
 
@@ -305,8 +306,7 @@ app.post('/v1/technicians/apply', async (request, reply) => {
        ON CONFLICT (user_id) DO NOTHING`, [user.sub]
     );
     await audit(client, { actorUserId: user.sub, action: 'technician.applied', subjectType: 'user', subjectId: user.sub });
-    const issuedUser = { id: user.sub, role: 'technician', phone_e164: user.phone };
-    const session = issueAccessToken(issuedUser);
+    const session = issueSession({ id: user.sub, role: 'technician' });
     await client.query('COMMIT');
     return reply.code(202).send({
       status: 'unsubmitted',
@@ -529,8 +529,9 @@ app.post('/v1/payments/zarinpal/start', async (request, reply) => {
       return reply.code(409).send({ error: 'idempotency_conflict', message: 'این درخواست قبلاً پردازش شده است.', status: intent.status });
     }
     const result = await client.query(
-      `SELECT q.*, o.customer_id, o.status AS order_status FROM quotes q
+      `SELECT q.*, o.customer_id, o.status AS order_status, customer.phone_e164 AS customer_phone FROM quotes q
        JOIN service_orders o ON o.id = q.order_id
+       JOIN users customer ON customer.id = o.customer_id
        JOIN quote_acceptances a ON a.quote_id = q.id
        WHERE q.id = $1 FOR UPDATE`, [quoteId]
     );
@@ -542,7 +543,15 @@ app.post('/v1/payments/zarinpal/start', async (request, reply) => {
     await requireApprovedTechnician(client, quote.technician_id);
     const amountTomans = Number(quote.total_tomans);
     const description = `پرداخت پیش‌فاکتور ${quote.id}`;
-    intent = { id: crypto.randomUUID(), customerId: user.sub, amountTomans, description, technicianId: quote.technician_id, quoteId: quote.id };
+    intent = {
+      id: crypto.randomUUID(),
+      customerId: user.sub,
+      customerPhone: quote.customer_phone,
+      amountTomans,
+      description,
+      technicianId: quote.technician_id,
+      quoteId: quote.id
+    };
     await client.query(
       `INSERT INTO payment_intents (id, customer_id, technician_id, quote_id, provider, amount_tomans, amount_rials, description, idempotency_key, status)
        VALUES ($1, $2, $3, $4, 'zarinpal', $5, $6, $7, $8, 'created')`,
@@ -563,7 +572,7 @@ app.post('/v1/payments/zarinpal/start', async (request, reply) => {
       amountRials: intent.amountTomans * 10,
       callbackUrl: callbackUrl(),
       description: intent.description,
-      metadata: { mobile: user.phone?.replace(/^\+98/, '0') },
+      metadata: { mobile: intent.customerPhone?.replace(/^\+98/, '0') },
       sandbox: config.zarinpalSandbox
     });
     await pool.query(`UPDATE payment_intents SET authority = $2, status = 'pending' WHERE id = $1`, [intent.id, payment.authority]);

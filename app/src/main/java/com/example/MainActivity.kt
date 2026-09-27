@@ -39,6 +39,7 @@ import androidx.navigation.navArgument
 import com.example.ui.screens.auth.OtpScreen
 import com.example.ui.screens.auth.PhoneAuthScreen
 import com.example.ui.screens.auth.SplashScreen
+import com.example.ui.screens.common.FeatureUnavailableScreen
 import com.example.ui.screens.devices.AddDeviceScreen
 import com.example.ui.screens.devices.DevicePassportScreen
 import com.example.ui.screens.devices.DevicesListScreen
@@ -285,6 +286,7 @@ fun OostaApp(
                         onNavigateToWarranties = { navController.navigate(Screen.Warranties.route) },
                         onNavigateToParts = { navController.navigate(Screen.Parts.route) },
                         onNavigateToChat = { navController.navigate(Screen.Chat.route) },
+                        technicianWorkspaceEnabled = platformFeatures.technicianMatching,
                         onSwitchToTechnicianMode = { navController.navigate(Screen.TechnicianDashboard.route) }
                     )
                 }
@@ -334,12 +336,21 @@ fun OostaApp(
                     arguments = listOf(navArgument("orderId") { type = NavType.StringType })
                 ) { entry ->
                     val orderId = entry.arguments?.getString("orderId") ?: ""
-                    OrderMatchingScreen(
-                        viewModel = viewModel,
-                        orderId = orderId,
-                        onBack = { navController.popBackStack() },
-                        onNavigateToTracking = { id -> navController.navigate(Screen.OrderTracking.createRoute(id)) }
-                    )
+                    if (!platformFeatures.technicianMatching) {
+                        FeatureUnavailableScreen(
+                            title = "پیشنهادهای تکنسین",
+                            message = "نمایش و پذیرش پیش‌فاکتور پس از تکمیل KYC، پشتیبانی و فعال‌سازی سرور در دسترس خواهد بود.",
+                            onBack = { navController.popBackStack() },
+                            screenTag = "screen_matching_unavailable"
+                        )
+                    } else {
+                        OrderMatchingScreen(
+                            viewModel = viewModel,
+                            orderId = orderId,
+                            onBack = { navController.popBackStack() },
+                            onNavigateToTracking = { id -> navController.navigate(Screen.OrderTracking.createRoute(id)) }
+                        )
+                    }
                 }
 
                 composable(
@@ -405,13 +416,22 @@ fun OostaApp(
                     )
                 }
 
-                // --- Technician Workspace ---
+                // Technician routes remain unavailable until the server enables matching after KYC review.
                 composable(Screen.TechnicianDashboard.route) {
-                    TechnicianDashboardScreen(
-                        viewModel = viewModel,
-                        onNavigateToJobDetail = { orderId -> navController.navigate(Screen.TechnicianJobDetail.createRoute(orderId)) },
-                        onSwitchToCustomerMode = { navController.navigate(Screen.Home.route) }
-                    )
+                    if (!platformFeatures.technicianMatching) {
+                        FeatureUnavailableScreen(
+                            title = "میز کار تکنسین",
+                            message = "این بخش فقط برای تکنسین‌های تأییدشده و پس از فعال‌سازی سرور نمایش داده می‌شود.",
+                            onBack = { navController.navigate(Screen.Home.route) },
+                            screenTag = "screen_technician_unavailable"
+                        )
+                    } else {
+                        TechnicianDashboardScreen(
+                            viewModel = viewModel,
+                            onNavigateToJobDetail = { orderId -> navController.navigate(Screen.TechnicianJobDetail.createRoute(orderId)) },
+                            onSwitchToCustomerMode = { navController.navigate(Screen.Home.route) }
+                        )
+                    }
                 }
 
                 composable(
@@ -419,12 +439,21 @@ fun OostaApp(
                     arguments = listOf(navArgument("orderId") { type = NavType.StringType })
                 ) { entry ->
                     val orderId = entry.arguments?.getString("orderId") ?: ""
-                    TechnicianJobDetailScreen(
-                        viewModel = viewModel,
-                        orderId = orderId,
-                        onBack = { navController.popBackStack() },
-                        onJobFinished = { navController.navigate(Screen.TechnicianDashboard.route) { popUpTo(Screen.TechnicianDashboard.route) { inclusive = true } } }
-                    )
+                    if (!platformFeatures.technicianMatching) {
+                        FeatureUnavailableScreen(
+                            title = "جزئیات کار تکنسین",
+                            message = "انجام کار، کنترل کیفیت و تسویه تا فعال‌سازی فرایند سروری در دسترس نیست.",
+                            onBack = { navController.popBackStack() },
+                            screenTag = "screen_technician_job_unavailable"
+                        )
+                    } else {
+                        TechnicianJobDetailScreen(
+                            viewModel = viewModel,
+                            orderId = orderId,
+                            onBack = { navController.popBackStack() },
+                            onJobFinished = { navController.navigate(Screen.TechnicianDashboard.route) { popUpTo(Screen.TechnicianDashboard.route) { inclusive = true } } }
+                        )
+                    }
                 }
             }
         }

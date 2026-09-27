@@ -38,7 +38,7 @@ cd ../..
 docker compose -f docker-compose.auth.yml --env-file services/auth-api/.env up --build
 ```
 
-The container executes `npm run migrate` before starting. For a local fresh database, the mounted numbered migrations are also applied by PostgreSQL safely; migration tracking makes subsequent starts no-ops.
+The container executes `npm run migrate` before starting. It is the only migration authority in the local stack; migration tracking makes subsequent starts no-ops.
 
 ```bash
 curl http://localhost:8080/health

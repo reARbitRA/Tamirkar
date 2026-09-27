@@ -55,7 +55,7 @@ Enabling payment does **not** make an arrangement legal escrow. Counsel and fina
 
 ## Observability and backups
 
-Create alerts for OTP provider failures/rate limits, API 5xx, AI unavailability, payment verification failures, ledger imbalance (must be zero), pending payment age, due escrow holds, KYC review age, and database disk/connection saturation. Preserve structured audit events without OTPs, tokens, raw KYC documents, or raw prompts.
+Create alerts for OTP provider failures/rate limits, API 5xx, AI unavailability, payment verification failures, ledger imbalance (must be zero), pending payment age, due escrow holds, KYC review age, and database disk/connection saturation. Preserve structured audit events without OTPs, access tokens, raw KYC documents, raw prompts, or raw phone numbers; use a keyed pseudonymous phone reference only when correlation is necessary.
 
 - Database backup: daily encrypted snapshots plus point-in-time recovery where available.
 - Restore drill: restore to an isolated project at least quarterly; record RPO/RTO and data-validation result.

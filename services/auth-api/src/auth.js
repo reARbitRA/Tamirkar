@@ -1,18 +1,9 @@
-import jwt from 'jsonwebtoken';
+import { verifyAccessToken } from './session.js';
 
 export function authenticatedUser(request, config) {
   const header = request.headers.authorization ?? '';
   const token = header.startsWith('Bearer ') ? header.slice('Bearer '.length) : '';
-  if (!token) return null;
-  try {
-    return jwt.verify(token, config.jwtSecret, {
-      algorithms: ['HS256'],
-      issuer: 'oosta-auth-api',
-      audience: 'oosta-android'
-    });
-  } catch {
-    return null;
-  }
+  return verifyAccessToken(token, config.jwtSecret);
 }
 
 export function requireUser(request, reply, config, allowedRoles = null) {

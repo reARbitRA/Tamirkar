@@ -9,7 +9,7 @@ The Android APK communicates only with the public Oosta API. Kavenegar, Gemini, 
 - Authenticated routes require `Authorization: Bearer <access token>`.
 - Money-creating routes also require `Idempotency-Key` (16–128 ASCII characters).
 - `GET /v1/public/features` is authoritative. A disabled feature returns `503 feature_unavailable`; clients must not offer it as live functionality.
-- The server issues one-hour access tokens. The current Android implementation keeps them only in memory; re-authentication is required after an app restart.
+- The server issues one-hour access tokens containing only the user ID and role. The current Android implementation keeps them only in memory; re-authentication is required after an app restart.
 
 ## Authentication
 

@@ -339,14 +339,15 @@ fun WalletScreen(
 
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Button(
-                                onClick = { viewModel.depositWallet(1000000L) {} },
+                                onClick = { Unit },
+                                enabled = false,
                                 modifier = Modifier.weight(1f).height(46.dp).testTag("btn_deposit_wallet"),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
                             ) {
                                 Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("افزایش اعتبار (+۱ میلیون)")
+                                Text("افزایش اعتبار پس از فعال‌سازی پرداخت")
                             }
                         }
                     }
