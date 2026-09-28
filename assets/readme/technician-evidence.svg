@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 680" width="1600" height="680" role="img" aria-labelledby="t d" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif">
+  <title id="t">Oosta technician evidence</title>
+  <desc id="d">Guild seal, KYC review and before/after evidence hashes</desc>
+  <rect width="1600" height="680" fill="#0A0908"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B8B0A4"/></marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D60019"/></marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#34D399"/></marker>
+    <marker id="arrowCopper" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C87533"/></marker>
+    <linearGradient id="forge" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#15120F"/><stop offset="100%" stop-color="#0A0908"/></linearGradient>
+    <linearGradient id="emberline" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#D60019"/><stop offset="55%" stop-color="#C87533"/><stop offset="100%" stop-color="#34D399"/></linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1600" height="5" rx="2.5" fill="url(#emberline)"/>
+  <text x="64" y="72" font-size="13" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="82" data-maxw="300" letter-spacing="2.2">GUILD SEAL</text>
+  <text x="64" y="116" font-size="34" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="685" data-maxw="860" direction="rtl" xml:lang="fa">مُهر صنف — who may touch the machine</text>
+  <text x="64" y="148" font-size="16" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="995" data-maxw="1040">Verification is a human decision recorded on the server, then enforced on every quote, payment and evidence write.</text>
+  <rect x="64" y="196" width="720" height="232" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="92" y="236" font-size="19" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="196" data-maxw="280">KYC state machine</text>
+  <text x="92" y="260" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="278" data-maxw="320">technician_profiles.verification_status</text>
+  <rect x="96" y="296" width="142" height="48" rx="12" fill="#0A0908" stroke="#7E776D" stroke-width="1.5"/>
+  <text x="167.0" y="326" font-size="13" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="89" data-maxw="128">unsubmitted</text>
+  <path d="M242,320 L260,320" fill="none" stroke="#C87533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowCopper)"/>
+  <rect x="264" y="296" width="142" height="48" rx="12" fill="#0A0908" stroke="#C87533" stroke-width="1.5"/>
+  <text x="335.0" y="326" font-size="13" fill="#C87533" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="73" data-maxw="128">submitted</text>
+  <path d="M410,320 L428,320" fill="none" stroke="#C87533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowCopper)"/>
+  <rect x="432" y="296" width="142" height="48" rx="12" fill="#0A0908" stroke="#C87533" stroke-width="1.5"/>
+  <text x="503.0" y="326" font-size="13" fill="#C87533" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="97" data-maxw="128">under_review</text>
+  <path d="M578,320 L596,320" fill="none" stroke="#C87533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowCopper)"/>
+  <rect x="600" y="296" width="142" height="48" rx="12" fill="#0A0908" stroke="#34D399" stroke-width="1.5"/>
+  <text x="671.0" y="326" font-size="13" fill="#34D399" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="64" data-maxw="128">approved</text>
+  <rect x="96" y="366" width="150" height="42" rx="12" fill="#0A0908" stroke="#D60019" stroke-width="1.5"/>
+  <text x="171" y="393" font-size="13" fill="#D60019" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="64" data-maxw="136">rejected</text>
+  <rect x="264" y="366" width="150" height="42" rx="12" fill="#0A0908" stroke="#D60019" stroke-width="1.5"/>
+  <text x="339" y="393" font-size="13" fill="#D60019" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="73" data-maxw="136">suspended</text>
+  <text x="456" y="393" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="377" data-maxw="391">A human operator decides; no AI approval path exists.</text>
+  <rect x="816" y="196" width="720" height="232" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="844" y="236" font-size="19" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="206" data-maxw="280">Enforcement points</text>
+  <circle cx="852" cy="271" r="4" fill="#34D399"/>
+  <text x="868" y="276" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="219" data-maxw="330">requireApprovedTechnician()</text>
+  <text x="1508" y="276" font-size="12" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="end" data-est-width="315" data-maxw="330">role=technician AND is_active AND approved</text>
+  <circle cx="852" cy="309" r="4" fill="#34D399"/>
+  <text x="868" y="314" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="211" data-maxw="330">POST /v1/orders/:id/quotes</text>
+  <text x="1508" y="314" font-size="12" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="end" data-est-width="327" data-maxw="330">rejects 409 when the profile is not approved</text>
+  <circle cx="852" cy="347" r="4" fill="#34D399"/>
+  <text x="868" y="352" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="260" data-maxw="330">POST /v1/payments/zarinpal/start</text>
+  <text x="1508" y="352" font-size="12" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="end" data-est-width="320" data-maxw="330">re-checks the technician before money moves</text>
+  <circle cx="852" cy="385" r="4" fill="#34D399"/>
+  <text x="868" y="390" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="228" data-maxw="330">POST /v1/orders/:id/evidence</text>
+  <text x="1508" y="390" font-size="12" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="end" data-est-width="298" data-maxw="330">403 unless the quote is accepted or paid</text>
+  <rect x="64" y="456" width="1472" height="200" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="92" y="496" font-size="19" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="263" data-maxw="300">Before / after evidence</text>
+  <text x="92" y="522" font-size="14" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="157" data-maxw="240" direction="rtl" xml:lang="fa">مدرک پیش و پس از کار</text>
+  <rect x="380" y="486" width="372" height="142" rx="16" fill="#0A0908" stroke="#C87533" stroke-width="1.5"/>
+  <text x="404" y="518" font-size="14" fill="#C87533" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="122" data-maxw="180">phase="before"</text>
+  <text x="728" y="518" font-size="14" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="end" data-est-width="78" data-maxw="150" direction="rtl" xml:lang="fa">پیش از کار</text>
+  <line x1="404" y1="534" x2="728" y2="534" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <text x="404" y="562" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="114" data-maxw="180">object_reference</text>
+  <text x="404" y="584" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="169" data-maxw="324">s3://oosta-evidence/…</text>
+  <text x="404" y="612" font-size="12.5" fill="#C87533" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="124" data-maxw="324">sha256:9f2c…41ab</text>
+  <rect x="780" y="486" width="372" height="142" rx="16" fill="#0A0908" stroke="#34D399" stroke-width="1.5"/>
+  <text x="804" y="518" font-size="14" fill="#34D399" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="113" data-maxw="180">phase="after"</text>
+  <text x="1128" y="518" font-size="14" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="end" data-est-width="71" data-maxw="150" direction="rtl" xml:lang="fa">پس از کار</text>
+  <line x1="804" y1="534" x2="1128" y2="534" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <text x="804" y="562" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="114" data-maxw="180">object_reference</text>
+  <text x="804" y="584" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="169" data-maxw="324">s3://oosta-evidence/…</text>
+  <text x="804" y="612" font-size="12.5" fill="#34D399" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="124" data-maxw="324">sha256:9f2c…41ab</text>
+  <rect x="1200" y="486" width="308" height="142" rx="16" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="1224" y="518" font-size="15" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="127" data-maxw="180">Integrity rule</text>
+  <text x="1224" y="546" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="255" data-maxw="264">The API stores a 64-character SHA-256</text>
+  <text x="1224" y="566" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="198" data-maxw="264">digest, so a swapped photo is</text>
+  <text x="1224" y="586" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="177" data-maxw="264">detectable after the fact.</text>
+  <text x="1224" y="614" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="171" data-maxw="264">job_evidence.object_hash</text>
+</svg>

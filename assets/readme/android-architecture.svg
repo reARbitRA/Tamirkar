@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 700" width="1600" height="700" role="img" aria-labelledby="t d" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif">
+  <title id="t">Oosta Android architecture</title>
+  <desc id="d">Compose screens, view model, repository and remote clients</desc>
+  <rect width="1600" height="700" fill="#0A0908"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B8B0A4"/></marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D60019"/></marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#34D399"/></marker>
+    <marker id="arrowCopper" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C87533"/></marker>
+    <linearGradient id="forge" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#15120F"/><stop offset="100%" stop-color="#0A0908"/></linearGradient>
+    <linearGradient id="emberline" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#D60019"/><stop offset="55%" stop-color="#C87533"/><stop offset="100%" stop-color="#34D399"/></linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1600" height="5" rx="2.5" fill="url(#emberline)"/>
+  <text x="64" y="72" font-size="13" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="58" data-maxw="240" letter-spacing="2.2">ANDROID</text>
+  <text x="64" y="116" font-size="34" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="802" data-maxw="820">Compose · ViewModel · Repository · Room</text>
+  <text x="64" y="148" font-size="16" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="885" data-maxw="1040">Single-activity Kotlin app, Navigation Compose, Room for local state, OkHttp for the server boundary.</text>
+  <rect x="64" y="196" width="356" height="330" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="64" y="196" width="356" height="6" rx="3" fill="#C87533"/>
+  <text x="88" y="240" font-size="20" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="97" data-maxw="308">UI layer</text>
+  <text x="88" y="264" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="264" data-maxw="308">ui/screens · ui/components · ui/theme</text>
+  <line x1="88" y1="292" x2="396" y2="292" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="92" cy="317" r="3.5" fill="#C87533"/>
+  <text x="106" y="322" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="229" data-maxw="284">Auth: PhoneAuthScreen, OtpScreen</text>
+  <circle cx="92" cy="351" r="3.5" fill="#C87533"/>
+  <text x="106" y="356" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="229" data-maxw="284">Home, Devices, Warranties, Chat,</text>
+  <text x="106" y="374" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="50" data-maxw="284">Profile</text>
+  <circle cx="92" cy="403" r="3.5" fill="#C87533"/>
+  <text x="106" y="408" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="279" data-maxw="284">Diagnosis, NewOrder, Matching, Tracking</text>
+  <circle cx="92" cy="437" r="3.5" fill="#C87533"/>
+  <text x="106" y="442" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="249" data-maxw="284">Parts, Wallet, Technician workspace</text>
+  <circle cx="92" cy="471" r="3.5" fill="#C87533"/>
+  <text x="106" y="476" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="249" data-maxw="284">FeatureUnavailableScreen for closed</text>
+  <text x="106" y="494" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="35" data-maxw="284">gates</text>
+  <rect x="436" y="196" width="356" height="330" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="436" y="196" width="356" height="6" rx="3" fill="#D60019"/>
+  <text x="460" y="240" font-size="20" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="133" data-maxw="308">State layer</text>
+  <text x="460" y="264" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="236" data-maxw="308">ui/viewmodel/TamirkarViewModel.kt</text>
+  <line x1="460" y1="292" x2="768" y2="292" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="464" cy="317" r="3.5" fill="#D60019"/>
+  <text x="478" y="322" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="243" data-maxw="284">otpRequestState · authSessionState</text>
+  <circle cx="464" cy="351" r="3.5" fill="#D60019"/>
+  <text x="478" y="356" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="149" data-maxw="284">platformFeatures from</text>
+  <text x="478" y="374" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="135" data-maxw="284">/v1/public/features</text>
+  <circle cx="464" cy="403" r="3.5" fill="#D60019"/>
+  <text x="478" y="408" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="235" data-maxw="284">runDiagnosis() · createNewOrder()</text>
+  <circle cx="464" cy="437" r="3.5" fill="#D60019"/>
+  <text x="478" y="442" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="264" data-maxw="284">acceptBid() · completeTechnicianJob()</text>
+  <circle cx="464" cy="471" r="3.5" fill="#D60019"/>
+  <text x="478" y="476" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="284" data-maxw="284">Client flags never replace server checks</text>
+  <rect x="808" y="196" width="356" height="330" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="808" y="196" width="356" height="6" rx="3" fill="#C87533"/>
+  <text x="832" y="240" font-size="20" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="121" data-maxw="308">Data layer</text>
+  <text x="832" y="264" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="200" data-maxw="308">data/repository · data/local</text>
+  <line x1="832" y1="292" x2="1140" y2="292" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="836" cy="317" r="3.5" fill="#C87533"/>
+  <text x="850" y="322" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="178" data-maxw="284">TamirkarRepository facade</text>
+  <circle cx="836" cy="351" r="3.5" fill="#C87533"/>
+  <text x="850" y="356" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="241" data-maxw="284">Room: users, devices, orders, bids</text>
+  <circle cx="836" cy="385" r="3.5" fill="#C87533"/>
+  <text x="850" y="390" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="227" data-maxw="284">parts, warranties, transactions,</text>
+  <text x="850" y="408" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="57" data-maxw="284">disputes</text>
+  <circle cx="836" cy="437" r="3.5" fill="#C87533"/>
+  <text x="850" y="442" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="178" data-maxw="284">TamirkarDao query surface</text>
+  <circle cx="836" cy="471" r="3.5" fill="#C87533"/>
+  <text x="850" y="476" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="256" data-maxw="284">Local cache, not the source of money</text>
+  <text x="850" y="494" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="35" data-maxw="284">truth</text>
+  <rect x="1180" y="196" width="356" height="330" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="1180" y="196" width="356" height="6" rx="3" fill="#34D399"/>
+  <text x="1204" y="240" font-size="20" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="145" data-maxw="308">Remote layer</text>
+  <text x="1204" y="264" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="78" data-maxw="308">data/remote</text>
+  <line x1="1204" y1="292" x2="1512" y2="292" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="1208" cy="317" r="3.5" fill="#34D399"/>
+  <text x="1222" y="322" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="194" data-maxw="284">AuthApi: request/verify OTP</text>
+  <circle cx="1208" cy="351" r="3.5" fill="#34D399"/>
+  <text x="1222" y="356" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="206" data-maxw="284">PlatformApi: features, orders</text>
+  <circle cx="1208" cy="385" r="3.5" fill="#34D399"/>
+  <text x="1222" y="390" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="235" data-maxw="284">AuthSessionStore: bearer token in</text>
+  <text x="1222" y="408" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="43" data-maxw="284">memory</text>
+  <circle cx="1208" cy="437" r="3.5" fill="#34D399"/>
+  <text x="1222" y="442" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="253" data-maxw="284">OostaApiConfig: HTTPS-only base URL</text>
+  <circle cx="1208" cy="471" r="3.5" fill="#34D399"/>
+  <text x="1222" y="476" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="234" data-maxw="284">No provider key is read on device</text>
+  <path d="M422,360 L432,360" fill="none" stroke="#B8B0A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+  <path d="M794,360 L804,360" fill="none" stroke="#B8B0A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+  <path d="M1166,360 L1176,360" fill="none" stroke="#B8B0A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+  <rect x="64" y="552" width="1472" height="108" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="64" y="552" width="6" height="108" rx="3" fill="#34D399"/>
+  <text x="96" y="590" font-size="17" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="133" data-maxw="220">Build surface</text>
+  <text x="96" y="622" font-size="13" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="95" data-maxw="320">Kotlin / AGP</text>
+  <text x="96" y="644" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="312" data-maxw="330">AGP 9.1.1 · Kotlin 2.2.10 · Gradle 9.3.1</text>
+  <text x="446" y="622" font-size="13" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="25" data-maxw="320">SDK</text>
+  <text x="446" y="644" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="327" data-maxw="330">minSdk 24 · targetSdk 36 · compileSdk 36.1</text>
+  <text x="796" y="622" font-size="13" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="39" data-maxw="320">Tests</text>
+  <text x="796" y="644" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="320" data-maxw="330">JUnit · Robolectric · Roborazzi · Compose</text>
+  <text x="1146" y="622" font-size="13" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="25" data-maxw="320">RTL</text>
+  <text x="1146" y="644" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="288" data-maxw="330">supportsRtl=true · Persian-first copy</text>
+</svg>
