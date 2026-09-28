@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 320" width="1600" height="320" role="img" aria-labelledby="t d" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif">
+  <title id="t">Oosta footer</title>
+  <desc id="d">Oosta project footer with documentation entry points</desc>
+  <rect width="1600" height="320" fill="#0A0908"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B8B0A4"/></marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D60019"/></marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#34D399"/></marker>
+    <marker id="arrowCopper" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C87533"/></marker>
+    <linearGradient id="forge" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#15120F"/><stop offset="100%" stop-color="#0A0908"/></linearGradient>
+    <linearGradient id="emberline" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#D60019"/><stop offset="55%" stop-color="#C87533"/><stop offset="100%" stop-color="#34D399"/></linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1600" height="5" rx="2.5" fill="url(#emberline)"/>
+  <path d="M88.32,110.56 L107.04,103.36 Q120,116.32 132.96,103.36 L151.68,110.56 L147.36,160.96 Q120,198.4 92.64,160.96 Z" fill="#D60019" stroke="#C87533" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M108.48,137.92 L120,150.88 L137.28,129.28" fill="none" stroke="#F4F1EB" stroke-width="4.32" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="98.4" y1="166.72" x2="141.6" y2="166.72" stroke="#F4F1EB" stroke-width="1.44" stroke-linecap="round" opacity="0.5"/>
+  <text x="192" y="132" font-size="34" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="95" data-maxw="180" direction="rtl" xml:lang="fa">اوستا</text>
+  <text x="192" y="168" font-size="22" fill="#B8B0A4" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="70" data-maxw="200" letter-spacing="5">OOSTA</text>
+  <line x1="340" y1="90" x2="340" y2="210" stroke="#2A2420" stroke-width="1.5" stroke-linecap="round"/>
+  <text x="396" y="112" font-size="14" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="59" data-maxw="220" letter-spacing="1.6">Product</text>
+  <text x="396" y="142" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="111" data-maxw="250">docs/README.md</text>
+  <text x="396" y="166" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="119" data-maxw="250">docs/SCREENS.md</text>
+  <text x="396" y="190" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="176" data-maxw="250">docs/BUSINESS_LOGIC.md</text>
+  <text x="668" y="112" font-size="14" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="93" data-maxw="220" letter-spacing="1.6">Engineering</text>
+  <text x="668" y="142" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="160" data-maxw="250">docs/ARCHITECTURE.md</text>
+  <text x="668" y="166" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="87" data-maxw="250">docs/API.md</text>
+  <text x="668" y="190" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="128" data-maxw="250">docs/DATABASE.md</text>
+  <text x="940" y="112" font-size="14" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="84" data-maxw="220" letter-spacing="1.6">Operations</text>
+  <text x="940" y="142" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="144" data-maxw="250">docs/DEPLOYMENT.md</text>
+  <text x="940" y="166" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="154" data-maxw="250">LAUNCH_CHECKLIST.md</text>
+  <text x="940" y="190" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="129" data-maxw="250">RISK_REGISTER.md</text>
+  <text x="1212" y="112" font-size="14" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="42" data-maxw="220" letter-spacing="1.6">Trust</text>
+  <text x="1212" y="142" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="89" data-maxw="250">SECURITY.md</text>
+  <text x="1212" y="166" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="174" data-maxw="250">docs/legal/TERMS_FA.md</text>
+  <text x="1212" y="190" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="198" data-maxw="250">docs/legal/WARRANTY_FA.md</text>
+  <line x1="64" y1="248" x2="1536" y2="248" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <text x="64" y="284" font-size="14" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="431" data-maxw="560" direction="rtl" xml:lang="fa">«اول تشخیص، بعد هزینه.» — diagnose first, price second.</text>
+  <text x="1536" y="284" font-size="12.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="end" data-est-width="257" data-maxw="420">MIT licensed · security@oosta.app</text>
+</svg>

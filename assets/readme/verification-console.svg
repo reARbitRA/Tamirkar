@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 700" width="1600" height="700" role="img" aria-labelledby="t d" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif">
+  <title id="t">Oosta verification console</title>
+  <desc id="d">Executed commands, exit codes and honest gaps</desc>
+  <rect width="1600" height="700" fill="#0A0908"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B8B0A4"/></marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D60019"/></marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#34D399"/></marker>
+    <marker id="arrowCopper" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C87533"/></marker>
+    <linearGradient id="forge" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#15120F"/><stop offset="100%" stop-color="#0A0908"/></linearGradient>
+    <linearGradient id="emberline" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#D60019"/><stop offset="55%" stop-color="#C87533"/><stop offset="100%" stop-color="#34D399"/></linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1600" height="5" rx="2.5" fill="url(#emberline)"/>
+  <text x="64" y="72" font-size="13" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="99" data-maxw="280" letter-spacing="2.2">VERIFICATION</text>
+  <text x="64" y="116" font-size="34" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="817" data-maxw="860">What was executed, and what could not be</text>
+  <text x="64" y="148" font-size="16" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="925" data-maxw="1100">Exit codes below come from this checkout. Android tasks are reported as not-run rather than assumed green.</text>
+  <rect x="64" y="192" width="1472" height="420" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="92" y="230" font-size="11.5" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="51" data-maxw="200" letter-spacing="2">COMMAND</text>
+  <text x="1000" y="230" font-size="11.5" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="29" data-maxw="100" letter-spacing="2">EXIT</text>
+  <text x="1090" y="230" font-size="11.5" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="44" data-maxw="200" letter-spacing="2">RESULT</text>
+  <line x1="92" y1="244" x2="1508" y2="244" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <rect x="92" y="250" width="1416" height="36" rx="10" fill="#0A0908" stroke="#2A2420" stroke-width="1.5" opacity="0.6"/>
+  <rect x="92" y="250" width="4" height="36" rx="2" fill="#34D399"/>
+  <text x="112" y="274" font-size="13.5" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="209" data-maxw="860">services/auth-api: npm ci</text>
+  <text x="1000" y="274" font-size="13.5" fill="#34D399" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="8" data-maxw="80">0</text>
+  <text x="1090" y="274" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="255" data-maxw="410">clean install from package-lock.json</text>
+  <rect x="92" y="288" width="1416" height="36" rx="10" fill="#0A0908" stroke="#2A2420" stroke-width="1.5" opacity="0.6"/>
+  <rect x="92" y="288" width="4" height="36" rx="2" fill="#34D399"/>
+  <text x="112" y="312" font-size="13.5" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="226" data-maxw="860">services/auth-api: npm test</text>
+  <text x="1000" y="312" font-size="13.5" fill="#34D399" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="8" data-maxw="80">0</text>
+  <text x="1090" y="312" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="241" data-maxw="410">18 passed · 0 failed · node --test</text>
+  <rect x="92" y="326" width="1416" height="36" rx="10" fill="#0A0908" stroke="#2A2420" stroke-width="1.5" opacity="0.6"/>
+  <rect x="92" y="326" width="4" height="36" rx="2" fill="#34D399"/>
+  <text x="112" y="350" font-size="13.5" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="326" data-maxw="860">services/auth-api: npm audit --omit=dev</text>
+  <text x="1000" y="350" font-size="13.5" fill="#34D399" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="8" data-maxw="80">0</text>
+  <text x="1090" y="350" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="120" data-maxw="410">0 vulnerabilities</text>
+  <rect x="92" y="364" width="1416" height="36" rx="10" fill="#0A0908" stroke="#2A2420" stroke-width="1.5" opacity="0.6"/>
+  <rect x="92" y="364" width="4" height="36" rx="2" fill="#34D399"/>
+  <text x="112" y="388" font-size="13.5" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="368" data-maxw="860">scripts/launch-readiness-audit.sh --no-build</text>
+  <text x="1000" y="388" font-size="13.5" fill="#34D399" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="8" data-maxw="80">0</text>
+  <text x="1090" y="388" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="212" data-maxw="410">GO-WITH-EVIDENCE · 0 blockers</text>
+  <rect x="92" y="402" width="1416" height="36" rx="10" fill="#0A0908" stroke="#2A2420" stroke-width="1.5" opacity="0.6"/>
+  <rect x="92" y="402" width="4" height="36" rx="2" fill="#34D399"/>
+  <text x="112" y="426" font-size="13.5" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="310" data-maxw="860">python3 tools/readme/verify_assets.py</text>
+  <text x="1000" y="426" font-size="13.5" fill="#34D399" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="8" data-maxw="80">0</text>
+  <text x="1090" y="426" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="221" data-maxw="410">15 SVGs parsed · links resolved</text>
+  <rect x="92" y="440" width="1416" height="36" rx="10" fill="#0A0908" stroke="#2A2420" stroke-width="1.5" opacity="0.6"/>
+  <rect x="92" y="440" width="4" height="36" rx="2" fill="#34D399"/>
+  <text x="112" y="464" font-size="13.5" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="134" data-maxw="860">git diff --check</text>
+  <text x="1000" y="464" font-size="13.5" fill="#34D399" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="8" data-maxw="80">0</text>
+  <text x="1090" y="464" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="142" data-maxw="410">no whitespace errors</text>
+  <rect x="92" y="478" width="1416" height="36" rx="10" fill="#0A0908" stroke="#2A2420" stroke-width="1.5" opacity="0.6"/>
+  <rect x="92" y="478" width="4" height="36" rx="2" fill="#D60019"/>
+  <text x="112" y="502" font-size="13.5" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="126" data-maxw="860">./gradlew tasks</text>
+  <text x="1000" y="502" font-size="13.5" fill="#D60019" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="8" data-maxw="80">1</text>
+  <text x="1090" y="502" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="237" data-maxw="410">JAVA_HOME not set in this sandbox</text>
+  <rect x="92" y="516" width="1416" height="36" rx="10" fill="#0A0908" stroke="#2A2420" stroke-width="1.5" opacity="0.6"/>
+  <rect x="92" y="516" width="4" height="36" rx="2" fill="#D60019"/>
+  <text x="112" y="540" font-size="13.5" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="227" data-maxw="860">./gradlew testDebugUnitTest</text>
+  <text x="1000" y="540" font-size="13.5" fill="#D60019" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="25" data-maxw="80">n/r</text>
+  <text x="1090" y="540" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="223" data-maxw="410">blocked: no JDK, no Android SDK</text>
+  <rect x="92" y="554" width="1416" height="36" rx="10" fill="#0A0908" stroke="#2A2420" stroke-width="1.5" opacity="0.6"/>
+  <rect x="92" y="554" width="4" height="36" rx="2" fill="#D60019"/>
+  <text x="112" y="578" font-size="13.5" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="252" data-maxw="860">./gradlew lint / assembleDebug</text>
+  <text x="1000" y="578" font-size="13.5" fill="#D60019" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="25" data-maxw="80">n/r</text>
+  <text x="1090" y="578" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="262" data-maxw="410">blocked: maven.google.com unreachable</text>
+  <text x="64" y="646" font-size="13.5" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="1423" data-maxw="1440">Sandbox reality: java is absent and maven.google.com, services.gradle.org and dl.google.com are unreachable, so the Android toolchain cannot resolve. GitHub Actions runs the full Gradle path on</text>
+  <text x="64" y="666" font-size="13.5" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="191" data-maxw="1440">every push to this branch.</text>
+</svg>

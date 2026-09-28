@@ -18,3 +18,4 @@ local.properties
 debug.keystore
 /audit-output
 node_modules/
+__pycache__/

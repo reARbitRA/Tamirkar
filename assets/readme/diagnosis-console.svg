@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 700" width="1600" height="700" role="img" aria-labelledby="t d" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif">
+  <title id="t">Oosta diagnosis console</title>
+  <desc id="d">Symptom capture, preliminary triage and the booking gate</desc>
+  <rect width="1600" height="700" fill="#0A0908"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B8B0A4"/></marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D60019"/></marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#34D399"/></marker>
+    <marker id="arrowCopper" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C87533"/></marker>
+    <linearGradient id="forge" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#15120F"/><stop offset="100%" stop-color="#0A0908"/></linearGradient>
+    <linearGradient id="emberline" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#D60019"/><stop offset="55%" stop-color="#C87533"/><stop offset="100%" stop-color="#34D399"/></linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1600" height="5" rx="2.5" fill="url(#emberline)"/>
+  <text x="64" y="72" font-size="13" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="115" data-maxw="340" letter-spacing="2.2">DIAGNOSIS RAIL</text>
+  <text x="64" y="116" font-size="34" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="470" data-maxw="620">Listen before you quote</text>
+  <text x="64" y="148" font-size="19" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="319" data-maxw="520" direction="rtl" xml:lang="fa">گوشِ کاوه — تشخیص پیش از هزینه</text>
+  <rect x="64" y="196" width="400" height="452" rx="26" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="78" y="210" width="372" height="38" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="96" y="235" font-size="15" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="101" data-maxw="180" direction="rtl" xml:lang="fa">تشخیص هوشمند</text>
+  <text x="432" y="235" font-size="12" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="end" data-est-width="67" data-maxw="120">diagnosis</text>
+  <rect x="88" y="270" width="69.68" height="30" rx="15" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="122.84" y="290" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="44" data-maxw="59.68000000000001" direction="rtl" xml:lang="fa">موبایل</text>
+  <rect x="165.68" y="270" width="69.68" height="30" rx="15" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="200.52" y="290" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="44" data-maxw="59.68000000000001" direction="rtl" xml:lang="fa">لپ‌تاپ</text>
+  <rect x="243.36" y="270" width="91.52000000000001" height="30" rx="15" fill="#C87533" stroke="#C87533" stroke-width="1.5" opacity="0.22"/>
+  <text x="289.12" y="290" font-size="13" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="66" data-maxw="81.52000000000001" direction="rtl" xml:lang="fa">کولر گازی</text>
+  <rect x="342.88" y="270" width="84.24000000000001" height="30" rx="15" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="385.0" y="290" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="58" data-maxw="74.24000000000001" direction="rtl" xml:lang="fa">لباسشویی</text>
+  <rect x="435.12" y="270" width="62.400000000000006" height="30" rx="15" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="466.32" y="290" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="36" data-maxw="52.400000000000006" direction="rtl" xml:lang="fa">یخچال</text>
+  <rect x="88" y="316" width="352" height="96" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="424" y="344" font-size="14" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="end" data-est-width="180" data-maxw="280" direction="rtl" xml:lang="fa">علائم خرابی را بنویسید…</text>
+  <text x="424" y="372" font-size="14" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="end" data-est-width="290" data-maxw="320" direction="rtl" xml:lang="fa">صدای تق‌تق و بوی سوختگی از پشت دستگاه</text>
+  <text x="104" y="400" font-size="11" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="198" data-maxw="280">symptom → problem_description</text>
+  <rect x="88" y="428" width="176" height="48" rx="12" fill="#0A0908" stroke="#C87533" stroke-width="1.5"/>
+  <text x="176" y="458" font-size="14" fill="#C87533" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="94" data-maxw="150" direction="rtl" xml:lang="fa">افزودن تصویر</text>
+  <rect x="276" y="428" width="164" height="48" rx="12" fill="#D60019" opacity="0.9"/>
+  <text x="358" y="458" font-size="15" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="84" data-maxw="140" direction="rtl" xml:lang="fa">شروع تشخیص</text>
+  <rect x="88" y="496" width="352" height="128" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="424" y="526" font-size="14" fill="#34D399" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="end" data-est-width="290" data-maxw="320" direction="rtl" xml:lang="fa">نتیجهٔ اولیه — نیازمند تأیید استادکار</text>
+  <text x="424" y="556" font-size="14" fill="#F4F1EB" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="end" data-est-width="227" data-maxw="300" direction="rtl" xml:lang="fa">برد کنترل: احتمال اتصال کوتاه</text>
+  <text x="108" y="588" font-size="15" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="210" data-maxw="260" direction="rtl" xml:lang="fa">۹۵۰٬۰۰۰ – ۱٬۶۰۰٬۰۰۰ تومان</text>
+  <text x="424" y="588" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="end" data-est-width="78" data-maxw="120">preliminary</text>
+  <text x="108" y="612" font-size="11.5" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="226" data-maxw="320">AI never approves money or a refund.</text>
+  <rect x="512" y="196" width="1024" height="214" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="540" y="236" font-size="20" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="277" data-maxw="420">Server-side triage path</text>
+  <text x="540" y="264" font-size="14.5" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="572" data-maxw="700">The APK carries no model key. Triage runs behind an authenticated route.</text>
+  <rect x="1322" y="218" width="186" height="30" rx="15.0" fill="#C87533" opacity="0.14"/>
+  <rect x="1322" y="218" width="186" height="30" rx="15.0" fill="none" stroke="#C87533" stroke-width="1"/>
+  <text x="1415.0" y="237.2" font-size="12" fill="#C87533" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="134" data-maxw="174">gate: ai_diagnosis</text>
+  <rect x="540" y="300" width="152" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="616.0" y="330" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="61" data-maxw="136">Compose</text>
+  <text x="616.0" y="352" font-size="10.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="118" data-maxw="136">DiagnosisScreen.kt</text>
+  <path d="M696,339 L710,339" fill="none" stroke="#C87533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowCopper)"/>
+  <rect x="714" y="300" width="152" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="790.0" y="330" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="79" data-maxw="136">ViewModel</text>
+  <text x="790.0" y="352" font-size="10.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="92" data-maxw="136">runDiagnosis()</text>
+  <path d="M870,339 L884,339" fill="none" stroke="#C87533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowCopper)"/>
+  <rect x="888" y="300" width="152" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="964.0" y="330" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="97" data-maxw="136">PlatformApi</text>
+  <text x="964.0" y="352" font-size="10.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="78" data-maxw="136">Bearer token</text>
+  <path d="M1044,339 L1058,339" fill="none" stroke="#C87533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowCopper)"/>
+  <rect x="1062" y="300" width="152" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="1138.0" y="330" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="70" data-maxw="136">auth-api</text>
+  <text x="1138.0" y="352" font-size="10.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="28" data-maxw="136">POST</text>
+  <text x="1138.0" y="367" font-size="10.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="104" data-maxw="136">/v1/ai/diagnoses</text>
+  <path d="M1218,339 L1232,339" fill="none" stroke="#C87533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowCopper)"/>
+  <rect x="1236" y="300" width="152" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="1312.0" y="330" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="79" data-maxw="136">Redaction</text>
+  <text x="1312.0" y="352" font-size="10.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="124" data-maxw="136">phone · national id</text>
+  <path d="M1392,339 L1406,339" fill="none" stroke="#C87533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowCopper)"/>
+  <rect x="1410" y="300" width="152" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="1486.0" y="330" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="70" data-maxw="136">Provider</text>
+  <text x="1486.0" y="352" font-size="10.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="98" data-maxw="136">server-only key</text>
+  <rect x="512" y="436" width="244" height="212" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="512" y="436" width="244" height="5" rx="2.5" fill="#34D399"/>
+  <text x="534" y="478" font-size="16" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="135" data-maxw="204">Preliminary by</text>
+  <text x="534" y="500" font-size="16" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="67" data-maxw="204">default</text>
+  <line x1="534" y1="528" x2="734" y2="528" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <text x="534" y="556" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="170" data-maxw="204">Result copy states it is</text>
+  <text x="534" y="576" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="163" data-maxw="204">unverified and needs an</text>
+  <text x="534" y="596" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="99" data-maxw="204">on-site check.</text>
+  <rect x="772" y="436" width="244" height="212" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="772" y="436" width="244" height="5" rx="2.5" fill="#D60019"/>
+  <text x="794" y="478" font-size="16" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="145" data-maxw="204">No silent price</text>
+  <line x1="794" y1="528" x2="994" y2="528" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <text x="794" y="556" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="192" data-maxw="204">A failed provider returns a</text>
+  <text x="794" y="576" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="128" data-maxw="204">human route, not a</text>
+  <text x="794" y="596" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="128" data-maxw="204">fabricated number.</text>
+  <rect x="1032" y="436" width="244" height="212" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="1032" y="436" width="244" height="5" rx="2.5" fill="#C87533"/>
+  <text x="1054" y="478" font-size="16" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="145" data-maxw="204">Bounded payload</text>
+  <line x1="1054" y1="528" x2="1254" y2="528" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <text x="1054" y="556" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="170" data-maxw="204">Image count and size are</text>
+  <text x="1054" y="576" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="191" data-maxw="204">validated before a provider</text>
+  <text x="1054" y="596" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="71" data-maxw="204">is called.</text>
+  <rect x="1292" y="436" width="244" height="212" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="1292" y="436" width="244" height="5" rx="2.5" fill="#C87533"/>
+  <text x="1314" y="478" font-size="16" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="116" data-maxw="204">Booking gate</text>
+  <line x1="1314" y1="528" x2="1514" y2="528" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <text x="1314" y="556" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="149" data-maxw="204">Proceed-to-booking is</text>
+  <text x="1314" y="576" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="198" data-maxw="204">disabled unless new_bookings</text>
+  <text x="1314" y="596" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="57" data-maxw="204">is true.</text>
+</svg>

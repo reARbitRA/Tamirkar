@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 700" width="1600" height="700" role="img" aria-labelledby="t d" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif">
+  <title id="t">Oosta OTP authentication flow</title>
+  <desc id="d">Mobile to auth API to Kavenegar to a signed session token</desc>
+  <rect width="1600" height="700" fill="#0A0908"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B8B0A4"/></marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D60019"/></marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#34D399"/></marker>
+    <marker id="arrowCopper" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C87533"/></marker>
+    <linearGradient id="forge" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#15120F"/><stop offset="100%" stop-color="#0A0908"/></linearGradient>
+    <linearGradient id="emberline" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#D60019"/><stop offset="55%" stop-color="#C87533"/><stop offset="100%" stop-color="#34D399"/></linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1600" height="5" rx="2.5" fill="url(#emberline)"/>
+  <text x="64" y="72" font-size="13" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="66" data-maxw="240" letter-spacing="2.2">IDENTITY</text>
+  <text x="64" y="116" font-size="34" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="862" data-maxw="940">OTP: mobile → auth-api → Kavenegar → token</text>
+  <text x="64" y="148" font-size="16" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="629" data-maxw="900">The Android app never generates, stores or compares a verification code.</text>
+  <rect x="64" y="196" width="380" height="82" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="64" y="196" width="380" height="5" rx="2.5" fill="#C87533"/>
+  <text x="86" y="234" font-size="18" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="119" data-maxw="336">Android app</text>
+  <text x="86" y="258" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="195" data-maxw="336">PhoneAuthScreen · OtpScreen</text>
+  <rect x="500" y="196" width="380" height="82" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="500" y="196" width="380" height="5" rx="2.5" fill="#D60019"/>
+  <text x="522" y="234" font-size="18" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="86" data-maxw="336">auth-api</text>
+  <text x="522" y="258" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="145" data-maxw="336">Fastify · PostgreSQL</text>
+  <rect x="936" y="196" width="380" height="82" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="936" y="196" width="380" height="5" rx="2.5" fill="#C87533"/>
+  <text x="958" y="234" font-size="18" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="98" data-maxw="336">Kavenegar</text>
+  <text x="958" y="258" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="158" data-maxw="336">Verify Lookup template</text>
+  <rect x="1372" y="196" width="200" height="82" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="1372" y="196" width="200" height="5" rx="2.5" fill="#34D399"/>
+  <text x="1394" y="234" font-size="18" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="76" data-maxw="156">Session</text>
+  <text x="1394" y="258" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="79" data-maxw="156">HS256 token</text>
+  <line x1="254" y1="286" x2="254" y2="600" stroke="#2A2420" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4 8"/>
+  <line x1="690" y1="286" x2="690" y2="600" stroke="#2A2420" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4 8"/>
+  <line x1="1126" y1="286" x2="1126" y2="600" stroke="#2A2420" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4 8"/>
+  <line x1="1472" y1="286" x2="1472" y2="600" stroke="#2A2420" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4 8"/>
+  <path d="M254,322 L690,322" fill="none" stroke="#C87533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowCopper)"/>
+  <text x="472.0" y="310" font-size="14" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="212" data-maxw="416">POST /v1/auth/request-otp</text>
+  <text x="472.0" y="342" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="235" data-maxw="416">phone normalised to +989xxxxxxxxx</text>
+  <path d="M690,386 L1126,386" fill="none" stroke="#D60019" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowRed)"/>
+  <text x="908.0" y="374" font-size="14" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="110" data-maxw="416">Verify Lookup</text>
+  <text x="908.0" y="406" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="193" data-maxw="416">receptor + token + template</text>
+  <path d="M690,450 L254,450" fill="none" stroke="#B8B0A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+  <text x="472.0" y="438" font-size="14" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="101" data-maxw="416">202 Accepted</text>
+  <text x="472.0" y="470" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="242" data-maxw="416">expires_in 300s · resend_after 60s</text>
+  <path d="M254,514 L690,514" fill="none" stroke="#C87533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowCopper)"/>
+  <text x="472.0" y="502" font-size="14" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="204" data-maxw="416">POST /v1/auth/verify-otp</text>
+  <text x="472.0" y="534" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="214" data-maxw="416">6-digit code, latin-normalised</text>
+  <path d="M690,578 L1472,578" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowGreen)"/>
+  <text x="1081.0" y="566" font-size="14" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="101" data-maxw="762">access_token</text>
+  <text x="1081.0" y="598" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="257" data-maxw="762">role claim · 3600s · iss/aud checked</text>
+  <rect x="64" y="616" width="284" height="66" rx="12" fill="#15120F" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="80" y="640" font-size="13" fill="#34D399" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="71" data-maxw="252">Hash only</text>
+  <text x="80" y="658" font-size="11" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="252" data-maxw="252">sha256(phone:code:pepper); the raw code is</text>
+  <text x="80" y="672" font-size="11" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="72" data-maxw="252">never stored</text>
+  <rect x="360" y="616" width="284" height="66" rx="12" fill="#15120F" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="376" y="640" font-size="13" fill="#34D399" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="102" data-maxw="252">Constant time</text>
+  <text x="376" y="658" font-size="11" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="247" data-maxw="252">timingSafeEqual over equal-length digests</text>
+  <rect x="656" y="616" width="284" height="66" rx="12" fill="#15120F" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="672" y="640" font-size="13" fill="#34D399" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="94" data-maxw="252">Rate limited</text>
+  <text x="672" y="658" font-size="11" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="210" data-maxw="252">60s resend cooldown, 3 sends per 15</text>
+  <text x="672" y="672" font-size="11" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="42" data-maxw="252">minutes</text>
+  <rect x="952" y="616" width="284" height="66" rx="12" fill="#15120F" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="968" y="640" font-size="13" fill="#34D399" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="117" data-maxw="252">Attempt lockout</text>
+  <text x="968" y="658" font-size="11" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="222" data-maxw="252">status becomes locked at max_attempts</text>
+  <rect x="1248" y="616" width="284" height="66" rx="12" fill="#15120F" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="1264" y="640" font-size="13" fill="#34D399" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="102" data-maxw="252">Advisory lock</text>
+  <text x="1264" y="658" font-size="11" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="216" data-maxw="252">pg_advisory_xact_lock serialises one</text>
+  <text x="1264" y="672" font-size="11" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="36" data-maxw="252">number</text>
+</svg>

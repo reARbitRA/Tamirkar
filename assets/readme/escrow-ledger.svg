@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 700" width="1600" height="700" role="img" aria-labelledby="t d" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif">
+  <title id="t">Oosta escrow ledger</title>
+  <desc id="d">Balanced double-entry postings for capture and release</desc>
+  <rect width="1600" height="700" fill="#0A0908"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B8B0A4"/></marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D60019"/></marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#34D399"/></marker>
+    <marker id="arrowCopper" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C87533"/></marker>
+    <linearGradient id="forge" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#15120F"/><stop offset="100%" stop-color="#0A0908"/></linearGradient>
+    <linearGradient id="emberline" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#D60019"/><stop offset="55%" stop-color="#C87533"/><stop offset="100%" stop-color="#34D399"/></linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1600" height="5" rx="2.5" fill="url(#emberline)"/>
+  <text x="64" y="72" font-size="13" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="196" data-maxw="420" letter-spacing="2.2">MONEY WITH A PAPER TRAIL</text>
+  <text x="64" y="116" font-size="34" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="933" data-maxw="947" direction="rtl" xml:lang="fa">پولِ امانت — balanced postings, idempotent events</text>
+  <text x="64" y="148" font-size="16" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="934" data-maxw="1040">postLedgerEntry() refuses to write unless debits equal credits, and every event carries an idempotency key.</text>
+  <rect x="64" y="196" width="720" height="278" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="92" y="236" font-size="18" fill="#F4F1EB" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="246" data-maxw="340">event: payment_capture</text>
+  <text x="92" y="260" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="314" data-maxw="420">idempotencyKey = payment-capture:&lt;intent-id&gt;</text>
+  <rect x="590" y="216" width="166" height="30" rx="15.0" fill="#34D399" opacity="0.14"/>
+  <rect x="590" y="216" width="166" height="30" rx="15.0" fill="none" stroke="#34D399" stroke-width="1"/>
+  <text x="673.0" y="235.2" font-size="12" fill="#34D399" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="67" data-maxw="154">on verify</text>
+  <rect x="92" y="300" width="664" height="44" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="92" y="300" width="5" height="44" rx="2.5" fill="#C87533"/>
+  <text x="114" y="328" font-size="14" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="139" data-maxw="260">gateway_clearing</text>
+  <text x="470" y="328" font-size="13" fill="#C87533" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="40" data-maxw="110">debit</text>
+  <text x="736" y="328" font-size="14" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="end" data-est-width="118" data-maxw="200" direction="rtl" xml:lang="fa">۱٬۰۰۰٬۰۰۰ تومان</text>
+  <rect x="92" y="346" width="664" height="44" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="92" y="346" width="5" height="44" rx="2.5" fill="#34D399"/>
+  <text x="114" y="374" font-size="14" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="156" data-maxw="260">technician_payable</text>
+  <text x="470" y="374" font-size="13" fill="#34D399" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="48" data-maxw="110">credit</text>
+  <text x="736" y="374" font-size="14" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="end" data-est-width="102" data-maxw="200" direction="rtl" xml:lang="fa">۸۵۰٬۰۰۰ تومان</text>
+  <rect x="92" y="392" width="664" height="44" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="92" y="392" width="5" height="44" rx="2.5" fill="#D60019"/>
+  <text x="114" y="420" font-size="14" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="139" data-maxw="260">escrow_liability</text>
+  <text x="470" y="420" font-size="13" fill="#D60019" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="48" data-maxw="110">credit</text>
+  <text x="736" y="420" font-size="14" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="end" data-est-width="102" data-maxw="200" direction="rtl" xml:lang="fa">۱۵۰٬۰۰۰ تومان</text>
+  <text x="92" y="456" font-size="12" fill="#34D399" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="379" data-maxw="520">debit total == credit total, asserted before insert</text>
+  <rect x="816" y="196" width="720" height="278" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="844" y="236" font-size="18" fill="#F4F1EB" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="234" data-maxw="340">event: escrow_release</text>
+  <text x="844" y="260" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="293" data-maxw="420">idempotencyKey = escrow-release:&lt;hold-id&gt;</text>
+  <rect x="1330" y="216" width="180" height="30" rx="15.0" fill="#C87533" opacity="0.14"/>
+  <rect x="1330" y="216" width="180" height="30" rx="15.0" fill="none" stroke="#C87533" stroke-width="1"/>
+  <text x="1420.0" y="235.2" font-size="12" fill="#C87533" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="149" data-maxw="168">gate: escrow_release</text>
+  <rect x="844" y="306" width="664" height="44" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="844" y="306" width="5" height="44" rx="2.5" fill="#D60019"/>
+  <text x="866" y="334" font-size="14" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="139" data-maxw="260">escrow_liability</text>
+  <text x="1222" y="334" font-size="13" fill="#D60019" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="40" data-maxw="110">debit</text>
+  <text x="1488" y="334" font-size="14" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="end" data-est-width="102" data-maxw="200" direction="rtl" xml:lang="fa">۱۵۰٬۰۰۰ تومان</text>
+  <rect x="844" y="358" width="664" height="44" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="844" y="358" width="5" height="44" rx="2.5" fill="#34D399"/>
+  <text x="866" y="386" font-size="14" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="156" data-maxw="260">technician_payable</text>
+  <text x="1222" y="386" font-size="13" fill="#34D399" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="48" data-maxw="110">credit</text>
+  <text x="1488" y="386" font-size="14" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="end" data-est-width="102" data-maxw="200" direction="rtl" xml:lang="fa">۱۵۰٬۰۰۰ تومان</text>
+  <text x="844" y="420" font-size="13" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="404" data-maxw="620">A duplicate worker run finds the key and changes nothing.</text>
+  <text x="844" y="446" font-size="12" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="318" data-maxw="520">SELECT … FOR UPDATE SKIP LOCKED LIMIT 100</text>
+  <rect x="64" y="486" width="1472" height="174" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="92" y="524" font-size="18" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="195" data-maxw="280">Capture to release</text>
+  <rect x="96" y="552" width="220" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="206.0" y="582" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="114" data-maxw="204">Customer pays</text>
+  <text x="206.0" y="606" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="143" data-maxw="204">checkout on Zarinpal</text>
+  <path d="M320,591 L334,591" fill="none" stroke="#D60019" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowRed)"/>
+  <rect x="338" y="552" width="220" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="448.0" y="582" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="131" data-maxw="204">Server verifies</text>
+  <text x="448.0" y="606" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="178" data-maxw="204">verify.json, code 100/101</text>
+  <path d="M562,591 L576,591" fill="none" stroke="#D60019" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowRed)"/>
+  <rect x="580" y="552" width="220" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="690.0" y="582" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="114" data-maxw="204">Capture posts</text>
+  <text x="690.0" y="606" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="164" data-maxw="204">85% payable, 15% escrow</text>
+  <path d="M804,591 L818,591" fill="none" stroke="#D60019" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowRed)"/>
+  <rect x="822" y="552" width="220" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="932.0" y="582" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="88" data-maxw="204">Hold opens</text>
+  <text x="932.0" y="606" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="171" data-maxw="204">release_after = +30 days</text>
+  <path d="M1046,591 L1060,591" fill="none" stroke="#D60019" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowRed)"/>
+  <rect x="1064" y="552" width="220" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="1174.0" y="582" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="114" data-maxw="204">Warranty runs</text>
+  <text x="1174.0" y="606" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="193" data-maxw="204">dispute can freeze the hold</text>
+  <path d="M1288,591 L1302,591" fill="none" stroke="#D60019" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowRed)"/>
+  <rect x="1306" y="552" width="220" height="78" rx="14" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <text x="1416.0" y="582" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="131" data-maxw="204">Worker releases</text>
+  <text x="1416.0" y="606" font-size="11.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="185" data-maxw="204">operator token, idempotent</text>
+</svg>

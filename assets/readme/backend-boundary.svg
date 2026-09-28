@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 660" width="1600" height="660" role="img" aria-labelledby="t d" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif">
+  <title id="t">Oosta backend boundary</title>
+  <desc id="d">Secrets stay server-side; the APK holds only a public base URL</desc>
+  <rect width="1600" height="660" fill="#0A0908"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B8B0A4"/></marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D60019"/></marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#34D399"/></marker>
+    <marker id="arrowCopper" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C87533"/></marker>
+    <linearGradient id="forge" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#15120F"/><stop offset="100%" stop-color="#0A0908"/></linearGradient>
+    <linearGradient id="emberline" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#D60019"/><stop offset="55%" stop-color="#C87533"/><stop offset="100%" stop-color="#34D399"/></linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1600" height="5" rx="2.5" fill="url(#emberline)"/>
+  <text x="64" y="72" font-size="13" fill="#C87533" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="66" data-maxw="240" letter-spacing="2.2">BOUNDARY</text>
+  <text x="64" y="116" font-size="34" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="658" data-maxw="760">Secrets never cross into the APK</text>
+  <text x="64" y="148" font-size="16" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="934" data-maxw="1040">The distributed application is reverse-engineerable by definition, so it is given nothing worth extracting.</text>
+  <rect x="64" y="200" width="500" height="380" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="64" y="200" width="500" height="6" rx="3" fill="#C87533"/>
+  <text x="92" y="246" font-size="22" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="148" data-maxw="300">Android APK</text>
+  <text x="92" y="272" font-size="12" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="208" data-maxw="380">com.aistudio.tamirkar.zpxlka</text>
+  <line x1="92" y1="292" x2="536" y2="292" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="100" cy="323" r="4" fill="#34D399"/>
+  <text x="116" y="328" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="155" data-maxw="420">AUTH_API_BASE_URL</text>
+  <text x="116" y="348" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="268" data-maxw="420">public HTTPS host, validated at runtime</text>
+  <circle cx="100" cy="377" r="4" fill="#34D399"/>
+  <text x="116" y="382" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="166" data-maxw="420">Bearer access token</text>
+  <text x="116" y="402" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="184" data-maxw="420">short-lived, held in memory</text>
+  <circle cx="100" cy="431" r="4" fill="#34D399"/>
+  <text x="116" y="436" font-size="14.5" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="175" data-maxw="420">Feature flags (read)</text>
+  <text x="116" y="456" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="123" data-maxw="420">advisory copy only</text>
+  <line x1="92" y1="486" x2="536" y2="486" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <text x="92" y="512" font-size="12.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="358" data-maxw="444">OostaApiConfig rejects a blank, placeholder or</text>
+  <text x="92" y="532" font-size="12.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="282" data-maxw="444">plain-HTTP URL. Debug builds may use</text>
+  <text x="92" y="552" font-size="12.5" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="333" data-maxw="444">http://10.0.2.2:8080 for the emulator only.</text>
+  <rect x="620" y="200" width="46" height="380" rx="18" fill="#15120F" stroke="#D60019" stroke-width="1.5"/>
+  <line x1="628" y1="226" x2="658" y2="226" stroke="#D60019" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+  <line x1="628" y1="266" x2="658" y2="266" stroke="#D60019" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+  <line x1="628" y1="306" x2="658" y2="306" stroke="#D60019" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+  <line x1="628" y1="346" x2="658" y2="346" stroke="#D60019" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+  <line x1="628" y1="386" x2="658" y2="386" stroke="#D60019" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+  <line x1="628" y1="426" x2="658" y2="426" stroke="#D60019" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+  <line x1="628" y1="466" x2="658" y2="466" stroke="#D60019" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+  <line x1="628" y1="506" x2="658" y2="506" stroke="#D60019" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+  <line x1="628" y1="546" x2="658" y2="546" stroke="#D60019" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+  <text x="643" y="606" font-size="13" fill="#D60019" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="middle" data-est-width="25" data-maxw="80">TLS</text>
+  <rect x="722" y="200" width="814" height="380" rx="18" fill="url(#forge)" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="722" y="200" width="814" height="6" rx="3" fill="#D60019"/>
+  <text x="750" y="246" font-size="22" fill="#F4F1EB" font-weight="700" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="224" data-maxw="340">services/auth-api</text>
+  <text x="750" y="272" font-size="12" fill="#7E776D" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="255" data-maxw="420">Fastify · Node 20+ · PostgreSQL 16</text>
+  <rect x="1330" y="228" width="178" height="30" rx="15.0" fill="#34D399" opacity="0.14"/>
+  <rect x="1330" y="228" width="178" height="30" rx="15.0" fill="none" stroke="#34D399" stroke-width="1"/>
+  <text x="1419.0" y="247.2" font-size="12" fill="#34D399" font-weight="700" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="middle" data-est-width="112" data-maxw="166">single boundary</text>
+  <line x1="750" y1="292" x2="1508" y2="292" stroke="#2A2420" stroke-width="1" stroke-linecap="round"/>
+  <rect x="750" y="304" width="364" height="48" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="750" y="304" width="4" height="48" rx="2" fill="#D60019"/>
+  <text x="768" y="324" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="144" data-maxw="330">KAVENEGAR_API_KEY</text>
+  <text x="768" y="342" font-size="11.5" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="145" data-maxw="330">SMS delivery credential</text>
+  <rect x="1142" y="304" width="364" height="48" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="1142" y="304" width="4" height="48" rx="2" fill="#D60019"/>
+  <text x="1160" y="324" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="85" data-maxw="330">OTP_PEPPER</text>
+  <text x="1160" y="342" font-size="11.5" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="177" data-maxw="330">distinct from the JWT secret</text>
+  <rect x="750" y="366" width="364" height="48" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="750" y="366" width="4" height="48" rx="2" fill="#D60019"/>
+  <text x="768" y="386" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="85" data-maxw="330">JWT_SECRET</text>
+  <text x="768" y="404" font-size="11.5" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="107" data-maxw="330">HS256 signing key</text>
+  <rect x="1142" y="366" width="364" height="48" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="1142" y="366" width="4" height="48" rx="2" fill="#D60019"/>
+  <text x="1160" y="386" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="102" data-maxw="330">DATABASE_URL</text>
+  <text x="1160" y="404" font-size="11.5" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="165" data-maxw="330">PostgreSQL password inside</text>
+  <rect x="750" y="428" width="364" height="48" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="750" y="428" width="4" height="48" rx="2" fill="#D60019"/>
+  <text x="768" y="448" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="118" data-maxw="330">GEMINI_API_KEY</text>
+  <text x="768" y="466" font-size="11.5" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="138" data-maxw="330">server-only triage key</text>
+  <rect x="1142" y="428" width="364" height="48" rx="12" fill="#0A0908" stroke="#2A2420" stroke-width="1.5"/>
+  <rect x="1142" y="428" width="4" height="48" rx="2" fill="#D60019"/>
+  <text x="1160" y="448" font-size="13" fill="#F4F1EB" font-weight="400" font-family="'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'DejaVu Sans Mono', Menlo, monospace" text-anchor="start" data-est-width="169" data-maxw="330">ZARINPAL_MERCHANT_ID</text>
+  <text x="1160" y="466" font-size="11.5" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="157" data-maxw="330">payment merchant identity</text>
+  <text x="750" y="544" font-size="12.5" fill="#B8B0A4" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="704" data-maxw="758">config.js refuses to boot on placeholder values and requires HTTPS callbacks when payments are enabled.</text>
+  <text x="64" y="640" font-size="13.5" fill="#7E776D" font-weight="400" font-family="Vazirmatn, 'Noto Sans Arabic', 'IBM Plex Sans', 'Segoe UI', Tahoma, 'DejaVu Sans', sans-serif" text-anchor="start" data-est-width="848" data-maxw="1300">Checked by scripts/launch-readiness-audit.sh: no provider URL or credential pattern is read by the Android sources.</text>
+</svg>
