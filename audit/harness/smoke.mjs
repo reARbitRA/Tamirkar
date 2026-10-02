@@ -20,6 +20,8 @@ import net from 'node:net';
 import pg from 'pg';
 import jwt from 'jsonwebtoken';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const API = new URL('../../services/auth-api', import.meta.url).pathname.replace(/\/$/, '');
 // Admin connection used only to drop/create the throwaway database. Everything else goes through
@@ -198,8 +200,31 @@ const j = async (res) => { const t = await res.text(); try { return JSON.parse(t
     ['DELETE', '/v1/me',                                    custToken, null]
   ];
 
+  // ---- self-check: the table above must not silently fall behind src/server.js ----
+  // This is the failure mode that let the payment callback go untested in the first place: a
+  // hand-maintained list drifts, the suite stays green, and the untested route is the new one.
+  // Derive the registered routes from the source and require an entry for each.
+  const src = fs.readFileSync(path.join(API, 'src/server.js'), 'utf8');
+  const registered = [];
+  const routeRe = /app\.(get|post|put|delete|patch)\(\s*'([^']+)'/g;
+  let m;
+  while ((m = routeRe.exec(src)) !== null) registered.push([m[1].toUpperCase(), m[2]]);
+  // Reduce both sides to one shape so `:deviceId`, `${dev.device.id}` and a literal UUID compare equal.
+  const shape = (p) => p.split('?')[0]
+    .replace(/\$\{[^}]*\}/g, ':x')
+    .replace(/:[A-Za-z][A-Za-z0-9_]*/g, ':x')
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ':x')
+    .replace(/\/+$/, '');
+  const covered = new Set(routes.map(([meth, p]) => `${meth} ${shape(p)}`));
+  const uncovered = registered.filter(([meth, p]) => !covered.has(`${meth} ${shape(p)}`));
+  if (uncovered.length) {
+    console.log('ROUTES IN src/server.js WITH NO SMOKE ENTRY:');
+    for (const [meth, p] of uncovered) console.log(`  ${meth} ${p}`);
+  }
+  console.log(`registered routes in src/server.js: ${registered.length}; smoke table entries: ${routes.length}`);
+
   const rows = [];
-  for (const [method, path, tok, body] of routes) {
+  for (const [method, p, tok, body] of routes) {
     // Only send content-type when there IS a body. Fastify's JSON parser rejects a bodiless request
     // that declares application/json with a 400 before the handler ever runs — which would silently
     // mark a route as "exercised" when it was not. That is what DELETE /v1/me was doing here.
@@ -214,14 +239,14 @@ const j = async (res) => { const t = await res.text(); try { return JSON.parse(t
     }
     let res;
     try {
-      res = await fetch(`${base}${path}`, init);
+      res = await fetch(`${base}${p}`, init);
     } catch (error) {
-      rows.push({ method, path, status: 'THROW', detail: String(error.message).slice(0, 90) });
+      rows.push({ method, path: p, status: 'THROW', detail: String(error.message).slice(0, 90) });
       continue;
     }
     let detail = '';
     if (res.status >= 500) detail = JSON.stringify(await j(res)).slice(0, 160);
-    rows.push({ method, path, status: res.status, detail });
+    rows.push({ method, path: p, status: res.status, detail });
   }
 
   // server.js returns 502 (provider failure, 3 sites) and 503 (feature_unavailable, 2 sites)
@@ -236,7 +261,10 @@ const j = async (res) => { const t = await res.text(); try { return JSON.parse(t
   }
 
   console.log('');
-  console.log(`SMOKE { "routes": ${rows.length}, "server_errors": ${serverErrors.length} }`);
+  console.log(`SMOKE { "routes": ${rows.length}, "registered": ${registered.length}, "uncovered": ${uncovered.length}, "server_errors": ${serverErrors.length} }`);
+  if (uncovered.length) {
+    console.log('A route was added to src/server.js without a smoke entry - add one above.');
+  }
   if (serverErrors.length) {
     console.log('ROUTES THAT RETURNED 5xx OR THREW:');
     for (const r of serverErrors) console.log(`  ${r.method} ${r.path} -> ${r.status} ${r.detail ?? ''}`);
@@ -244,7 +272,7 @@ const j = async (res) => { const t = await res.text(); try { return JSON.parse(t
 
   api.child.kill();
   await pool.end();
-  process.exit(serverErrors.length ? 1 : 0);
+  process.exit(serverErrors.length || uncovered.length ? 1 : 0);
 })().catch(async (error) => {
   console.error('SMOKE HARNESS ERROR:', error);
   process.exit(1);
