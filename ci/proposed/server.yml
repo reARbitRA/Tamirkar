@@ -131,3 +131,22 @@ jobs:
           node src/migrate.js down 99
           node src/migrate.js up
           echo "migration round-trip OK"
+
+      - name: Smoke every route for unhandled exceptions
+        # e2e.mjs walks the journeys, so a route no journey needs is never called; the payment
+        # callback sat in that gap. This calls all 27 registered routes and fails on any 5xx other
+        # than the 502/503 the code emits deliberately. The only code(500) in server.js is the
+        # catch-all error handler, so a 500 means an exception escaped a handler.
+        env:
+          SMOKE_DATABASE_ADMIN_URL: postgres://oosta:oosta@127.0.0.1:5432/postgres
+          SMOKE_PGPORT: '5432'
+        # Back to the repo root: the job's default working-directory is services/auth-api.
+        working-directory: .
+        run: |
+          set -e
+          # smoke.mjs imports pg and jsonwebtoken but lives outside services/auth-api. Node resolves
+          # them through audit/harness/node_modules, which is committed as a RELATIVE symlink to
+          # ../../services/auth-api/node_modules, so the tree the "Install dependencies" step built
+          # is reused and no second npm ci is needed.
+          test -e audit/harness/node_modules/pg || { echo "::error::audit/harness/node_modules symlink is broken"; exit 1; }
+          node audit/harness/smoke.mjs

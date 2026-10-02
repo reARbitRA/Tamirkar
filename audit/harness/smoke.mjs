@@ -11,7 +11,9 @@
 // route can crash the request. A 400/401/403/404/409/422/429/502/503 is fine — those are handled
 // outcomes. Only 5xx counts as a failure, because a 5xx means an exception escaped the handler.
 //
-// Run: node audit/harness/smoke.mjs   (needs PostgreSQL on 127.0.0.1:55432)
+// Run: node audit/harness/smoke.mjs
+// Connection defaults match audit/harness/start_pg.sh; override with SMOKE_DATABASE_ADMIN_URL for a
+// differently-configured server (CI uses a password-authenticated service container on 5432).
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import net from 'node:net';
@@ -19,8 +21,12 @@ import pg from 'pg';
 import jwt from 'jsonwebtoken';
 import crypto from 'node:crypto';
 
-const API = '/home/user/Tamirkar/services/auth-api';
-const PGHOST = '127.0.0.1', PGPORT = 55432;
+const API = new URL('../../services/auth-api', import.meta.url).pathname.replace(/\/$/, '');
+// Admin connection used only to drop/create the throwaway database. Everything else goes through
+// SMOKE_DATABASE_URL, which points at the created database.
+const ADMIN_URL = process.env.SMOKE_DATABASE_ADMIN_URL ?? 'postgres://oosta@127.0.0.1:55432/postgres';
+const PGHOST = process.env.SMOKE_PGHOST ?? '127.0.0.1';
+const PGPORT = process.env.SMOKE_PGPORT ?? '55432';
 const DBNAME = 'oosta_smoke';
 const ENV_BASE = {
   HOST: '127.0.0.1',
@@ -49,7 +55,7 @@ function freePort() {
 }
 
 async function resetDatabase() {
-  const admin = new pg.Client({ host: PGHOST, port: PGPORT, user: 'oosta', database: 'postgres' });
+  const admin = new pg.Client({ connectionString: ADMIN_URL });
   await admin.connect();
   await admin.query(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()`, [DBNAME]);
   await admin.query(`DROP DATABASE IF EXISTS ${DBNAME} WITH (FORCE)`);
