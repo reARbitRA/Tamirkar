@@ -208,9 +208,6 @@ const POST = (url, tok, body = {}) => fetch(url, { method: 'POST', headers: H(to
   await pool.query(`UPDATE quotes SET status='accepted' WHERE id=$1`, [b11.id]);
   const r13 = await fetch(`${base}/v1/payments/zarinpal/start`, { method: 'POST', headers: { ...H(custToken), 'idempotency-key': 'audit-idem-key-0001' }, body: JSON.stringify({ quote_id: b11.id }) });
   const b13 = await j(r13);
-  // A 200 with a payment_url is a real Zarinpal authority: J5 is then genuinely verified end to
-  // end. A 502 means the provider was unreachable (placeholder merchant id or no egress), which is
-  // recorded as PARTIAL rather than PASS — the intent row below still proves our side is correct.
   // The route returns 201 + checkout_url when Zarinpal issued a real authority (server.js:
   // `reply.code(201).send({ id, status: 'pending', checkout_url: payment.paymentUrl })`), and
   // 200 + checkout_url when it replays an existing pending intent. Anything else means the
