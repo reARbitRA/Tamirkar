@@ -161,7 +161,7 @@ Per-module, from the executed lanes:
 | `services/auth-api/src/ledger.js` | 37 | balanced + idempotent, exercised on real rows | **A** | none material |
 | `services/auth-api/src/config.js` | 100% line cov | 5 new fail-closed tests | **A** | — |
 | `services/auth-api/src/auth.js` | 33% cov | `requireActiveUser` proven via harness + integration test | **B** | no token revocation list |
-| `services/auth-api/db/*.sql` | 164 | 4 migrations apply cleanly, exit 0 | **A** | no down-migrations |
+| `services/auth-api/db/**/*.sql` | 266 (228 up + 38 down) | 5 migrations + 5 matching rollbacks; `up → down 99 → up` round-trip executed against a real database | **A** | 4 of the 5 rollbacks are destructive by nature |
 | `app/src/main/java/…/data/remote/*` | ~250 | read-only; no Gradle in sandbox | **C** | compile status unproven |
 | `app/src/main/java/…/ui/**` | ~5000 | not executed at all | **D** | entirely unverified |
 | `.github/workflows/*` | 3 files | `gh run list`: 10/10 failed | **F** | no green build in history |
