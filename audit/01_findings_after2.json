@@ -194,15 +194,15 @@
     },
     {
       "id": "F-QUAL-006",
-      "title": "server.js is a 694-line god file holding all 16 routes, validation and money logic",
+      "title": "server.js is a 1297-line god file holding all 27 routes, validation and money logic",
       "lane": "QUAL",
       "severity": "P3",
       "confidence": 1.0,
       "evidence_grade": "B",
       "evidence": [
-        "[E:cmd#8 wc -l -> 694 services/auth-api/src/server.js; next largest source file is 490]"
+        "[E:cmd wc -l services/auth-api/src/*.js -> server.js 1297, migrate.js 114, retry.js 90; 27 registered routes]"
       ],
-      "impact": "Every change to auth, AI, KYC, orders, payments and escrow touches one file, raising merge-conflict and regression risk exactly where the money lives.",
+      "impact": "Every change to auth, AI, KYC, orders, devices, payments and escrow touches one file, raising merge-conflict and regression risk exactly where the money lives. The file has grown from 694 to 1297 lines and 16 to 27 routes during this remediation, so the concentration has roughly doubled rather than been reduced.",
       "exploit_or_repro": "NONE_FOUND",
       "blast_radius": "single-user",
       "remediation": "Extract route groups into modules sharing one app factory; keep the ledger and state machine in domain modules.",
