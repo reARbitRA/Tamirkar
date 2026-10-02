@@ -1,6 +1,6 @@
 # Oosta (اوستا) — MVP Readiness Audit + Remediation
 
-**Repository** `reARbitRA/Tamirkar` · **baseline** `3bd962b3d490f936f81fe333a945e35427ffc7e0` · **head** `721ca75`
+**Repository** `reARbitRA/Tamirkar` · **baseline** `3bd962b3d490f936f81fe333a945e35427ffc7e0` · **head** `b5e9c4b`
 **Branch** `arena/01a0fac4-tamirkar` · **audit date** 2026-10-02
 **VALIDATION: DEGRADED — SINGLE-MODEL** (no second model was reachable in this workspace; see §4)
 
@@ -35,11 +35,11 @@
 ═══════════════════════════════════════════════
 ```
 
-## 2. Adjudication — AFTER (current HEAD `721ca75`)
+## 2. Adjudication — AFTER (current HEAD `b5e9c4b`)
 
 ```
 ═══════════════════════════════════════════════
-  MVP LAUNCH ADJUDICATION (AFTER) — commit 721ca75
+  MVP LAUNCH ADJUDICATION (AFTER) — commit b5e9c4b
 ═══════════════════════════════════════════════
   VERDICT          : CONDITIONAL GO
   GO PROBABILITY   : 100.00 %
