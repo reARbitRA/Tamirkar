@@ -212,19 +212,22 @@
     },
     {
       "id": "F-QUAL-007",
-      "title": "Room MIGRATION_1_2 is a no-op that exists only to absorb a version bump",
+      "title": "RESIDUAL: Room schema export is disabled, so MIGRATION_1_2 can never be validated against a real schema",
       "lane": "QUAL",
       "severity": "P3",
       "confidence": 1.0,
       "evidence_grade": "B",
       "evidence": [
-        "[E:app/src/main/java/com/example/data/local/TamirkarDatabase.kt:L66-L72 override fun migrate(db) = Unit]"
+        "[E:app/src/main/java/com/example/data/local/TamirkarDatabase.kt:L39 exportSchema = false]",
+        "[E:app/src/main/java/com/example/data/local/TamirkarDatabase.kt:L70 override fun migrate(db) = Unit]",
+        "[E:cmd ls app/schemas -> no such file or directory; no schema JSON is checked in]",
+        "[E:app/src/main/java/com/example/data/local/TamirkarDatabase.kt:L64-L68 KDoc above MIGRATION_1_2 documents why the bump happened - present since baseline 3bd962b, not added by this audit]"
       ],
-      "impact": "Harmless today and correctly non-destructive, but it teaches the pattern of bumping schema versions without migration content.",
+      "impact": "With exportSchema = false Room writes no schema JSON, so nothing in the repository records what version 1 or version 2 actually looked like. MIGRATION_1_2 asserts the two are identical and does nothing - which is correct today, but a future entity change that bumps version 3 would silently inherit that same empty migration and ship a database that Room cannot open, with no diff available to catch it. The rationale for the existing no-op IS documented (KDoc at L64-L68, present since baseline); what is missing is the machine-checkable artifact that would make the claim verifiable.",
       "exploit_or_repro": "Static read.",
       "blast_radius": "single-user",
-      "remediation": "Either revert version to 1 or document why the bump happened; enable exportSchema and check schemas in.",
-      "effort_hours": 1.0,
+      "remediation": "Set exportSchema = true, add room.schemaLocation to the kapt/ksp arguments in app/build.gradle.kts, and check the generated app/schemas/ JSON into the repository. Then a MigrationTestHelper can assert MIGRATION_1_2 against the real v1 schema. Cannot be done or verified in this sandbox: no JDK or Android SDK, so the build cannot be run.",
+      "effort_hours": 1.5,
       "mvp_blocking": false,
       "blocks_journey": [
         "J3"
