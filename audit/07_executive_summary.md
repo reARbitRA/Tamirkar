@@ -3,6 +3,12 @@
 **Repository** `reARbitRA/Tamirkar` · **audited HEAD** `7c8b749f4ca2f69c01de5e3d86d419b713d85344` · **date** 2026-10-02
 **Full report** `audit/07_final_report.md` · **PR** [#23](https://github.com/reARbitRA/Tamirkar/pull/23) (open, unmerged)
 
+> **PR status:** open and **not merged**. GitHub reports #23 as *conflicting* because `main` advanced
+> (PR #22) after this branch was cut. The branch was deliberately **not** rebased — that would rewrite
+> published history — and not re-synced, because merging newer `main` content would move the branch tip
+> away from the audited revision `7c8b749` and invalidate the freeze. Re-syncing is a human decision
+> that requires re-running the gates; see the full report's §4.
+
 ## Verdict
 
 **NO-GO — REMEDIABLE.** The product is close on engineering and blocked by process gaps a human must close.
