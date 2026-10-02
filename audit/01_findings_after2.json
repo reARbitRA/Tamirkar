@@ -150,22 +150,22 @@
     },
     {
       "id": "F-QUAL-005",
-      "title": "Duplicate orphan CI files and a zero-width-named workflow that builds with tests disabled",
+      "title": "RESIDUAL: a zero-width-named workflow still builds the APK with lint and tests disabled",
       "lane": "QUAL",
       "severity": "P2",
       "confidence": 1.0,
       "evidence_grade": "A",
       "evidence": [
-        "[E:cmd#11 git ls-files lists ci/android-apk.yml and github/workflows/build.yml (github/, not .github/)]",
-        "[E:cmd#27 diff shows both differ from their .github/workflows counterparts - stale copies, not includes]",
-        "[E:.github/workflows/ apkbuild.yml filename begins with U+200C ZERO WIDTH NON-JOINER]",
-        "[E:.github/workflows/ apkbuild.yml:L20-L26 step Force Build APK (Ignore AI Errors) runs gradlew assembleDebug -x lint -x test]"
+        "[E:cmd git ls-files .github/workflows -> 'android-apk.yml', 'build.yml', '\\u200capkbuild.yml' (the third filename begins with U+200C ZERO WIDTH NON-JOINER)]",
+        "[E:.github/workflows/‌apkbuild.yml:L26 run: ./gradlew assembleDebug -x lint -x test --no-daemon]",
+        "[E:.github/workflows/android-apk.yml:L47 ./gradlew test --stacktrace and :L69 assembleDebug WITHOUT -x test - the correct workflow already exists]",
+        "[E:cmd git cat-file -e HEAD:ci/android-apk.yml and HEAD:github/workflows/build.yml both fail - the two stale duplicates were deleted in 3983342]"
       ],
-      "impact": "Three near-identical workflow definitions with no single source of truth, plus a workflow whose explicit purpose is to ship an APK with lint and tests skipped. That is the mechanism by which F-EXEC-001 stayed invisible.",
+      "impact": "Three workflows build the same APK. Two of them (android-apk.yml, build.yml) run the tests; the third skips lint and tests outright with -x lint -x test, so it goes green on an APK whose tests fail. Because its filename starts with a zero-width non-joiner it is near-impossible to select, edit or delete by typing its name, which is why it survived. Deleting the two duplicate orphan files - the other half of this finding - was completed in 3983342.",
       "exploit_or_repro": "Executed diffs and filename byte inspection.",
       "blast_radius": "all-users",
-      "remediation": "Delete the ci/ and github/ duplicates, consolidate to one workflow per target, and retire the test-skipping workflow once F-EXEC-001 is fixed.",
-      "effort_hours": 2.0,
+      "remediation": "Delete .github/workflows/‌apkbuild.yml and keep android-apk.yml, which already runs ./gradlew test before assembleDebug. Requires the `workflows` permission, so this stays requires_human. The duplicate ci/ and github/ orphans named in the original finding are already gone.",
+      "effort_hours": 0.5,
       "mvp_blocking": false,
       "blocks_journey": []
     },
