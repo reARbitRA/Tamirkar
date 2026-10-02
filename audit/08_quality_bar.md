@@ -8,7 +8,7 @@ not a target.
 | --- | --- | --- | --- | --- |
 | Q1 | Arithmetic determinism and reproducibility | 12 | 100 | `emit` re-run byte-identical on 01_findings/02_scorecard/03_decision/mc_out; `mc_sim.py --verify` exit 0; scores 1 dp, percentages 2 dp, seed 424242, N=10000. |
 | Q2 | Phase coverage and artifact completeness | 10 | 98 | Phases 0-8 each have artifacts under ./audit/; the Phase 0 and Phase 1 budget overruns are logged rather than hidden; Phase 5 is DEGRADED by environment, recorded and not papered over. |
-| Q3 | Evidence-protocol compliance | 12 | 100 | Every one of the 26 frozen findings carries at least one `[E:...]` token; 8 grade A and 18 grade B, 0 C, 0 D; the seeded spot-check returned 10/10 with per-finding content anchors. |
+| Q3 | Evidence-protocol compliance | 12 | 100 | Every one of the 26 frozen findings carries at least one `[E:...]` token; 8 grade A and 18 grade B, 0 C, 0 D; the seeded spot-check returned 10/10 on the audit seed **and** 10/10 on the live-tip seed, re-opening 20 citations with per-finding and per-token content anchors. Four citation defects found by this check were corrected (FREEZE_EXCEPTION-004) and the checker's own four defects were fixed (FREEZE_EXCEPTION-005). |
 | Q4 | Schema, lane-to-dimension mapping and severity discipline | 10 | 100 | All findings validate against the universal schema; every penalty term is owned by a finding mapped to that dimension; no P0 was inflated (there are none) and no P1 was deflated into P2. |
 | Q5 | Go/No-Go adjudication with hard-gate overrides | 10 | 100 | Top-down verdict table, unmet_conditions enumerated, P_GO capped at 0.35 on both states by the P1>=5 gate, verdict NO-GO — REMEDIABLE, distance-to-go and residual risks stated. |
 | Q6 | Blocking validation honesty | 10 | 100 | validator_model=NONE_AVAILABLE, RESULT=DEGRADED — SINGLE-MODEL; no peer output, score or agreement metric fabricated; a mechanical re-implementation validated arithmetic and citations instead, and its limits are stated. |
@@ -49,3 +49,13 @@ reviewed the findings, so inter-rater agreement, hallucination rate and ΔR are 
 measured. The mechanical validator substitutes arithmetic and citation checking, which is strictly
 weaker than judgement checking. Any reader should treat the severity assignments as one model's
 calibrated opinion backed by executed evidence, not as a peer-agreed consensus.
+
+## Post-merge addendum
+
+The merge-time re-verification found that the certificate's original strength had been overstated: the
+first "10/10" sampled only ten tokens, skipped `cmd#` citations entirely and never content-checked a
+single-line range. The strengthened check re-opens 20 citations across two seeds and resolves every
+token shape, and it immediately caught four real citation defects. The certificate is now *weaker in
+claim and stronger in fact*, which is the right direction: `RESULT: DEGRADED — SINGLE-MODEL` remains,
+and the mechanical check's scope (arithmetic, citation resolution, citation content) is stated
+separately from what it cannot check (judgement, severity calibration).

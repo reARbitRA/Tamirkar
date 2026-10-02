@@ -96,7 +96,7 @@ MAX_DEV           : UNKNOWN
 ΔR (points)       : UNKNOWN
 P0 Jaccard        : UNKNOWN
 hallucinations    : 0 (mechanical validator; no peer output to compare)
-spot-check        : 10/10 (content-checked against a per-finding anchor regex)
+spot-check        : 10/10 audit seed + 10/10 live-tip seed (20 citations re-opened)
 RESULT            : DEGRADED — SINGLE-MODEL
 effective R_point : 80.9198 / 100
 effective P_GO    : 35.00%
@@ -106,6 +106,8 @@ effective P_GO    : 35.00%
 The certificate above is printed with the post-census audit confidence (95.1%); the frozen
 certificate in `04_validation.json` records 93.62%, the difference being the Phase 7 file census that
 replaced an estimated coverage ratio with a measured one (FREEZE_EXCEPTION-003).
+
+After `main` was merged into this branch the certificate was re-issued on the merged tree: the audit seed and the live-tip seed both return 10/10, and the checker is strictly stronger than the one that issued the first certificate (it resolves `cmd#` tokens against the evidence inventory, samples them, matches anchors case-insensitively and reports superseded ranges). `main`'s round-2 artifacts are kept as `01_findings_after2.json`, `02_scorecard_after2.json` and `07_final_report_round2.md`; they score a different revision and are not mixed into these figures.
 
 No second model is reachable from this environment: the only credential present is the GitHub token,
 and both `api.openai.com` and `api.anthropic.com` answer HTTP 000 (cmd#24). **No peer output, score or
@@ -144,8 +146,8 @@ Tasks halted as `requires_human`: T-008, T-009, T-010, T-011.
 
 | | Before | After |
 | --- | --- | --- |
-| Server tests | 37 total, 37 pass / 0 skipped (with DB); 6 skipped without it | **44 total, 44 pass, 0 fail, 0 skipped** |
-| Test suites | 13 | 13 (+2 files, `retention.test.js` and `render-blueprint.test.js`) |
+| Server tests | 37 total, 37 pass / 0 skipped (with DB) | **47 total, 47 pass, 0 fail, 0 skipped** (44 at audit close; three arrived with the upstream capture lane) |
+| Test suites | 11 | 14 (+`retention`, `render-blueprint`, `capture`) |
 | Measured line coverage | 78.34% | 78.34% (suite grew; coverage re-measured, unchanged) |
 | Findings open | 26 | 21 |
 | P0 / P1 | 0 / 6 | 0 / 5 |

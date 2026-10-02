@@ -1,6 +1,6 @@
 {
-  "head": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
-  "short_sha": "7c8b749",
+  "head": "f0274536a0d0eb0001133fde1672de825795550c",
+  "short_sha": "f027453",
   "branch": "arena/01a0fbb5-tamirkar",
   "dimensions": [
     {
@@ -444,14 +444,14 @@
   "R_point": 79.073,
   "letter_grade": "B",
   "monte_carlo": {
-    "implementation": "numpy 2.4.6 random.default_rng(424242)",
-    "mean": 78.7599,
+    "implementation": "LCG fallback (seed 424242) + Irwin-Hall normal approximation",
+    "mean": 78.7026,
     "ci95": [
-      72.76,
-      84.8252
+      72.7869,
+      84.6568
     ],
-    "p_ge_75": 0.8892,
-    "p_ge_85": 0.0216,
+    "p_ge_75": 0.8869,
+    "p_ge_85": 0.0175,
     "point": 79.073,
     "n": 10000,
     "seed": 424242,

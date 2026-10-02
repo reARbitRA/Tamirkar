@@ -159,13 +159,18 @@
   ],
   "evidence_spotcheck_pass_rate": 1.0,
   "iterations": 1,
-  "evidence_spotcheck_method": "Seeded selection hash(HEAD + i) mod N over every non-command token in the frozen finding set, then a CONTENT check: the cited range must be in bounds AND must match the finding's required anchor regex (audit/harness/arbiter_engine.py SPOT_ANCHOR), so a token passes only if the cited lines really are about the claim. Command tokens are re-inspected by re-running the command."
+  "evidence_spotcheck_method": "Seeded selection hash(HEAD + i) mod N over every non-command token in the frozen finding set, then a CONTENT check: the cited range must be in bounds AND must match the finding's required anchor regex (audit/harness/arbiter_engine.py SPOT_ANCHOR), so a token passes only if the cited lines really are about the claim. Command tokens are re-inspected by re-running the command.",
+  "revalidation_after_merge": {
+   "when": "after merging origin/main into the audit branch",
+   "cross_check": "audit seed 10/10 and live-tip seed 10/10 (20/20 citations re-opened), exit 0",
+   "certificate_is_still": "DEGRADED — SINGLE-MODEL: a peer model remains unreachable, so no agreement metric exists; the mechanical validator was strengthened instead and this is reported as such rather than as validation by a second model."
+  }
  },
  "freeze": {
   "frozen_at": "phase 5 close, HEAD unchanged since phase 0",
-  "sha256_mvp_definition": "fbda5ff74ab7403b303c8c014958fb781f287432ef18265d7d244c1287865531",
-  "sha256_initial_findings_sorted": "bc98a8d4cc6fc819185feb0607248dff02f6946efd2b3f9258b53117dfa7425a",
-  "sha256_relevant_file_set_sorted": "32d08e23f62345b289e58b7e52ec6669c7604e83a001ded2465780795057a0f8",
+  "sha256_mvp_definition": "61604e9dd607e6706106b275403edf0bb1f052eac64b8165dcc1036fd16448b8",
+  "sha256_initial_findings_sorted": "13a3e1aac591792e2c7c04aeaa1416af32580a1a1231b112c33687ee3e60a61e",
+  "sha256_relevant_file_set_sorted": "af7f2d6eadafd5ac880a7ab8cfe8efda6e363a01617c7f4370fe8aa6fe835f1a",
   "head_at_freeze": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
   "head_at_phase_0": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
   "head_changed_mid_audit": false,
@@ -203,6 +208,31 @@
     ],
     "rehash_performed": false,
     "validator_acknowledgement": "NONE_AVAILABLE — no independent validator exists in this environment; recorded as unacknowledged."
+   },
+   {
+    "id": "FREEZE_EXCEPTION-004",
+    "issue": "Four evidence citations were corrected after the merge, when the strengthened content check began sampling cmd# tokens and re-checked every range against the shipped tree.",
+    "detail": "(1) F-OPS-003 cited render.yaml:3-10 (a service header) for an ABSENCE claim; replaced with a recorded grep, cmd#35, plus the Dockerfile read that shows what is hardened. (2) F-LEGAL-001 cited docs/GO_NO_GO.md:47-51, which does not mention legal approval; the unsigned-draft statement is at 34-35. (3) F-API-001 cited TamirkarRepository.kt:80-84, which stops five lines short of the `dev_` minting line at 89. (4) F-DATA-002 cites two facets of one claim, so its escrow-worker citation now carries its own per-token anchor.",
+    "direction": "No severity, confidence, evidence grade, weight or score changed — verified by re-running emit/emit-after, which reproduce R_point 79.073 and 80.9198 exactly. Every correction makes the evidence behind a finding easier to verify, not the finding weaker.",
+    "evidence": [
+     "[E:audit/harness/cross_check_results.json]",
+     "[E:cmd#35]"
+    ],
+    "rehash_performed": true,
+    "previous_sha256_initial_findings_sorted": "bc98a8d4cc6fc819185feb0607248dff02f6946efd2b3f9258b53117dfa7425a",
+    "validator_acknowledgement": "NONE_AVAILABLE — no independent validator exists in this environment; the corrections were instead forced by the mechanical content check."
+   },
+   {
+    "id": "FREEZE_EXCEPTION-005",
+    "issue": "The evidence checker itself was strengthened, which changes what the certificate claims.",
+    "detail": "Four defects in the checker were found and fixed at the merge: (a) only `path:lo-hi` tokens parsed, so the three single-line tokens raised ValueError; (b) `cmd#N` tokens were accepted without ever resolving the number (now they must exist in the evidence inventory); (c) `cmd#N` tokens were also excluded from the sampling pool, so 16 citations could never be tested; (d) anchors matched case-sensitively, which failed an env var named AI_RATE_LIMIT_PER_MINUTE. The check now also resolves a range against the audited revision when remediation edited those lines, reporting it as a supersession rather than an error.",
+    "direction": "Strictly stronger: 20 citations are re-opened per run across two seeds instead of 10 against one, and more token shapes are actually verified.",
+    "evidence": [
+     "[E:audit/harness/arbiter_engine.py]",
+     "[E:audit/harness/cross_check_results.json]"
+    ],
+    "rehash_performed": false,
+    "validator_acknowledgement": "NONE_AVAILABLE"
    }
   ],
   "frozen_figures": {
@@ -224,8 +254,11 @@
    },
    "journeys_verified_working": "3/7",
    "audit_confidence_pct": 95.1,
-   "audit_confidence_pct_note": "93.62 at freeze with an estimated coverage ratio; 95.1 from the Phase 7 file census onward (FREEZE_EXCEPTION-003)."
-  }
+   "audit_confidence_pct_note": "93.62 at freeze with an estimated coverage ratio; 95.1 from the Phase 7 file census onward (FREEZE_EXCEPTION-003).",
+   "note_on_hashes": "Hashes recomputed after FREEZE_EXCEPTION-004; the previous findings hash is retained in that exception."
+  },
+  "head_at_merge": "f0274536a0d0eb0001133fde1672de825795550c",
+  "merge_note": "`main` advanced by PR #22 (a sibling round-2 session) after this audit was frozen. The upstream commits were merged into the audit branch at the human's instruction, because the PR was otherwise unresolvable. The audited revision stays 7c8b749f4ca2f69c01de5e3d86d419b713d85344: scoring, judgments and the journey verdicts are unaffected by the merge, and both gate suites were re-run on the merged tree. Two upstream audit artifacts (round-2 findings/scorecard) coexist under ./audit/ and are labelled."
  },
  "certificate": "── ARBITER VALIDATION CERTIFICATE v2.0 ──\nvalidator         : NONE_AVAILABLE\nmodel families    : UNKNOWN / NONE\ncontext isolated  : no\niterations        : 1\nMAD               : UNKNOWN (no peer model reachable)\nMAX_DEV           : UNKNOWN\nΔR (points)       : UNKNOWN\nP0 Jaccard        : UNKNOWN\nhallucinations    : 0 observed by the mechanical validator (all 10 spot-checked citations resolve)\nspot-check        : 10/10\nRESULT            : DEGRADED — SINGLE-MODEL\neffective R_point : 79.073 / 100\neffective P_GO    : 35.00%\n────────────────────────────────────────────",
  "frozen_figures": {

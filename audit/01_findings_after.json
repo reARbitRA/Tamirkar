@@ -1,6 +1,6 @@
 {
-  "head": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
-  "short_sha": "7c8b749",
+  "head": "f0274536a0d0eb0001133fde1672de825795550c",
+  "short_sha": "f027453",
   "branch": "arena/01a0fbb5-tamirkar",
   "remediation_status": {
     "F-RELY-001": {
@@ -178,7 +178,7 @@
         "[E:docs/legal/APPROVALS.md:1-9]",
         "[E:docs/legal/TERMS_FA.md:1-5]",
         "[E:docs/legal/PRIVACY_FA.md:1-5]",
-        "[E:docs/GO_NO_GO.md:47-51]"
+        "[E:docs/GO_NO_GO.md:34-35]: “تأیید حقوقی — docs/legal/* پیش‌نویس داخلی است…” — the unsigned-draft statement, not the earlier range this finding carried"
       ],
       "impact": "docs/legal/APPROVALS.md lists six required sign-offs (counsel, finance, payment gateway, operations, security, product) and every box is unchecked; the four text files carry no date, no version and no signature. Iranian private-law and PSP/escrow licensing questions cannot be resolved by any agent reading this repository — this is routed to a human, as LEGAL lane rules require, and it independently blocks a public paid launch.",
       "exploit_or_repro": "NONE_FOUND",
@@ -199,7 +199,7 @@
       "title": "Client generates device ids that the server's UUID validator will reject once a /v1/devices client is added",
       "evidence": [
         "[E:services/auth-api/src/server.js:106-116]",
-        "[E:app/src/main/java/com/example/data/repository/TamirkarRepository.kt:80-84]",
+        "[E:app/src/main/java/com/example/data/repository/TamirkarRepository.kt:79-89]: the addDevice signature together with the `dev_` + UUID.randomUUID() line the claim rests on — the earlier range stopped five lines short of it",
         "[E:services/auth-api/db/005_devices.sql:9-10]"
       ],
       "impact": "`requireUuid` rejects anything that is not 8-4-4-4-12 hex, and POST /v1/devices does not accept a client-supplied id at all — the row id comes from `gen_random_uuid()`. The app meanwhile mints `\"dev_\" + UUID.randomUUID().take(8)` (TamirkarRepository.addDevice). Any reconciliation written on the current assumption will silently mis-key the passport, and the ids it produces can never satisfy GET /v1/devices/:deviceId.",
@@ -420,8 +420,8 @@
       "evidence_grade": "B",
       "title": "Container has no read-only root filesystem, dropped capabilities or memory/CPU ceiling",
       "evidence": [
-        "[E:services/auth-api/Dockerfile:19-27]",
-        "[E:render.yaml:3-10]"
+        "[E:services/auth-api/Dockerfile:19-27]: EXPOSE 8080, HEALTHCHECK, USER node and CMD — the read shows what IS hardened, so the absence of read-only/cap-drop/memory limits is meaningful rather than an unread file",
+        "[E:cmd#35]: grep over render.yaml and docker-compose.auth.yml for read_only|cap_drop|security_opt|mem_limit|cpus returns exit 1 with no matches, which is what an absence claim needs as evidence"
       ],
       "impact": "`USER node` is set, which covers the main privilege risk, but a runaway process in this container can consume the whole instance and a compromised process keeps a writable filesystem and the default capability set. Severity is bounded by the fact that the declared target is a single-tenant free-tier pilot.",
       "exploit_or_repro": "NONE_FOUND",

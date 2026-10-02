@@ -247,3 +247,54 @@ diff returned zero matches; `cross-check` and `mc_sim.py --verify` both exited 0
 `07_final_report.md` carries the BEFORE/AFTER adjudication blocks, the verdict, the top-5 residual
 risks and the could_not_do table.
 
+## Post-audit merge of `main` (human instruction)
+
+`main` advanced by PR #22 — a sibling round-2 session that added the capture-lane tests
+(`test/capture.test.js`, `test/zarinpal-stub.mjs`), narrowed four of its own findings, and added three
+`package.json` scripts. GitHub reported the audit PR as conflicting. `origin/main` was merged into
+this branch at `f027453`; the branch was **not** rebased, so no published history was rewritten.
+
+| file | resolution |
+| --- | --- |
+| `services/auth-api/package.json` | union — upstream `test:coverage`/`harness`/`harness:smoke` kept alongside `retention` |
+| `audit/07_final_report.md` | this round's report kept at the canonical path; upstream's round-2 report preserved verbatim as `audit/07_final_report_round2.md` |
+| `audit/01_findings_after2.json`, `audit/02_scorecard_after2.json`, `audit/harness/smoke.mjs`, `.gitignore`, `test/capture.test.js`, `test/zarinpal-stub.mjs` | upstream taken as-is |
+
+**The merge did not touch scoring.** `emit` reproduces `R_point` 79.073 and `emit-after` reproduces
+80.9198 exactly, because the audited revision is unchanged and no finding was re-graded.
+
+### Gates re-run on the merged tree
+
+| gate | result |
+| --- | --- |
+| `node --test` with a database | **47 tests, 47 pass, 0 fail, 0 skipped** (three more tests than before the merge, none lost) |
+| `node --test` without a database | 47 tests, 38 pass, 0 fail, 9 skipped |
+| `bash scripts/ci-server-check.sh` | ALL GATES PASSED, exit 0 (includes the up→down→up migration round trip) |
+| `python3 tools/verify_backup_rules.py` | exit 0 |
+| `python3 audit/mc_sim.py --verify` | exit 0 |
+| `python3 audit/harness/arbiter_engine.py cross-check` | audit seed 10/10 **and** live-tip seed 10/10, exit 0 |
+
+### Four defects found in the evidence checker itself, and four citations it then caught
+
+The spot-check seed is `hash(HEAD + index) mod N`, so the merge selected a different sample — and the
+new sample exposed that the checker had been weaker than it looked.
+
+1. Only `path:lo-hi` tokens parsed; the three single-line citations (`Dockerfile:27`,
+   `002_platform.sql:74`, `render.yaml:62`) raised `ValueError`. **Fixed.**
+2. `cmd#N` tokens were accepted as "re-verified" without resolving the number. They now must exist in
+   the evidence inventory with a recorded exit code. **Fixed.**
+3. `cmd#N` tokens were excluded from the sampling pool, so 16 citations could never be tested.
+   **Fixed** — the pool is now 79 tokens and both seeds are sampled.
+4. Anchors matched case-sensitively, which failed a citation containing `AI_RATE_LIMIT_PER_MINUTE`.
+   **Fixed** — matching is case-insensitive, which is what an anchor describing content means.
+
+With those fixed, four real citation defects surfaced and were corrected (FREEZE_EXCEPTION-004):
+F-OPS-003 cited a service header for an absence claim (now a recorded grep, cmd#35); F-LEGAL-001
+cited `GO_NO_GO.md:47-51` where the legal statement is at 34-35; F-API-001's range stopped five lines
+short of the `dev_` minting line; and F-DATA-002's escrow-worker citation needed its own per-token
+anchor because the finding covers two facets. **No severity, confidence or score changed** — verified
+by re-running `emit`/`emit-after`.
+
+The certificate now re-opens 20 citations per run across two seeds instead of 10 across one, and
+reports a range that matches only at the audited revision as a *supersession* rather than an error
+(F-OPS-001's `render.yaml:79-80`, which T-005's remediation moved).

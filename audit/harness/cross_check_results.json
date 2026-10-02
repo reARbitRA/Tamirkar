@@ -1,49 +1,228 @@
 {
-  "head": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
-  "spotcheck": [
-    {
-      "token": "[E:services/auth-api/Dockerfile:19-27]",
-      "finding": "F-OPS-003",
-      "pass": true,
-      "check": "content+anchor",
-      "anchor_regex": "USER node|EXPOSE|read-only|cap",
-      "anchor_matched": true,
-      "auto_anchors_matched": [
-        "USER node"
-      ],
-      "reason": "services/auth-api/Dockerfile:19-27 in bounds (27 lines); required anchor /USER node|EXPOSE|read-only|cap/ matched"
+  "head": "f0274536a0d0eb0001133fde1672de825795550c",
+  "audited_head": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
+  "head_moved_since_audit": true,
+  "spotcheck_summary": {
+    "audit": {
+      "seed_head": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
+      "passed": 10,
+      "total": 10
     },
+    "live-tip": {
+      "seed_head": "f0274536a0d0eb0001133fde1672de825795550c",
+      "passed": 10,
+      "total": 10
+    }
+  },
+  "superseded_citations": [],
+  "spotcheck": [
     {
       "token": "[E:services/auth-api/db/005_devices.sql:9-10]",
       "finding": "F-API-001",
       "pass": true,
       "check": "content+anchor",
+      "resolved_at": "shipped-tree",
       "anchor_regex": "UUID|requireUuid|dev_",
       "anchor_matched": true,
       "auto_anchors_matched": [
         "UUID",
         "gen_random_uuid()"
       ],
-      "reason": "services/auth-api/db/005_devices.sql:9-10 in bounds (38 lines); required anchor /UUID|requireUuid|dev_/ matched"
+      "reason": "services/auth-api/db/005_devices.sql:9-10 in bounds (38 lines); required anchor /UUID|requireUuid|dev_/ matched",
+      "seed": "audit"
     },
     {
-      "token": "[E:services/auth-api/db/004_operational_indexes.sql:22-26]",
+      "token": "[E:cmd#16]",
+      "finding": "F-API-002",
+      "pass": true,
+      "check": "command-record",
+      "command": "grep -cE '^### `' docs/API.md; grep -cE '^app\\.(get|post|delete|put|patch)' server.js",
+      "exit": 0,
+      "reason": "cmd#16 resolved in the inventory (exit 0)",
+      "seed": "audit"
+    },
+    {
+      "token": "[E:cmd#19]",
+      "finding": "F-QUAL-001",
+      "pass": true,
+      "check": "command-record",
+      "command": "grep -c \"await client.query('BEGIN')\" services/auth-api/src/server.js",
+      "exit": 0,
+      "reason": "cmd#19 resolved in the inventory (exit 0)",
+      "seed": "audit"
+    },
+    {
+      "token": "[E:cmd#19]",
+      "finding": "F-QUAL-001",
+      "pass": true,
+      "check": "command-record",
+      "command": "grep -c \"await client.query('BEGIN')\" services/auth-api/src/server.js",
+      "exit": 0,
+      "reason": "cmd#19 resolved in the inventory (exit 0)",
+      "seed": "audit"
+    },
+    {
+      "token": "[E:app/src/test/java/com/example/GreetingScreenshotTest.kt:26-39]",
+      "finding": "F-QUAL-002",
+      "pass": true,
+      "check": "content+anchor",
+      "resolved_at": "shipped-tree",
+      "anchor_regex": "assert|@Test|test\\(",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "GreetingScreenshotTest"
+      ],
+      "reason": "app/src/test/java/com/example/GreetingScreenshotTest.kt:26-39 in bounds (55 lines); required anchor /assert|@Test|test\\(/ matched",
+      "seed": "audit"
+    },
+    {
+      "token": "[E:app/src/test/java/com/example/AiProviderRouterTest.kt:19-77]",
+      "finding": "F-QUAL-002",
+      "pass": true,
+      "check": "content+anchor",
+      "resolved_at": "shipped-tree",
+      "anchor_regex": "assert|@Test|test\\(",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "AiProviderRouterTest"
+      ],
+      "reason": "app/src/test/java/com/example/AiProviderRouterTest.kt:19-77 in bounds (77 lines); required anchor /assert|@Test|test\\(/ matched",
+      "seed": "audit"
+    },
+    {
+      "token": "[E:render.yaml:79-80]",
+      "finding": "F-OPS-001",
+      "pass": true,
+      "check": "content+anchor",
+      "resolved_at": "audited-revision (superseded in the shipped tree)",
+      "anchor_regex": "escrow|cron|dockerCommand|FEATURE_ESCROW_RELEASE|CMD",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "FEATURE_ESCROW_RELEASE"
+      ],
+      "reason": "render.yaml:79-80 in bounds (82 lines); supersedes: cited lines match 7c8b749; required anchor /escrow|cron|dockerCommand|FEATURE_ESCROW_RELEASE|CMD/ matched",
+      "seed": "audit"
+    },
+    {
+      "token": "[E:services/auth-api/src/escrow-worker.js:1-13]",
       "finding": "F-DATA-002",
       "pass": true,
       "check": "content+anchor",
-      "anchor_regex": "otp_challenges|escrow_holds|retention",
+      "resolved_at": "shipped-tree",
+      "anchor_regex": "release-due|escrow|worker",
       "anchor_matched": true,
       "auto_anchors_matched": [
-        "escrow_holds",
-        "otp_challenges"
+        "worker"
       ],
-      "reason": "services/auth-api/db/004_operational_indexes.sql:22-26 in bounds (26 lines); required anchor /otp_challenges|escrow_holds|retention/ matched"
+      "reason": "services/auth-api/src/escrow-worker.js:1-13 in bounds (13 lines); required anchor /release-due|escrow|worker/ matched",
+      "seed": "audit"
+    },
+    {
+      "token": "[E:services/auth-api/src/server.js:1288-1296]",
+      "finding": "F-RELY-002",
+      "pass": true,
+      "check": "content+anchor",
+      "resolved_at": "shipped-tree",
+      "anchor_regex": "close|SIGTERM|pool",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "SIGTERM",
+        "close()",
+        "closeGracefully",
+        "end()"
+      ],
+      "reason": "services/auth-api/src/server.js:1288-1296 in bounds (1302 lines); required anchor /close|SIGTERM|pool/ matched",
+      "seed": "audit"
+    },
+    {
+      "token": "[E:cmd#12]",
+      "finding": "F-EXEC-004",
+      "pass": true,
+      "check": "command-record",
+      "command": "ls .github/workflows; grep -rl 'services/auth-api' .github/workflows",
+      "exit": 1,
+      "reason": "cmd#12 resolved in the inventory (exit 1)",
+      "seed": "audit"
+    },
+    {
+      "token": "[E:cmd#10]",
+      "finding": "F-DATA-001",
+      "pass": true,
+      "check": "command-record",
+      "command": "command -v pg_dump; command -v pg_restore; ls $PG/bin",
+      "exit": 1,
+      "reason": "cmd#10 resolved in the inventory (exit 1)",
+      "seed": "live-tip"
+    },
+    {
+      "token": "[E:services/auth-api/db/005_devices.sql:9-10]",
+      "finding": "F-API-001",
+      "pass": true,
+      "check": "content+anchor",
+      "resolved_at": "shipped-tree",
+      "anchor_regex": "UUID|requireUuid|dev_",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "UUID",
+        "gen_random_uuid()"
+      ],
+      "reason": "services/auth-api/db/005_devices.sql:9-10 in bounds (38 lines); required anchor /UUID|requireUuid|dev_/ matched",
+      "seed": "live-tip"
+    },
+    {
+      "token": "[E:cmd#13]",
+      "finding": "F-EXEC-005",
+      "pass": true,
+      "check": "command-record",
+      "command": "gh run list --limit 6",
+      "exit": 0,
+      "reason": "cmd#13 resolved in the inventory (exit 0)",
+      "seed": "live-tip"
+    },
+    {
+      "token": "[E:cmd#28]",
+      "finding": "F-EXEC-001",
+      "pass": true,
+      "check": "command-record",
+      "command": "python3 route census: routes from ^app\\.(get|post|...) in src/server.js vs a literal scan of app/src/main/java/**/*.kt f",
+      "exit": 0,
+      "reason": "cmd#28 resolved in the inventory (exit 0)",
+      "seed": "live-tip"
+    },
+    {
+      "token": "[E:app/src/test/java/com/example/ExampleUnitTest.kt:11-15]",
+      "finding": "F-QUAL-002",
+      "pass": true,
+      "check": "content+anchor",
+      "resolved_at": "shipped-tree",
+      "anchor_regex": "assert|@Test|test\\(",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "ExampleUnitTest"
+      ],
+      "reason": "app/src/test/java/com/example/ExampleUnitTest.kt:11-15 in bounds (16 lines); required anchor /assert|@Test|test\\(/ matched",
+      "seed": "live-tip"
+    },
+    {
+      "token": "[E:services/auth-api/src/server.js:24-33]",
+      "finding": "F-RELY-002",
+      "pass": true,
+      "check": "content+anchor",
+      "resolved_at": "shipped-tree",
+      "anchor_regex": "close|SIGTERM|pool",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "statement_timeout"
+      ],
+      "reason": "services/auth-api/src/server.js:24-33 in bounds (1302 lines); required anchor /close|SIGTERM|pool/ matched",
+      "seed": "live-tip"
     },
     {
       "token": "[E:docs/GO_60_ROADMAP.md:47-90]",
       "finding": "F-EXEC-001",
       "pass": true,
       "check": "content+anchor",
+      "resolved_at": "shipped-tree",
       "anchor_regex": "/v1/",
       "anchor_matched": true,
       "auto_anchors_matched": [
@@ -52,79 +231,60 @@
         "AuthApi",
         "AuthApi.kt"
       ],
-      "reason": "docs/GO_60_ROADMAP.md:47-90 in bounds (219 lines); required anchor //v1// matched"
-    },
-    {
-      "token": "[E:app/src/main/java/com/example/data/remote/AuthApi.kt:40-61]",
-      "finding": "F-EXEC-001",
-      "pass": true,
-      "check": "content+anchor",
-      "anchor_regex": "/v1/",
-      "anchor_matched": true,
-      "auto_anchors_matched": [
-        "AuthApi"
-      ],
-      "reason": "app/src/main/java/com/example/data/remote/AuthApi.kt:40-61 in bounds (79 lines); required anchor //v1// matched"
-    },
-    {
-      "token": "[E:app/src/main/res/xml/data_extraction_rules.xml:1-12]",
-      "finding": "F-LEGAL-002",
-      "pass": true,
-      "check": "content+anchor",
-      "anchor_regex": "sharedpref|database|backup|Eclude|exclude",
-      "anchor_matched": true,
-      "auto_anchors_matched": [],
-      "reason": "app/src/main/res/xml/data_extraction_rules.xml:1-12 in bounds (12 lines); required anchor /sharedpref|database|backup|Eclude|exclude/ matched"
+      "reason": "docs/GO_60_ROADMAP.md:47-90 in bounds (219 lines); required anchor //v1// matched",
+      "seed": "live-tip"
     },
     {
       "token": "[E:app/src/main/java/com/example/data/remote/AiProviderRouter.kt:24-43]",
       "finding": "F-EXEC-001",
       "pass": true,
       "check": "content+anchor",
+      "resolved_at": "shipped-tree",
       "anchor_regex": "/v1/",
       "anchor_matched": true,
       "auto_anchors_matched": [],
-      "reason": "app/src/main/java/com/example/data/remote/AiProviderRouter.kt:24-43 in bounds (46 lines); required anchor //v1// matched"
+      "reason": "app/src/main/java/com/example/data/remote/AiProviderRouter.kt:24-43 in bounds (46 lines); required anchor //v1// matched",
+      "seed": "live-tip"
     },
     {
-      "token": "[E:services/auth-api/src/config.js:78-81]",
-      "finding": "F-SEC-002",
+      "token": "[E:app/src/main/java/com/example/data/repository/TamirkarRepository.kt:79-89]",
+      "finding": "F-API-001",
       "pass": true,
       "check": "content+anchor",
-      "anchor_regex": "bucket|limit|window",
+      "resolved_at": "shipped-tree",
+      "anchor_regex": "UUID|requireUuid|dev_",
       "anchor_matched": true,
       "auto_anchors_matched": [
-        "AI_RATE_LIMIT_PER_MINUTE"
+        "\"dev_\" + UUID",
+        "UUID",
+        "dev_",
+        "randomUUID()"
       ],
-      "reason": "services/auth-api/src/config.js:78-81 in bounds (86 lines); required anchor /bucket|limit|window/ matched"
+      "reason": "app/src/main/java/com/example/data/repository/TamirkarRepository.kt:79-89 in bounds (238 lines); required anchor /UUID|requireUuid|dev_/ matched",
+      "seed": "live-tip"
     },
     {
-      "token": "[E:services/auth-api/src/config.js:78-81]",
-      "finding": "F-SEC-002",
+      "token": "[E:services/auth-api/src/server.js:1288-1296]",
+      "finding": "F-RELY-002",
       "pass": true,
       "check": "content+anchor",
-      "anchor_regex": "bucket|limit|window",
+      "resolved_at": "shipped-tree",
+      "anchor_regex": "close|SIGTERM|pool",
       "anchor_matched": true,
       "auto_anchors_matched": [
-        "AI_RATE_LIMIT_PER_MINUTE"
+        "SIGTERM",
+        "close()",
+        "closeGracefully",
+        "end()"
       ],
-      "reason": "services/auth-api/src/config.js:78-81 in bounds (86 lines); required anchor /bucket|limit|window/ matched"
-    },
-    {
-      "token": "[E:docs/legal/APPROVALS.md:1-9]",
-      "finding": "F-LEGAL-001",
-      "pass": true,
-      "check": "content+anchor",
-      "anchor_regex": "\\[ \\]|APPROVALS|\\u062a\\u0623\\u06cc\\u06cc\\u062f",
-      "anchor_matched": true,
-      "auto_anchors_matched": [],
-      "reason": "docs/legal/APPROVALS.md:1-9 in bounds (10 lines); required anchor /\\[ \\]|APPROVALS|\\u062a\\u0623\\u06cc\\u06cc\\u062f/ matched"
+      "reason": "services/auth-api/src/server.js:1288-1296 in bounds (1302 lines); required anchor /close|SIGTERM|pool/ matched",
+      "seed": "live-tip"
     }
   ],
   "failures": [],
   "recomputed": {
     "R_point": 79.072978,
     "P_GO_effective": 0.35,
-    "MC_mean": 78.7599
+    "MC_mean": 78.7026
   }
 }

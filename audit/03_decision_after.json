@@ -1,6 +1,6 @@
 {
-  "head": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
-  "short_sha": "7c8b749",
+  "head": "f0274536a0d0eb0001133fde1672de825795550c",
+  "short_sha": "f027453",
   "branch": "arena/01a0fbb5-tamirkar",
   "state": "after phase 7 remediation",
   "verdict": "NO-GO — REMEDIABLE",
@@ -11,12 +11,12 @@
   ],
   "R_point": 80.9198,
   "letter_grade": "B+",
-  "R_mean_mc": 80.4347,
+  "R_mean_mc": 80.3776,
   "CI95": [
-    74.4674,
-    86.4556
+    74.4986,
+    86.3241
   ],
-  "P_GO_raw": 0.9624,
+  "P_GO_raw": 0.963,
   "P_GO_effective": 0.35,
   "audit_confidence_pct": 95.1,
   "counts": {

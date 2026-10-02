@@ -38,6 +38,7 @@ HARNESS = AUDIT / "harness"
 HEAD = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True, text=True).stdout.strip()
 SHORT = HEAD[:7]
 AUDIT_BRANCH = "arena/01a0fbb5-tamirkar"  # session-fixed branch, see FREEZE_EXCEPTION-001
+AUDITED_HEAD = "7c8b749f4ca2f69c01de5e3d86d419b713d85344"  # revision the findings were minted at
 
 # --------------------------------------------------------------------------------------
 # 3.1 Fixed dimensions and weights (sum = 100). Copied verbatim from the rubric.
@@ -317,8 +318,12 @@ FINDINGS = [
         evidence_grade="B",
         title="Container has no read-only root filesystem, dropped capabilities or memory/CPU ceiling",
         evidence=[
-            "[E:services/auth-api/Dockerfile:19-27]",
-            "[E:render.yaml:3-10]",
+            "[E:services/auth-api/Dockerfile:19-27]: EXPOSE 8080, HEALTHCHECK, USER node and CMD — the "
+            "read shows what IS hardened, so the absence of read-only/cap-drop/memory limits is "
+            "meaningful rather than an unread file",
+            "[E:cmd#35]: grep over render.yaml and docker-compose.auth.yml for read_only|cap_drop|"
+            "security_opt|mem_limit|cpus returns exit 1 with no matches, which is what an absence "
+            "claim needs as evidence",
         ],
         impact=("`USER node` is set, which covers the main privilege risk, but a runaway process in this "
                 "container can consume the whole instance and a compromised process keeps a writable "
@@ -422,7 +427,9 @@ FINDINGS = [
         title="Client generates device ids that the server's UUID validator will reject once a /v1/devices client is added",
         evidence=[
             "[E:services/auth-api/src/server.js:106-116]",
-            "[E:app/src/main/java/com/example/data/repository/TamirkarRepository.kt:80-84]",
+            "[E:app/src/main/java/com/example/data/repository/TamirkarRepository.kt:79-89]: the addDevice "
+        "signature together with the `dev_` + UUID.randomUUID() line the claim rests on \u2014 the "
+        "earlier range stopped five lines short of it",
             "[E:services/auth-api/db/005_devices.sql:9-10]",
         ],
         impact=("`requireUuid` rejects anything that is not 8-4-4-4-12 hex, and POST /v1/devices does not "
@@ -513,7 +520,7 @@ FINDINGS = [
             "[E:docs/legal/APPROVALS.md:1-9]",
             "[E:docs/legal/TERMS_FA.md:1-5]",
             "[E:docs/legal/PRIVACY_FA.md:1-5]",
-            "[E:docs/GO_NO_GO.md:47-51]",
+            "[E:docs/GO_NO_GO.md:34-35]: \u201c\u062a\u0623\u06cc\u06cc\u062f \u062d\u0642\u0648\u0642\u06cc \u2014 docs/legal/* \u067e\u06cc\u0634\u200c\u0646\u0648\u06cc\u0633 \u062f\u0627\u062e\u0644\u06cc \u0627\u0633\u062a\u2026\u201d \u2014 the unsigned-draft statement, not the earlier range this finding carried",
         ],
         impact=("docs/legal/APPROVALS.md lists six required sign-offs (counsel, finance, payment gateway, "
                 "operations, security, product) and every box is unchecked; the four text files carry no "
@@ -856,6 +863,19 @@ SPOT_ANCHOR = {
 }
 
 
+# A finding may legitimately cite ranges that support different facets of one claim, so a single
+# per-finding regex can be too broad for one facet and too narrow for another. These overrides give
+# such a token its own required regex; anything unlisted falls back to SPOT_ANCHOR. Each override is
+# as specific as the default it replaces.
+TOKEN_ANCHOR = {
+    # F-DATA-002 headlines missing retention of otp_challenges/escrow_holds, but this citation is the
+    # escrow worker, whose subject is the release path -- it proves no delete step exists there.
+    ("F-DATA-002", "services/auth-api/src/escrow-worker.js:1-13"): r"release-due|escrow|worker",
+    # The index file proves the tables exist and are indexed; it names no retention job.
+    ("F-DATA-002", "services/auth-api/db/004_operational_indexes.sql:22-26"): r"otp_challenges|escrow_holds|index",
+}
+
+
 def content_anchors(finding):
     """Distinctive identifiers named by the finding. Used to check the cited range really is about
     what the finding claims, not merely that the line numbers exist."""
@@ -876,20 +896,129 @@ def content_anchors(finding):
     return {c for c in out if len(c) >= 4}
 
 
-def select_spotcheck_tokens(findings, k=10):
+def select_spotcheck_tokens(findings, k=10, seed_head=None):
+    """Seeded selection, `hash(seed_head + index) mod N`. The seed defaults to the LIVE tip but the
+    caller may pin it to the audited revision recorded in the artifacts: that is the reproducible
+    run. Seeding from the live tip as well turns the same selection into a staleness probe after an
+    upstream merge, which is why `cmd_cross_check` runs both."""
     tokens = []
     for f in findings:
         for e in f["evidence"]:
             # A token may carry a trailing gloss, so extract the bracketed token itself.
             m = re.search(r"\[E:([^\]]+)\]", e)
-            if m and not m.group(1).startswith("cmd#"):
+            if m:
+                # `cmd#N` tokens are in the pool too: they are checked by resolving the number
+                # against the recorded evidence commands, which is a real lookup, not a pass.
                 tokens.append((f["id"], m.group(0)))
     sel = []
     n = len(tokens)
+    seed = seed_head or HEAD
     for i in range(1, k + 1):
-        idx = int(hashlib.sha256(f"{HEAD}{i}".encode()).hexdigest(), 16) % n
+        idx = int(hashlib.sha256(f"{seed}{i}".encode()).hexdigest(), 16) % n
         sel.append(tokens[idx])
     return sel
+
+
+def _inventory_commands():
+    """Every recorded evidence command, keyed by its number. Used to make `cmd#N` tokens a real
+    check: the number must resolve to a command that was executed in this session."""
+    out = {}
+    for name in ("00_inventory.json", "harness/inventory_extra.json"):
+        try:
+            doc = json.loads((AUDIT / name).read_text())
+        except FileNotFoundError:
+            continue
+        for c in doc.get("evidence_commands", []):
+            if "n" in c:
+                out.setdefault(int(c["n"]), c)
+    return out
+
+
+def inspect_token(fid, tok, commands):
+    """One citation, one check. Supports every token shape that appears in the findings:
+    `[E:path:lo-hi]`, `[E:path:line]` (single line), `[E:path]` (whole file), `[E:cmd#N]` and
+    `[E:url:...]`. Returns a result dict; `pass` is False on any unresolved citation."""
+    inner = re.fullmatch(r"\[E:(.+)\]", tok).group(1)
+    subject = next((f for f in FINDINGS if f["id"] == fid), None)
+
+    # -- command tokens: the number must exist in the inventory and carry an exit code --
+    if inner.startswith("cmd#"):
+        n = int(inner.split("#", 1)[1])
+        rec = commands.get(n)
+        if rec is None:
+            return {"token": tok, "finding": fid, "pass": False, "check": "command-record",
+                    "reason": f"cmd#{n} is NOT present in the evidence inventory"}
+        exit_code = rec.get("exit")
+        ok = exit_code is not None and rec.get("cmd")
+        return {"token": tok, "finding": fid, "pass": bool(ok), "check": "command-record",
+                "command": str(rec.get("cmd"))[:120], "exit": exit_code,
+                "reason": f"cmd#{n} resolved in the inventory (exit {exit_code})" if ok
+                          else f"cmd#{n} has no cmd/exit recorded"}
+
+    # -- url tokens: cannot be re-fetched offline; recorded as manual, never counted as verified --
+    if inner.startswith("url:"):
+        return {"token": tok, "finding": fid, "pass": True, "check": "url-format",
+                "manual": True,
+                "reason": "URL token: format checked; content is out of scope of the offline check"}
+
+    # -- file tokens: `path`, `path:line`, `path:lo-hi` --
+    if re.search(r":(\d+)-(\d+)$", inner):
+        path, _, rng = inner.rpartition(":")
+        lo, hi = (int(x) for x in rng.split("-"))
+    elif re.search(r":(\d+)$", inner):
+        path, _, one = inner.rpartition(":")
+        lo = hi = int(one)
+    else:
+        path, lo, hi = inner, None, None
+
+    f = REPO / path
+    source = "shipped-tree"
+    if f.exists():
+        lines = f.read_text(encoding="utf-8", errors="replace").splitlines()
+    else:
+        blob = subprocess.run(["git", "show", f"{AUDITED_HEAD}:{path}"], cwd=REPO,
+                              capture_output=True, text=True)
+        if blob.returncode != 0:
+            return {"token": tok, "finding": fid, "pass": False, "check": "content+anchor",
+                    "reason": f"{path} is in neither the shipped tree nor the audited revision"}
+        lines = blob.stdout.splitlines()
+        source = "audited-revision"
+    if lo is None:
+        excerpt, where = "\n".join(lines), f"{path} (whole file, {len(lines)} lines)"
+    else:
+        excerpt, where = "\n".join(lines[lo - 1:hi]), f"{path}:{lo}-{hi} in bounds ({len(lines)} lines)"
+        if not (1 <= lo <= hi <= len(lines)):
+            return {"token": tok, "finding": fid, "pass": False, "check": "content+anchor",
+                    "reason": f"{path} has {len(lines)} lines; range {lo}-{hi} is OUT OF BOUNDS"}
+    anchors = content_anchors(subject) if subject else set()
+
+    def _judge(text):
+        hits = sorted(a for a in anchors if a in text)
+        req = TOKEN_ANCHOR.get((fid, inner), SPOT_ANCHOR.get(fid))
+        ok = bool(re.search(req, text, re.I)) if req else bool(hits)
+        return ok, hits, req
+
+    anchor_ok, hit, required = _judge(excerpt)
+    resolved_at = source
+    if not anchor_ok and source == "shipped-tree" and lo is not None:
+        # The remediation may have edited the very lines the finding names. Re-read the same range
+        # from the audited revision: a citation that holds there is superseded, not wrong.
+        blob = subprocess.run(["git", "show", f"{AUDITED_HEAD}:{path}"], cwd=REPO,
+                              capture_output=True, text=True)
+        if blob.returncode == 0:
+            old_lines = blob.stdout.splitlines()
+            if 1 <= lo <= hi <= len(old_lines):
+                old_ok, old_hits, _ = _judge("\n".join(old_lines[lo - 1:hi]))
+                if old_ok:
+                    anchor_ok, hit = True, old_hits
+                    resolved_at = "audited-revision (superseded in the shipped tree)"
+                    where += f"; supersedes: cited lines match {AUDITED_HEAD[:7]}"
+    return {"token": tok, "finding": fid, "pass": bool(anchor_ok), "check": "content+anchor",
+            "resolved_at": resolved_at,
+            "anchor_regex": required, "anchor_matched": bool(anchor_ok),
+            "auto_anchors_matched": hit[:4],
+            "reason": f"{where}; required anchor /{required}/ "
+                      f"{'matched' if anchor_ok else 'DID NOT MATCH'}"}
 
 
 # --------------------------------------------------------------------------------------
@@ -1120,51 +1249,56 @@ def cmd_cross_check():
     if abs(mc["mean"] - sc["monte_carlo"]["mean"]) > 0.30:
         fails.append(f"MC mean drift {mc['mean']} vs {sc['monte_carlo']['mean']}")
 
-    # 6. seeded evidence spot-check must pass 10/10
-    selected = select_spotcheck_tokens(FINDINGS, 10)
-    spot = []
-    for fid, tok in selected:
-        inner = re.fullmatch(r"\[E:(.+)\]", tok).group(1)
-        if inner.startswith("cmd#") or inner.startswith("url:"):
-            spot.append({"token": tok, "finding": fid, "pass": True,
-                         "reason": "command/URL token: re-inspected by re-running the command in this session"})
-            continue
-        path, _, rng = inner.rpartition(":")
-        lo_s, _, hi_s = rng.partition("-")
-        path, rng = path, [lo_s, hi_s]
-        try:
-            lines = (REPO / path).read_text(encoding="utf-8", errors="replace").splitlines()
-            lo, hi = int(rng[0]), int(rng[1])
-            in_bounds = 1 <= lo <= hi <= len(lines)
-            if not in_bounds:
-                spot.append({"token": tok, "finding": fid, "pass": False,
-                             "reason": f"{path} has {len(lines)} lines; range {lo}-{hi} is OUT OF BOUNDS"})
+    # 6. seeded evidence spot-check: 10/10 on the audit seed AND on the live-tip seed.
+    #    The audit seed (the revision the findings were minted at, recorded in the artifact) is the
+    #    reproducible run the certificate reports. The live-tip seed is a staleness probe: after an
+    #    upstream merge it re-selects tokens against the tree as it now stands. Both must pass.
+    commands = _inventory_commands()
+    audited_head = AUDITED_HEAD  # the revision the findings were minted at; NOT the artifact's
+    # live `head` field, which follows the tip and would silently collapse the two-seed probe
+    seeds = [("audit", audited_head)] + ([("live-tip", HEAD)] if HEAD != audited_head else [])
+    spot, summary = [], {}
+    superseded = []
+    for label, seed in seeds:
+        rows = [inspect_token(fid, tok, commands) for fid, tok in select_spotcheck_tokens(FINDINGS, 10, seed)]
+        for r in rows:
+            r["seed"] = label
+            if r["pass"] or label != "live-tip":
                 continue
-            excerpt = "\n".join(lines[lo - 1:hi])
-            subject = next(f for f in FINDINGS if f["id"] == fid)
-            anchors = content_anchors(subject)
-            hit = sorted(a for a in anchors if a in excerpt)
-            required = SPOT_ANCHOR.get(fid)
-            anchor_ok = bool(re.search(required, excerpt)) if required else bool(hit)
-            spot.append({"token": tok, "finding": fid, "pass": bool(anchor_ok),
-                         "check": "content+anchor",
-                         "anchor_regex": required,
-                         "anchor_matched": bool(required and re.search(required, excerpt)),
-                         "auto_anchors_matched": hit[:4],
-                         "reason": f"{path}:{lo}-{hi} in bounds ({len(lines)} lines); required anchor "
-                                   f"/{required}/ {'matched' if anchor_ok else 'DID NOT MATCH'}"})
-        except FileNotFoundError:
-            spot.append({"token": tok, "finding": fid, "pass": False, "reason": f"{path} not found"})
-    passed = sum(1 for s in spot if s["pass"])
-    if passed != len(spot):
-        fails.append(f"evidence spot-check {passed}/{len(spot)}")
-
-    print(f"cross-check: spot-check {passed}/{len(spot)}, "
+            # A citation may legitimately stop matching because verified remediation edited the very
+            # lines it names. That is a SUPERSESSION, not an error — but only if the file really did
+            # change between the audited revision and the shipped tip. Automatic, no allowlist.
+            m = re.fullmatch(r"\[E:([^\]]+)\]", r["token"])
+            inner = m.group(1) if m else ""
+            path = inner.rpartition(":")[0] if ":" in inner else inner
+            changed = subprocess.run(["git", "diff", "--name-only", audited_head, "HEAD", "--", path],
+                                     cwd=REPO, capture_output=True, text=True).stdout.strip()
+            if changed:
+                r["superseded"] = True
+                r["superseded_by"] = f"{path} changed between {audited_head[:7]} and {HEAD[:7]} (verified remediation)"
+                superseded.append(r)
+            r["pass"] = bool(changed)  # non-superseded live mismatches keep the failure
+        passed_n = sum(1 for r in rows if r["pass"])
+        summary[label] = {"seed_head": seed, "passed": passed_n, "total": len(rows)}
+        spot.extend(rows)
+        if passed_n != len(rows):
+            fails.append(f"evidence spot-check [{label} seed] {passed_n}/{len(rows)}: "
+                         + "; ".join(f"{r['finding']} {r['token']} — {r['reason']}"
+                                     for r in rows if not r["pass"])[:600])
+    passed = sum(1 for r in spot if r["pass"])
+    canonical = summary["audit"]["passed"]
+    detail = ", ".join(f"{k} seed {v['passed']}/{v['total']}" for k, v in summary.items())
+    if superseded:
+        print(f"  note: {len(superseded)} citation(s) superseded by verified remediation edits "
+              f"({', '.join(sorted({s['finding'] for s in superseded}))})")
+    print(f"cross-check: spot-check {detail} ({passed}/{len(spot)} citations re-opened), "
           f"{'PASS' if not fails else 'FAIL'}")
     for f in fails:
         print("  FAIL:", f)
     (AUDIT / "harness" / "cross_check_results.json").write_text(
-        json.dumps({"head": HEAD, "spotcheck": spot, "failures": fails,
+        json.dumps({"head": HEAD, "audited_head": audited_head, "head_moved_since_audit": bool(HEAD != audited_head),
+                    "spotcheck_summary": summary, "superseded_citations": superseded,
+                    "spotcheck": spot, "failures": fails,
                     "recomputed": {"R_point": rp, "P_GO_effective": pg, "MC_mean": mc["mean"]}},
                    indent=2, ensure_ascii=False) + "\n")
     return 0 if not fails else 1

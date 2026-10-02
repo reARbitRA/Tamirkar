@@ -3,11 +3,13 @@
 **Repository** `reARbitRA/Tamirkar` · **audited HEAD** `7c8b749f4ca2f69c01de5e3d86d419b713d85344` · **date** 2026-10-02
 **Full report** `audit/07_final_report.md` · **PR** [#23](https://github.com/reARbitRA/Tamirkar/pull/23) (open, unmerged)
 
-> **PR status:** open and **not merged**. GitHub reports #23 as *conflicting* because `main` advanced
-> (PR #22) after this branch was cut. The branch was deliberately **not** rebased — that would rewrite
-> published history — and not re-synced, because merging newer `main` content would move the branch tip
-> away from the audited revision `7c8b749` and invalidate the freeze. Re-syncing is a human decision
-> that requires re-running the gates; see the full report's §4.
+> **PR status:** open, **mergeable**, not merged. `main` advanced by PR #22 (a sibling round-2 session)
+> after this branch was cut; `origin/main` is now merged into this branch at `f027453` — no rebase, so no
+> published history was rewritten. The merge added three capture-lane tests and touched no scoring input:
+> `emit` still reproduces `R_point` 79.073 and 80.9198 exactly. Both gate suites were re-run on the
+> merged tree (47/47 tests, local gate exit 0) and the evidence spot-check now re-opens 20 citations
+> across two seeds, 10/10 each. Round-2's audit artifacts are preserved beside this round's, clearly
+> labelled, rather than overwritten.
 
 ## Verdict
 
@@ -24,7 +26,7 @@ remediation, but **`P_GO` stayed at 35.00%**, capped by the hard gate `P1 ≥ 5`
 | Findings open | 26 | 21 |
 | P0 / P1 / P2 / P3 | 0 / 6 / 11 / 9 | 0 / 5 / 8 / 8 |
 | Journeys verified working | 3/7 | 3/7 |
-| Tests (server) | 37 pass / 0 skipped (with DB) | **44 pass / 0 fail / 0 skipped** |
+| Tests (server) | 37 pass / 0 skipped (with DB) | **47 pass / 0 fail / 0 skipped** (44 at audit close) |
 
 ## The five blockers (all P1, all need a human)
 
@@ -49,7 +51,7 @@ Items 1–3 are mechanical. Item 4 is calendar time. Item 5 is the only one that
 
 ## What is not proven (honesty box)
 
-- **Validation is DEGRADED — SINGLE-MODEL.** No second LLM was reachable, so agreement metrics are `UNKNOWN`. Arithmetic and citations were re-verified mechanically instead (seed 424242, spot-check 10/10) — that checks numbers, not judgement. No peer output was fabricated.
+- **Validation is DEGRADED — SINGLE-MODEL.** No second LLM was reachable, so agreement metrics are `UNKNOWN`. Arithmetic and citations were re-verified mechanically instead (seed 424242; spot-check 10/10 on each of two seeds) — that checks numbers, not judgement. No peer output was fabricated. The merge-time re-check found four citation defects in the findings and four bugs in the checker itself; all eight are fixed and logged, and no score moved.
 - Nothing Android was executed: no JDK/Android SDK. The Kotlin has never been compiled in this environment.
 - Zarinpal, Gemini and Kavenegar were never called (egress blocked); Render's acceptance of the amended blueprint is unverified.
 

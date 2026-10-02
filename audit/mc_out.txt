@@ -1,14 +1,14 @@
 ARBITER-MVP v2.1 — Monte Carlo uncertainty (score-uncertainty likelihood of reaching the
 readiness threshold; NOT a probability of a successful production launch).
-HEAD                 : 7c8b749f4ca2f69c01de5e3d86d419b713d85344
-implementation       : numpy 2.4.6 random.default_rng(424242)
+HEAD                 : f0274536a0d0eb0001133fde1672de825795550c
+implementation       : LCG fallback (seed 424242) + Irwin-Hall normal approximation
 N / seed / sigma     : 10000 / 424242 / 3.0
 
 R_point              : 79.0730
-R_mean               : 78.7599
-CI95                 : [72.7600, 84.8252]
-P(R >= 75)           : 0.8892   -> p_go_raw
-P(R >= 85)           : 0.0216
+R_mean               : 78.7026
+CI95                 : [72.7869, 84.6568]
+P(R >= 75)           : 0.8869   -> p_go_raw
+P(R >= 85)           : 0.0175
 
 per-dimension inputs (score, dominant_grade, half width, min, mode, max):
   D1   w=18  s=42.8571  grade=A  hw=3   band=[39.8571, 42.8571, 45.8571]

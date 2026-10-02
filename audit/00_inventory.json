@@ -1,6 +1,6 @@
 {
-  "head": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
-  "short_sha": "7c8b749",
+  "head": "f0274536a0d0eb0001133fde1672de825795550c",
+  "short_sha": "f027453",
   "session_branch": "arena/01a0fbb5-tamirkar",
   "freeze_exception": "FREEZE_EXCEPTION-001",
   "repository_physics": {
@@ -895,6 +895,12 @@
       "cmd": "AUDIT_DATABASE_URL=... node --test  (after phase 7)",
       "exit": 0,
       "result": "tests 44, pass 44, fail 0, skipped 0"
+    },
+    {
+      "n": 35,
+      "cmd": "grep -rniE 'read_only|cap_drop|security_opt|mem_limit|cpus:' docker-compose.auth.yml render.yaml",
+      "exit": 1,
+      "result": "no matches in either file — the absence claim is a recorded grep, not an impression"
     }
   ]
 }
