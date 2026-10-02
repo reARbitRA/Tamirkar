@@ -1,0 +1,75 @@
+{
+  "phase": "5 - independent cross-LLM validation",
+  "validator_model": "NONE_AVAILABLE",
+  "invocation_method": "none - this workspace exposes no sub-agent or LLM-invocation tool. The tools available in this session are: bash, read_file, write_file, edit_file, web_search, fetch_page, image_search, generate_image, add_voice, generate_speech, start_process, get_process_output, stop_process, present_files, ask_user. None of them can instantiate a second model.",
+  "context_isolation": null,
+  "status": "DEGRADED - SINGLE-MODEL",
+  "fabrication_refusal": "Phase 5.1 forbids faking a validator. No validator scores, no blind re-score and no hostile-reviewer JSON have been invented. The metrics below that require a second model are reported as NOT_COMPUTED rather than as numbers.",
+  "metrics_requiring_second_model": {
+    "MAD": "NOT_COMPUTED (requires validator s_d for D1..D12)",
+    "MAX_DEV": "NOT_COMPUTED",
+    "delta_P_GO": "NOT_COMPUTED",
+    "P0_JACCARD": "NOT_COMPUTED",
+    "HALLUC": "NOT_COMPUTED by an external reviewer"
+  },
+  "fallback_5_5_executed": {
+    "name": "adversarial self-red-team + independent arithmetic re-derivation (single-model substitute)",
+    "a_hallucinated_entities": {
+      "method": "every finding id referenced by the dimension map was resolved against audit/01_findings.json; every named file in the evidence tokens was re-opened",
+      "result": "PASS - 0 dangling finding references, 0 orphan findings, 0 nonexistent files",
+      "evidence": [
+        "[E:cmd#34 /tmp/valcheck.py -> 'referenced findings that do not exist (hallucination check): NONE' and 'findings with no owning dimension: NONE']"
+      ]
+    },
+    "b_severity_inflation_or_deflation": {
+      "method": "re-tested each P0/P1 against the literal severity definitions",
+      "adjustments": [
+        "F-EXEC-006 was initially drafted as P0 ('core journey broken'). Downgraded to P1: the guard is deliberate fail-closed design, a developer can satisfy it with one git-ignored file, and the claim rests on Grade B/C evidence about a Gradle plugin this sandbox cannot execute. Kept mvp_blocking=true.",
+        "F-SEC-005 was initially drafted as P2. Downgraded to P3: Zarinpal's documented integration model has no webhook signature, the code re-verifies against verify.json, and the ledger is additionally guarded by status!=paid plus an idempotency key. P2 would have been inflation."
+      ]
+    },
+    "c_missed_issues_found_by_the_red_team": {
+      "added": [
+        "F-SEC-008 (P2) - trustProxy is never enabled, so quote_acceptances.acceptance_ip stores the reverse proxy for every customer. Found by re-reading server.js:L26 and L478 after the first pass had already scored D3.",
+        "F-DATA-006 (P3) - operational_audit_log has no index and neither it nor otp_challenges has any retention policy."
+      ],
+      "score_impact": "R_point moved 52.953 -> 51.645 (-1.308). The red team made the report more pessimistic, not less."
+    },
+    "d_arithmetic_errors": {
+      "method": "the whole of Phase 3 was re-implemented from the rubric text in a separate script that does not import mc_sim.py",
+      "result": "PASS - independent R_point 51.644900 vs engine 51.645000 (delta 1e-4, rounding only); max per-dimension deviation 0.000000000; weights sum to 100",
+      "evidence": [
+        "[E:cmd#34 /tmp/valcheck.py stdout]"
+      ]
+    },
+    "e_unjustified_optimism_or_pessimism": {
+      "checked": [
+        "D2 is NOT capped at 30 despite the Android test task being broken, because the server test suite was executed and passed 18/18; the breakage is charged as a P0 penalty instead of a blanket cap. This is the rubric's 'execution was attempted and failed' rule applied to the thing that was actually attempted.",
+        "D5 IS capped at 30 on Grade A evidence: all 10 workflow runs in the repository's history failed, observed via gh run list and gh run view 36493298453.",
+        "J5 is recorded PARTIAL, not VERIFIED_WORKING, even though the intent row and failure path were proven, because the ledger capture and 85/15 split never executed. Marking it working would have been the single most tempting inflation in this audit."
+      ]
+    }
+  },
+  "evidence_spotcheck": {
+    "tokens_selected": 10,
+    "passed": 9,
+    "failed": 1,
+    "failure": "[E:services/auth-api/src/server.js:L24] cited for the pg.Pool options; line 24 is `const config = loadConfig();`. The pool is at L25.",
+    "action": "Token corrected to L25 in audit/01_findings.json. Per protocol the owning dimensions (D6, D8) were re-audited claim-by-claim; all four findings (F-OPS-001, F-OPS-002, F-DATA-005, F-RELY-002, F-SEC-004) re-confirmed on content. No score changed.",
+    "also_corrected": "[E:services/auth-api/Dockerfile:L1-L11] -> L1-L10; the file is 10 lines."
+  },
+  "certificate": {
+    "validator": "NONE_AVAILABLE",
+    "context_isolated": "n/a",
+    "iterations": 1,
+    "MAD": "n/a",
+    "MAX_DEV": "n/a",
+    "delta_P_GO": "n/a",
+    "P0_Jaccard": "n/a",
+    "hallucinations": "0 detected by self-red-team; no external reviewer available",
+    "spot_check": "9/10 passed (1 line-number error, corrected, owning dimensions re-audited)",
+    "RESULT": "DEGRADED",
+    "final_P_GO_pct": 0.0
+  },
+  "consequence": "Per Phase 5.1 the final report is stamped VALIDATION: DEGRADED - SINGLE-MODEL. The report is usable, but no independent model has confirmed these scores and the committee should weight that accordingly."
+}
