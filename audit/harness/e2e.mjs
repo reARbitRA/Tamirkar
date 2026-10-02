@@ -130,10 +130,21 @@ const POST = (url, tok, body = {}) => fetch(url, { method: 'POST', headers: H(to
   rec('J2.2', 'J2', r5b.status === 401 ? 'PASS' : 'FAIL', `POST /v1/ai/diagnoses unauthenticated -> ${r5b.status} (expected 401)`);
 
   // ---------- J3 device passport ----------
+  // The passport now lives on the server, so this is a real create/list/read walk rather than a
+  // 404 probe. J3 was BROKEN at baseline because neither /v1/devices nor /v1/orders existed.
   const r6 = await fetch(`${base}/v1/devices`, { headers: H(custToken) });
   const r6b = await fetch(`${base}/v1/orders`, { headers: H(custToken) });
-  rec('J3.1', 'J3', r6.status === 404 ? 'PARTIAL' : 'INFO',
-    `GET /v1/devices -> ${r6.status} (still no device API; passports remain Room-local); GET /v1/orders -> ${r6b.status} (now present after T-004)`);
+  const r6c = await fetch(`${base}/v1/devices`, {
+    method: 'POST', headers: H(custToken),
+    body: JSON.stringify({ name: 'یخچال فریزر ساید بای ساید', category: 'refrigerator', brand: 'ال‌جی', model: 'GC-J247' })
+  });
+  const b6c = await j(r6c);
+  const r6d = await fetch(`${base}/v1/devices`, { headers: H(custToken) });
+  const b6d = await j(r6d);
+  const r6e = b6c?.device ? await fetch(`${base}/v1/devices/${b6c.device.id}`, { headers: H(custToken) }) : null;
+  rec('J3.1', 'J3',
+    (r6.status === 200 && r6c.status === 201 && b6d?.devices?.length >= 1 && r6e?.status === 200) ? 'PASS' : 'FAIL',
+    `GET /v1/devices -> ${r6.status}; POST -> ${r6c.status} id=${b6c?.device?.id ?? 'none'}; list=${b6d?.devices?.length ?? 0}; passport GET -> ${r6e?.status}; GET /v1/orders -> ${r6b.status}`);
 
   // ---------- J7 technician apply + KYC + admin approval ----------
   const r7 = await POST(`${base}/v1/technicians/apply`, custToken);

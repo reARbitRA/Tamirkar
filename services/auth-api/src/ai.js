@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { withRetry } from './retry.js';
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_IMAGES = 2;
@@ -59,21 +60,30 @@ export async function generateDiagnosis({ config, category, symptom, images = []
 
   // The key travels in a header, never in the query string: query strings are routinely
   // captured by egress proxies, load balancers and CDNs.
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-goog-api-key': config.geminiApiKey },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
-      }),
-      signal: AbortSignal.timeout(20_000)
+  const payload = await withRetry(async () => {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': config.geminiApiKey },
+        body: JSON.stringify({
+          contents: [{ parts }],
+          generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
+        }),
+        signal: AbortSignal.timeout(20_000)
+      }
+    );
+    if (!response.ok) {
+      const error = new Error(`AI provider request failed with HTTP ${response.status}`);
+      error.status = response.status;
+      throw error;
     }
-  );
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new AiUnavailableError(`AI provider request failed with HTTP ${response.status}`);
+    return response.json().catch(() => ({}));
+  }, { attempts: config.providerRetryAttempts ?? 3 });
+
+  try {
+    return { text: extractText(payload), requestId: crypto.randomUUID() };
+  } catch (error) {
+    throw new AiUnavailableError(error.message);
   }
-  return { text: extractText(payload), requestId: crypto.randomUUID() };
 }

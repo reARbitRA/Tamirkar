@@ -31,6 +31,14 @@ function devLogCode() {
   return requested;
 }
 
+function positiveInt(name, fallback) {
+  const raw = process.env[name]?.trim();
+  if (!raw) return fallback;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1) throw new Error(`${name} must be a positive integer`);
+  return value;
+}
+
 export function loadConfig() {
   const port = Number(process.env.PORT ?? 8080);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT must be a valid TCP port');
@@ -66,6 +74,13 @@ export function loadConfig() {
     escrowReleaseEnabled: enabled('FEATURE_ESCROW_RELEASE'),
     zarinpalMerchantId,
     zarinpalSandbox: process.env.ZARINPAL_SANDBOX === 'true',
-    paymentCallbackBaseUrl
+    paymentCallbackBaseUrl,
+    // Every AI diagnosis is a paid call to Gemini. Without a ceiling one client holding a valid
+    // session token can run the whole monthly spend cap down in minutes. The window is short on
+    // purpose so a legitimate user who hits the ceiling is unblocked within a minute.
+    aiRateLimit: positiveInt('AI_RATE_LIMIT_PER_MINUTE', 10),
+    // Provider calls get a bounded retry budget so a single Zarinpal/Kavenegar/Gemini blip does
+    // not surface as a user-visible 503, while a genuinely dead provider fails fast via the breaker.
+    providerRetryAttempts: positiveInt('PROVIDER_RETRY_ATTEMPTS', 3)
   };
 }

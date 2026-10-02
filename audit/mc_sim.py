@@ -64,6 +64,11 @@ import os as _os
 _FINDINGS_FILE = _os.environ.get("AUDIT_FINDINGS", "audit/01_findings.json")
 if _os.environ.get("AUDIT_J3") == "PARTIAL":
     JOURNEYS["J3"] = ("PARTIAL", "order history now server-backed and executed (J3.2/J3.3/J3.4 PASS); DeviceEntity still has no server API")
+if _os.environ.get("AUDIT_J3") == "VERIFIED":
+    JOURNEYS["J3"] = ("VERIFIED_WORKING", "GET/POST /v1/devices and the passport read all PASS in e2e.mjs (J3.1-J3.4)")
+if _os.environ.get("AUDIT_TESTS"):
+    _t = [int(x) for x in _os.environ["AUDIT_TESTS"].split(",")]
+    MEASURED["tests_total"], MEASURED["tests_passed"], MEASURED["tests_failed"] = _t[0], _t[1], _t[2]
 if _os.environ.get("AUDIT_COV"):
     MEASURED["line_coverage_pct"] = float(_os.environ["AUDIT_COV"])
 findings = {f["id"]: f for f in json.load(open(_FINDINGS_FILE))["findings"]}

@@ -11,6 +11,7 @@ import { issueAccessToken } from './session.js';
 import { latinDigits, normalizeIranMobile } from './phone.js';
 import { generateOtp, hashOtp, otpMatches } from './otp.js';
 import { createZarinpalPayment, verifyZarinpalPayment } from './zarinpal.js';
+import { createRateLimiter } from './ratelimit.js';
 
 const OTP_EXPIRY_MINUTES = 5;
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
@@ -48,6 +49,13 @@ function bumpRequest(route, status) {
 function bumpProviderFailure(provider) {
   metrics.providerFailures.set(provider, (metrics.providerFailures.get(provider) ?? 0) + 1);
 }
+
+// Every diagnosis is a billable Gemini call. This bounds what one authenticated caller can spend
+// per minute; see src/ratelimit.js for why the ceiling is per-instance rather than global.
+const aiRateLimiter = createRateLimiter({ limit: config.aiRateLimit, windowMs: 60_000 });
+// Keep the bucket map from growing forever on a long-lived container.
+const rateLimitSweeper = setInterval(() => aiRateLimiter.sweep(), 60_000);
+rateLimitSweeper.unref?.();
 
 app.addHook('onRequest', async (request, reply) => {
   const origin = request.headers.origin;
@@ -127,8 +135,28 @@ function featureEnabled(reply, enabled, feature) {
   return false;
 }
 
-function callbackUrl() {
-  return `${config.paymentCallbackBaseUrl}/v1/payments/zarinpal/callback`;
+/**
+ * The Zarinpal callback is an unauthenticated public GET, so the URL carries a signed state token
+ * binding this redirect to exactly one payment intent. Without it anyone who can reach the
+ * endpoint could present a captured Authority against a different intent, and the only thing
+ * tying a redirect to a payment was a value the gateway echoes back.
+ */
+function signCallbackState(paymentIntentId) {
+  return crypto.createHmac('sha256', config.jwtSecret).update(`zarinpal-callback:${paymentIntentId}`).digest('base64url');
+}
+
+function verifyCallbackState(paymentIntentId, state) {
+  if (typeof state !== 'string' || state.length === 0) return false;
+  const expected = signCallbackState(paymentIntentId);
+  // Fixed-length compare: a timing difference here would let an attacker grind the HMAC.
+  const a = Buffer.from(state);
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function callbackUrl(paymentIntentId) {
+  const base = `${config.paymentCallbackBaseUrl}/v1/payments/zarinpal/callback`;
+  return paymentIntentId ? `${base}?state=${signCallbackState(paymentIntentId)}` : base;
 }
 
 function issueSession(user) {
@@ -173,6 +201,31 @@ async function requireApprovedTechnician(client, technicianId) {
     throw error;
   }
   return rows[0].id;
+}
+
+/**
+ * Authentication + KYC gate for technician-only endpoints.
+ *
+ * POST /v1/technicians/apply flips users.role to 'technician' while verification_status is still
+ * 'unsubmitted', so a role check alone let an unverified applicant post quotes and upload evidence
+ * for other people's orders. Every privileged technician action must pass through here.
+ * Returns null when the caller is rejected (the reply has already been sent).
+ */
+async function requireVerifiedTechnician(request, reply) {
+  const technician = await requireActiveUser(request, reply, config, pool, ['technician']);
+  if (!technician) return null;
+  const { rows } = await pool.query(
+    `SELECT p.verification_status FROM technician_profiles p WHERE p.user_id = $1`, [technician.sub]);
+  const status = rows[0]?.verification_status;
+  if (status !== 'approved') {
+    reply.code(403).send({
+      error: 'technician_not_verified',
+      verification_status: status ?? 'missing',
+      message: 'برای این کار ابتدا باید مدارک شما بررسی و تأیید شود.'
+    });
+    return null;
+  }
+  return technician;
 }
 
 app.get('/health', async () => {
@@ -339,6 +392,76 @@ app.get('/v1/me', async (request, reply) => {
   return { user: { id: user.id, phone: user.phone_e164, role: user.role } };
 });
 
+/**
+ * Account erasure (right to be forgotten).
+ *
+ * Deletion is refused while money is in flight: an open escrow hold or an unfinished order means
+ * records that both parties may need in a dispute, and Iranian accounting/tax rules require them
+ * to be retained. In that case the caller is told to close the order first rather than being
+ * silently downgraded to a partial erase.
+ *
+ * When erasure is allowed it is a real erase, not a soft delete: the phone number is replaced with
+ * a one-way hash so the row keeps its identity for foreign keys but can no longer be linked back
+ * to a person, and sessions/OTPs/devices/KYC documents go with it.
+ */
+app.delete('/v1/me', async (request, reply) => {
+  const claims = authenticatedUser(request, config);
+  if (!claims) return reply.code(401).send({ error: 'unauthorized', message: 'ورود لازم است.' });
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const locked = await client.query(`SELECT id, phone_e164 FROM users WHERE id = $1 AND is_active = TRUE FOR UPDATE`, [claims.sub]);
+    const user = locked.rows[0];
+    if (!user) {
+      await client.query('ROLLBACK');
+      return reply.code(404).send({ error: 'not_found', message: 'حساب کاربری یافت نشد.' });
+    }
+    const openEscrow = await client.query(
+      `SELECT COUNT(*)::int AS n FROM escrow_holds
+       WHERE (customer_id = $1 OR technician_id = $1) AND status IN ('held','pending','frozen')`, [user.id]);
+    // service_orders carries no technician_id: the technician is attached through the quote, so a
+    // technician's open work is found by joining quotes rather than by a column on the order.
+    const openOrders = await client.query(
+      `SELECT COUNT(*)::int AS n FROM service_orders o
+       WHERE o.status NOT IN ('completed','cancelled','refunded')
+         AND (o.customer_id = $1
+              OR EXISTS (SELECT 1 FROM quotes q WHERE q.order_id = o.id AND q.technician_id = $1))`,
+      [user.id]);
+    if (openEscrow.rows[0].n > 0 || openOrders.rows[0].n > 0) {
+      await client.query('ROLLBACK');
+      return reply.code(409).send({
+        error: 'erasure_blocked',
+        open_escrow_holds: openEscrow.rows[0].n,
+        open_orders: openOrders.rows[0].n,
+        message: 'تا زمانی که سفارش باز یا مبلغی در امانت دارید، حذف حساب ممکن نیست.'
+      });
+    }
+    // Access tokens are stateless JWTs, so there is no session table to clear: setting is_active
+    // to FALSE below is what revokes them, because requireActiveUser re-checks the row per request.
+    await client.query(`DELETE FROM otp_challenges WHERE phone_e164 = $1`, [user.phone_e164]);
+    await client.query(`DELETE FROM customer_devices WHERE customer_id = $1`, [user.id]);
+    await client.query(`DELETE FROM technician_profiles WHERE user_id = $1`, [user.id]);
+    await client.query(`DELETE FROM kyc_cases WHERE technician_id = $1`, [user.id]);
+    // Irreversible: peppered hash, not the number. Hashed in Node rather than with pgcrypto's
+    // digest() so the schema stays free of an extension dependency. The pepper means a database
+    // dump alone cannot be reversed into a phone number.
+    const erasedToken = `erased:${crypto.createHmac('sha256', config.otpPepper).update(user.id).digest('hex')}`;
+    // users has created_at and last_login_at but no updated_at, so the erasure timestamp is
+    // recorded in the audit log rather than on the row.
+    await client.query(
+      `UPDATE users SET phone_e164 = $2, is_active = FALSE, last_login_at = NULL WHERE id = $1`,
+      [user.id, erasedToken]);
+    await audit(client, { actorUserId: user.id, action: 'account.erased', subjectType: 'user', subjectId: user.id });
+    await client.query('COMMIT');
+    return { erased: true, retained_for: ['financial_records', 'audit_log'] };
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+});
+
 // Server-backed order history. Without these the device passport dies with the install,
 // which contradicts the durability the product promises.
 app.get('/v1/orders', async (request, reply) => {
@@ -401,9 +524,118 @@ app.get('/v1/orders/:orderId', async (request, reply) => {
   return { order: { ...order, escrow_holds: holds.rows } };
 });
 
+// ---- Device passport. Previously the device list existed only in Room on one handset, so a
+// reinstall or a lost phone deleted the customer's whole service history. ----
+
+const DEVICE_CATEGORIES = new Set(['ac', 'washer', 'refrigerator', 'mobile', 'laptop', 'car', 'other']);
+
+function deviceRowToApi(row) {
+  return {
+    id: row.id,
+    customer_id: row.customer_id,
+    name: row.name,
+    category: row.category,
+    brand: row.brand,
+    model: row.model,
+    serial_number: row.serial_number,
+    purchase_date: row.purchase_date,
+    purchase_price: Number(row.purchase_price),
+    health_score: row.health_score,
+    last_service_date: row.last_service_date,
+    service_count: row.service_count,
+    device_image_url: row.device_image_url,
+    notes: row.notes,
+    is_active: row.is_active,
+    created_at: row.created_at,
+    updated_at: row.updated_at
+  };
+}
+
+app.get('/v1/devices', async (request, reply) => {
+  const user = await requireActiveUser(request, reply, config, pool);
+  if (!user) return;
+  const limit = Math.min(Math.max(Number.parseInt(String(request.query?.limit ?? 50), 10) || 50, 1), 100);
+  const offset = Math.max(Number.parseInt(String(request.query?.offset ?? 0), 10) || 0, 0);
+  // Ordered by health_score ASC to match the client's own query (TamirkarDao.kt:37): the worst
+  // device is first because that is the one the customer most needs to see.
+  const { rows } = await pool.query(
+    `SELECT * FROM customer_devices
+     WHERE customer_id = $1 AND is_active = TRUE
+     ORDER BY health_score ASC, created_at DESC
+     LIMIT $2 OFFSET $3`,
+    [user.sub, limit, offset]
+  );
+  return { devices: rows.map(deviceRowToApi), limit, offset };
+});
+
+app.post('/v1/devices', async (request, reply) => {
+  const user = await requireActiveUser(request, reply, config, pool);
+  if (!user) return;
+  const body = request.body ?? {};
+  const name = String(body.name ?? '').replace(/\s+/g, ' ').trim();
+  const category = String(body.category ?? '').trim().toLowerCase();
+  const brand = String(body.brand ?? '').replace(/\s+/g, ' ').trim();
+  const model = String(body.model ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  const serialNumber = String(body.serial_number ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  const purchaseDate = String(body.purchase_date ?? '').trim().slice(0, 30);
+  const purchasePrice = Number(body.purchase_price ?? 0);
+  const notes = String(body.notes ?? '').replace(/\s+/g, ' ').trim().slice(0, 2000);
+
+  if (name.length < 2 || name.length > 120) {
+    return reply.code(400).send({ error: 'invalid_request', message: 'نام دستگاه باید بین ۲ و ۱۲۰ نویسه باشد.' });
+  }
+  if (!DEVICE_CATEGORIES.has(category)) {
+    return reply.code(400).send({ error: 'invalid_request', message: 'دسته‌بندی دستگاه معتبر نیست.' });
+  }
+  if (!brand || brand.length > 80) {
+    return reply.code(400).send({ error: 'invalid_request', message: 'برند دستگاه معتبر نیست.' });
+  }
+  if (!Number.isFinite(purchasePrice) || purchasePrice < 0 || purchasePrice > 1e12 || !Number.isInteger(purchasePrice)) {
+    return reply.code(400).send({ error: 'invalid_request', message: 'مبلغ خرید معتبر نیست.' });
+  }
+
+  const { rows } = await pool.query(
+    `INSERT INTO customer_devices
+       (customer_id, name, category, brand, model, serial_number, purchase_date, purchase_price, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     RETURNING *`,
+    [user.sub, name, category, brand, model, serialNumber, purchaseDate, purchasePrice, notes]
+  );
+  return reply.code(201).send({ device: deviceRowToApi(rows[0]) });
+});
+
+app.get('/v1/devices/:deviceId', async (request, reply) => {
+  const user = await requireActiveUser(request, reply, config, pool);
+  if (!user) return;
+  const deviceId = requireUuid(request.params.deviceId, reply);
+  if (!deviceId) return;
+  const { rows } = await pool.query(
+    `SELECT * FROM customer_devices WHERE id = $1 AND customer_id = $2`, [deviceId, user.sub]);
+  if (!rows[0]) return reply.code(404).send({ error: 'not_found', message: 'دستگاه یافت نشد.' });
+  // The passport's whole point is service history, so include it rather than making a second call.
+  const history = await pool.query(
+    `SELECT o.id, o.status, o.created_at, q.total_tomans, q.warranty_days
+     FROM service_orders o LEFT JOIN quotes q ON q.order_id = o.id AND q.status IN ('accepted','paid')
+     WHERE o.device_id = $1 ORDER BY o.created_at DESC LIMIT 20`, [deviceId]);
+  return { device: deviceRowToApi(rows[0]), service_history: history.rows };
+});
+
 app.post('/v1/ai/diagnoses', async (request, reply) => {
   const user = await requireActiveUser(request, reply, config, pool);
   if (!user || !featureEnabled(reply, config.aiEnabled, 'ai_diagnosis')) return;
+  // Checked after authentication and before any provider call: the point is to bound billed
+  // work, so an unauthenticated caller must never reach the counter at all.
+  const quota = aiRateLimiter.take(user.sub);
+  reply.header('x-ratelimit-limit', String(quota.limit));
+  reply.header('x-ratelimit-remaining', String(quota.remaining));
+  if (!quota.allowed) {
+    reply.header('retry-after', String(quota.retryAfterSeconds));
+    return reply.code(429).send({
+      error: 'rate_limited',
+      message: 'تعداد درخواست‌های تشخیص هوشمند از حد مجاز گذشت. کمی بعد دوباره تلاش کنید.',
+      retry_after_seconds: quota.retryAfterSeconds
+    });
+  }
   const category = String(request.body?.category ?? '').trim();
   const symptom = String(request.body?.symptom ?? '').trim();
   if (!category || symptom.length < 3 || symptom.length > 2_000) return reply.code(400).send({ error: 'invalid_request', message: 'شرح مشکل معتبر نیست.' });
@@ -554,7 +786,7 @@ app.post('/v1/orders', async (request, reply) => {
 });
 
 app.post('/v1/orders/:orderId/quotes', async (request, reply) => {
-  const technician = await requireActiveUser(request, reply, config, pool, ['technician']);
+  const technician = await requireVerifiedTechnician(request, reply);
   if (!technician || !featureEnabled(reply, config.technicianMatchingEnabled, 'technician_matching')) return;
   const orderId = requireUuid(request.params.orderId, reply);
   if (!orderId) return;
@@ -631,7 +863,7 @@ app.post('/v1/quotes/:quoteId/accept', async (request, reply) => {
 });
 
 app.post('/v1/orders/:orderId/evidence', async (request, reply) => {
-  const technician = await requireActiveUser(request, reply, config, pool, ['technician']);
+  const technician = await requireVerifiedTechnician(request, reply);
   if (!technician) return;
   const orderId = requireUuid(request.params.orderId, reply);
   if (!orderId) return;
@@ -696,7 +928,7 @@ async function lockOrderForTechnician(client, orderId, technicianId) {
 }
 
 app.post('/v1/orders/:orderId/start', async (request, reply) => {
-  const technician = await requireActiveUser(request, reply, config, pool, ['technician']);
+  const technician = await requireVerifiedTechnician(request, reply);
   if (!technician) return;
   const orderId = requireUuid(request.params.orderId, reply);
   if (!orderId) return;
@@ -722,7 +954,7 @@ app.post('/v1/orders/:orderId/start', async (request, reply) => {
 });
 
 app.post('/v1/orders/:orderId/complete', async (request, reply) => {
-  const technician = await requireActiveUser(request, reply, config, pool, ['technician']);
+  const technician = await requireVerifiedTechnician(request, reply);
   if (!technician) return;
   const orderId = requireUuid(request.params.orderId, reply);
   if (!orderId) return;
@@ -925,7 +1157,7 @@ app.post('/v1/payments/zarinpal/start', async (request, reply) => {
     const payment = await createZarinpalPayment({
       merchantId: config.zarinpalMerchantId,
       amountRials: intent.amountTomans * 10,
-      callbackUrl: callbackUrl(),
+      callbackUrl: callbackUrl(intent.id),
       description: intent.description,
       metadata: { mobile: intent.customerPhone?.replace(/^\+98/, '0') },
       sandbox: config.zarinpalSandbox
@@ -943,10 +1175,18 @@ app.post('/v1/payments/zarinpal/start', async (request, reply) => {
 app.get('/v1/payments/zarinpal/callback', async (request, reply) => {
   const authority = String(request.query?.Authority ?? '').trim();
   const status = String(request.query?.Status ?? '').trim();
+  const state = String(request.query?.state ?? '');
   if (!/^[A-Za-z0-9-]{10,128}$/.test(authority)) return reply.code(400).type('text/plain').send('Invalid payment callback.');
   const { rows } = await pool.query(`SELECT * FROM payment_intents WHERE authority = $1`, [authority]);
   const intent = rows[0];
   if (!intent || status !== 'OK') return reply.code(400).type('text/plain').send('Payment was cancelled or could not be matched.');
+  // The gateway echoes Authority back to whoever holds the redirect URL, so it is not proof that
+  // this redirect belongs to this intent. The signed state is: it was minted for exactly one
+  // intent at creation time and cannot be forged without JWT_SECRET.
+  if (!verifyCallbackState(intent.id, state)) {
+    request.log.warn({ paymentIntentId: intent.id }, 'Zarinpal callback state token missing or invalid');
+    return reply.code(400).type('text/plain').send('Payment callback could not be authenticated.');
+  }
   try {
     const verification = await verifyZarinpalPayment({ merchantId: config.zarinpalMerchantId, amountRials: Number(intent.amount_rials), authority, sandbox: config.zarinpalSandbox });
     const client = await pool.connect();
