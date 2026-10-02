@@ -1,0 +1,86 @@
+{
+  "commit": "3bd962b3d490f936f81fe333a945e35427ffc7e0",
+  "verdict": "NO-GO - BLOCKED",
+  "P_GO": 0.0,
+  "P_NO_GO": 1.0,
+  "R_point": 51.645,
+  "letter_grade": "D",
+  "CI95": [
+    50.075,
+    53.194
+  ],
+  "monte_carlo": {
+    "N": 10000,
+    "seed": 424242
+  },
+  "audit_confidence_pct": 73.63,
+  "audit_confidence_formula": "100*(0.5*coverage_ratio + 0.3*grade_A_B_share + 0.2*evidence_spotcheck_pass_rate)",
+  "audit_confidence_inputs": {
+    "coverage_ratio": 0.5126,
+    "files_inspected_or_executed": 61,
+    "files_relevant_to_mvp": 119,
+    "grade_A_B_share": 1.0,
+    "evidence_spotcheck_pass_rate": 0.9,
+    "grade_histogram": {
+      "B": 21,
+      "A": 14
+    }
+  },
+  "counts": {
+    "P0": 2,
+    "P1": 9,
+    "P2": 19,
+    "P3": 7,
+    "total": 37
+  },
+  "journeys_verified_working": "4/7",
+  "journey_verdicts": {
+    "J1": "VERIFIED_WORKING",
+    "J2": "PARTIAL",
+    "J3": "BROKEN",
+    "J4": "VERIFIED_WORKING",
+    "J5": "PARTIAL",
+    "J6": "VERIFIED_WORKING",
+    "J7": "VERIFIED_WORKING"
+  },
+  "hard_gates_tripped": [
+    "P0_count=2 >= 1 -> P_GO capped at 0.05, verdict forced NO-GO",
+    "P1_count=9 >= 5 -> P_GO capped at 0.35",
+    "BROKEN journeys ['J3'] -> P_GO capped at 0.10"
+  ],
+  "distance_to_go": {
+    "delta_score_points_to_75": 23.355,
+    "sum_effort_hours_blocking_findings": 38.0,
+    "sum_effort_hours_all_findings": 98.0
+  },
+  "top5_blockers": [
+    {
+      "id": "F-DATA-001",
+      "line": "Escrow releases to the technician after 30 days with no completion or dispute path - money leaves escrow for work that may never have happened"
+    },
+    {
+      "id": "F-EXEC-001",
+      "line": "Android test source set imports AiTask / AiProviderRouter.candidates() that do not exist - gradlew test cannot compile, so no Android release proof is possible"
+    },
+    {
+      "id": "F-EXEC-008",
+      "line": "No server read API for orders/quotes/devices - the device passport dies with the install, contradicting the README's core promise"
+    },
+    {
+      "id": "F-SEC-001",
+      "line": "Deactivated accounts keep working for up to 3600 s on a live JWT - suspension is not enforceable"
+    },
+    {
+      "id": "F-EXEC-006",
+      "line": "AUTH_API_BASE_URL is never declared and its only default is rejected by OostaApiConfig - a stock-checkout APK cannot reach any backend"
+    }
+  ],
+  "evidence_spotcheck": {
+    "tokens_selected": 10,
+    "passed": 9,
+    "failed": 1,
+    "failure": "[E:services/auth-api/src/server.js:L24] cited for the pg.Pool options; line 24 is `const config = loadConfig();`. The pool is at L25.",
+    "action": "Token corrected to L25 in audit/01_findings.json. Per protocol the owning dimensions (D6, D8) were re-audited claim-by-claim; all four findings (F-OPS-001, F-OPS-002, F-DATA-005, F-RELY-002, F-SEC-004) re-confirmed on content. No score changed.",
+    "also_corrected": "[E:services/auth-api/Dockerfile:L1-L11] -> L1-L10; the file is 10 lines."
+  }
+}

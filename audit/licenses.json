@@ -1,0 +1,11 @@
+{
+  "installed_packages": 79,
+  "license_histogram": {
+    "MIT": 66,
+    "BSD-3-Clause": 5,
+    "Apache-2.0": 1,
+    "ISC": 6,
+    "?": 2
+  },
+  "copyleft": []
+}

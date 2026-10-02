@@ -1,0 +1,152 @@
+name: Server API
+
+# The service that owns OTP, sessions, payments and the escrow ledger must have a green
+# automated gate. Before this workflow existed, `npm test` ran only on a developer laptop and
+# no CI job touched services/auth-api at all.
+#
+# The postgres service container is not optional decoration. Without AUDIT_DATABASE_URL the four
+# integration tests skip, which means CI would report green while never executing the completion
+# gate, the dispute freeze, the refund replay or the ledger balance — the exact regressions this
+# suite exists to catch. It also drops measured line coverage from ~78% to ~47%.
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: server-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Node tests, audit and coverage
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/auth-api
+    env:
+      # A throwaway database, created fresh per run and destroyed with the runner.
+      AUDIT_DATABASE_URL: postgres://oosta:oosta@127.0.0.1:5432/postgres
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: oosta
+          POSTGRES_PASSWORD: oosta
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U oosta"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: services/auth-api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fail on any known production dependency vulnerability
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Confirm the integration lane is really running
+        # Guards against the silent-skip failure mode: if the database is unreachable the
+        # integration tests skip instead of failing, and a green run would mean nothing.
+        run: |
+          set -e
+          node -e '
+            const pg = require("pg");
+            const c = new pg.Client({ connectionString: process.env.AUDIT_DATABASE_URL });
+            c.connect()
+              .then(() => c.query("SELECT version()"))
+              .then((r) => { console.log("integration database reachable:", r.rows[0].version.split(",")[0]); return c.end(); })
+              .catch((e) => { console.error("integration database NOT reachable:", e.message); process.exit(1); });
+          '
+
+      - name: Run tests with coverage
+        run: node --test --experimental-test-coverage
+
+      - name: Assert no test was skipped
+        # A skip here means the money path went untested. Fail loudly rather than report green.
+        run: |
+          set -e
+          node --test 2>&1 | tee /tmp/test-output.txt
+          if grep -qE '^# skipped [1-9]' /tmp/test-output.txt; then
+            echo "::error::integration tests were skipped; AUDIT_DATABASE_URL is not reaching the suite"
+            exit 1
+          fi
+
+      - name: Syntax-check every server module
+        run: |
+          set -e
+          for f in src/*.js; do
+            node --check "$f"
+            echo "parsed $f"
+          done
+
+      - name: Verify every migration has a matching rollback
+        run: |
+          set -e
+          for up in db/[0-9]*_*.sql; do
+            base=$(basename "$up" .sql)
+            down="db/down/${base}.down.sql"
+            test -f "$down" || { echo "::error::missing rollback for $up (expected $down)"; exit 1; }
+            echo "ok $base (up + down)"
+          done
+
+      - name: Verify the full migration round-trip
+        # up -> down all -> up again, against the service container. This is what proves the
+        # rollback scripts are not decoration.
+        env:
+          DATABASE_URL: postgres://oosta:oosta@127.0.0.1:5432/roundtrip
+          JWT_SECRET: ci-only-jwt-secret-with-sufficient-entropy
+          OTP_PEPPER: ci-only-otp-pepper-with-sufficient-entropy
+          KAVENEGAR_API_KEY: ci-placeholder
+          KAVENEGAR_TEMPLATE: OOSTA_CI
+          CONFIRM_DESTRUCTIVE_ROLLBACK: 'yes'
+        run: |
+          set -e
+          node -e '
+            const pg = require("pg");
+            const c = new pg.Client({ connectionString: "postgres://oosta:oosta@127.0.0.1:5432/postgres" });
+            c.connect()
+              .then(() => c.query("DROP DATABASE IF EXISTS roundtrip WITH (FORCE)"))
+              .then(() => c.query("CREATE DATABASE roundtrip"))
+              .then(() => c.end());
+          '
+          node src/migrate.js up
+          node src/migrate.js down 99
+          node src/migrate.js up
+          echo "migration round-trip OK"
+
+      - name: Smoke every route for unhandled exceptions
+        # e2e.mjs walks the journeys, so a route no journey needs is never called; the payment
+        # callback sat in that gap. This calls all 27 registered routes and fails on any 5xx other
+        # than the 502/503 the code emits deliberately. The only code(500) in server.js is the
+        # catch-all error handler, so a 500 means an exception escaped a handler.
+        env:
+          SMOKE_DATABASE_ADMIN_URL: postgres://oosta:oosta@127.0.0.1:5432/postgres
+          SMOKE_PGPORT: '5432'
+        # Back to the repo root: the job's default working-directory is services/auth-api.
+        working-directory: .
+        run: |
+          set -e
+          # smoke.mjs imports pg and jsonwebtoken but lives outside services/auth-api. Node resolves
+          # them through audit/harness/node_modules, which is committed as a RELATIVE symlink to
+          # ../../services/auth-api/node_modules, so the tree the "Install dependencies" step built
+          # is reused and no second npm ci is needed.
+          test -e audit/harness/node_modules/pg || { echo "::error::audit/harness/node_modules symlink is broken"; exit 1; }
+          node audit/harness/smoke.mjs

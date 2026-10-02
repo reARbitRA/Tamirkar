@@ -1,0 +1,166 @@
+{
+  "phase0": {
+    "recorded_at_utc": "2026-10-02T04:06:52Z",
+    "head_sha": "3bd962b3d490f936f81fe333a945e35427ffc7e0",
+    "head_sha_short": "3bd962b",
+    "branch": "arena/01a0fac4-tamirkar",
+    "branch_deviation": "Prompt requested audit/mvp-readiness-<sha>. The Arena harness pins this session to arena/01a0fac4-tamirkar; work on any other branch would not be attributable to the session. All work is on arena/01a0fac4-tamirkar.",
+    "commit_count": 1,
+    "contributors": [
+      {
+        "name": "arena-ai-coding-agent[bot]",
+        "commits": 1
+      }
+    ],
+    "last_commit_age_days": 3.2,
+    "open_branches": [
+      "arena/01a0fac4-tamirkar",
+      "main"
+    ],
+    "working_tree_clean_at_start": false,
+    "tracked_files": 182,
+    "loc_by_language": {
+      "kotlin": 7564,
+      "kotlin_gradle_kts": 191,
+      "javascript": 1433,
+      "sql": 164,
+      "markdown": 2145,
+      "shell": 332,
+      "python": 1599
+    },
+    "loc_all_tracked_text": 16849,
+    "cloc_available": false
+  },
+  "stack": {
+    "manifests_found": [
+      "app/build.gradle.kts",
+      "build.gradle.kts",
+      "settings.gradle.kts",
+      "gradle/libs.versions.toml",
+      "services/auth-api/package.json",
+      "services/auth-api/Dockerfile",
+      "docker-compose.auth.yml",
+      "render.yaml",
+      ".github/workflows/build.yml",
+      ".github/workflows/android-apk.yml",
+      ".github/workflows/‌apkbuild.yml",
+      "ci/android-apk.yml",
+      "github/workflows/build.yml"
+    ],
+    "client": {
+      "type": "Android",
+      "language": "Kotlin 2.2.10",
+      "ui": "Jetpack Compose Material 3",
+      "persistence": "Room 2.7.0",
+      "network": "OkHttp",
+      "compileSdk": "36 (minor 1)",
+      "minSdk": 24,
+      "targetSdk": 36
+    },
+    "server": {
+      "type": "Node.js ESM",
+      "runtime_declared": ">=20",
+      "runtime_tested": "v22.22.3",
+      "framework": "Fastify ^5.2.1",
+      "db": "PostgreSQL (postgres:16-alpine in compose)",
+      "deps": {
+        "fastify": "^5.2.1",
+        "jsonwebtoken": "^9.0.2",
+        "pg": "^8.13.1"
+      }
+    },
+    "migrations": [
+      "services/auth-api/db/001_auth.sql",
+      "services/auth-api/db/002_platform.sql",
+      "services/auth-api/db/003_orders_quotes.sql"
+    ]
+  },
+  "mvp_definition": {
+    "scope_inferred": false,
+    "product": "Oosta (اوستا) — Persian-first Android appliance-repair marketplace: diagnosis before price, device passport, 15% escrow, KYC-gated technicians.",
+    "source_of_truth": [
+      "README.md:1-285",
+      "docs/GO_NO_GO.md:1-40",
+      "LAUNCH_CHECKLIST.md:1-40",
+      "services/auth-api/src/server.js:139-694"
+    ],
+    "primary_user_journeys": [
+      {
+        "id": "J1",
+        "name": "LOGIN",
+        "actor": "Customer",
+        "action": "Enters Iranian mobile, receives OTP by SMS, verifies it",
+        "expected": "Server-issued HS256 bearer session (sub+role, 3600s)",
+        "source": "README.md 'OTP architecture'; server.js:146-263"
+      },
+      {
+        "id": "J2",
+        "name": "TRIAGE",
+        "actor": "Customer",
+        "action": "Submits category + Persian symptom (+<=2 images)",
+        "expected": "Preliminary AI diagnosis or explicit human-support fallback; never a binding price",
+        "source": "README.md 'Diagnosis flow'; server.js:274-294; ai.js:1-77"
+      },
+      {
+        "id": "J3",
+        "name": "PASSPORT",
+        "actor": "Customer",
+        "action": "Registers a device and reviews its repair history",
+        "expected": "Durable identity + chronological repair history that survives reinstall",
+        "source": "README.md 'Device passport'; Entities.kt; DevicesScreens.kt"
+      },
+      {
+        "id": "J4",
+        "name": "BOOK",
+        "actor": "Customer / approved technician",
+        "action": "Customer creates order; approved technician sends immutable quote; customer accepts",
+        "expected": "Quote accepted, siblings superseded, order -> awaiting_payment",
+        "source": "README.md 'Warranty and dispute flow'; server.js:395-489"
+      },
+      {
+        "id": "J5",
+        "name": "PAY",
+        "actor": "Customer",
+        "action": "Pays the accepted quote through Zarinpal",
+        "expected": "Balanced ledger capture (debit gateway_clearing, credit technician_payable 85%, credit escrow_liability 15%) + escrow_holds row (30d)",
+        "source": "README.md escrow section; server.js:512-638"
+      },
+      {
+        "id": "J6",
+        "name": "RELEASE",
+        "actor": "Operator",
+        "action": "Runs escrow release for due holds",
+        "expected": "Idempotent, balanced ledger release; duplicate run changes ledger exactly once",
+        "source": "server.js:640-676; escrow-worker.js:1-13"
+      },
+      {
+        "id": "J7",
+        "name": "GUILD",
+        "actor": "Technician / operator",
+        "action": "Applies, submits KYC, receives human review decision",
+        "expected": "verification_status unsubmitted->submitted->approved; only approved technicians may quote or be paid",
+        "source": "README.md 'Technician matching'; server.js:296-393"
+      }
+    ],
+    "in_scope": [
+      "Server-side OTP + session",
+      "Server-side AI gateway with PII redaction",
+      "Orders/quotes/acceptance/evidence",
+      "Zarinpal payment capture + double-entry ledger + escrow",
+      "Technician KYC state machine",
+      "Server feature flags published to client",
+      "Android Compose client + remote layer",
+      "PostgreSQL migrations",
+      "Docker/Render deployment blueprint",
+      "Persian legal drafts"
+    ],
+    "out_of_scope": [
+      "iOS / web clients",
+      "Graphical admin console (KYC decisions are API-only)",
+      "Object storage for KYC documents and job evidence (references + SHA-256 only)",
+      "Production Zarinpal merchant onboarding",
+      "Human support staffing",
+      "In-app chat backend"
+    ]
+  }
+}

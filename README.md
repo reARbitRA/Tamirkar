@@ -12,7 +12,7 @@
   <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.2.10-0A0908?style=flat-square&labelColor=0A0908&color=C87533" />
   <img alt="Compose" src="https://img.shields.io/badge/Jetpack%20Compose-Material%203-0A0908?style=flat-square&labelColor=0A0908&color=D60019" />
   <img alt="API" src="https://img.shields.io/badge/auth--api-Fastify%20%2B%20PostgreSQL-0A0908?style=flat-square&labelColor=0A0908&color=D60019" />
-  <img alt="Tests" src="https://img.shields.io/badge/auth--api%20tests-18%2F18-0A0908?style=flat-square&labelColor=0A0908&color=34D399" />
+  <img alt="Tests" src="https://img.shields.io/badge/auth--api%20tests-37%2F37-0A0908?style=flat-square&labelColor=0A0908&color=34D399" />
   <img alt="Licence" src="https://img.shields.io/badge/licence-MIT-0A0908?style=flat-square&labelColor=0A0908&color=34D399" />
 </p>
 
@@ -150,7 +150,9 @@ Order state is a database constraint, not an app convention: `service_orders.sta
   <img src="assets/readme/escrow-ledger.svg" width="100%" alt="Escrow ledger: balanced payment capture and idempotent escrow release" />
 </p>
 
-Money follows the same discipline. On a verified Zarinpal payment, `postLedgerEntry()` writes one balanced event — debit `gateway_clearing` for the full amount, credit `technician_payable` 85%, credit `escrow_liability` 15% — and opens an `escrow_holds` row with `release_after = NOW() + 30 days`. The entry refuses to write unless debits equal credits, and each event is keyed (`payment-capture:<intent-id>`, `escrow-release:<hold-id>`), so a replayed callback or a duplicated worker run changes the ledger exactly once. A hold can be `frozen` for a dispute or `refunded`; a hold without an assigned technician stays held for manual reconciliation.
+Money follows the same discipline. On a verified Zarinpal payment, `postLedgerEntry()` writes one balanced event — debit `gateway_clearing` for the full amount, credit `technician_payable` 85%, credit `escrow_liability` 15% — and opens an `escrow_holds` row with `release_after = NOW() + 30 days`. The entry refuses to write unless debits equal credits, and each event is keyed (`payment-capture:<intent-id>`, `escrow-release:<hold-id>`), so a replayed callback or a duplicated worker run changes the ledger exactly once.
+
+Time alone never pays a technician. `release-due` joins through the payment intent and quote to the order and releases only when `service_orders.status = 'completed'`; completion itself requires both a `before` and an `after` evidence record. A customer or operator can dispute a paid, in-progress or completed order, which freezes the hold and writes a balanced `dispute_freeze` event that claws the technician's 85% back into `escrow_liability`. An operator can then refund a held or frozen hold with an `escrow-refund:<hold-id>` ledger event; replaying it is a `409`. A hold without an assigned technician stays held for manual reconciliation.
 
 ---
 
@@ -177,7 +179,7 @@ Rate limits are concrete: a 60-second resend cooldown, at most three sends per 1
   <img src="assets/readme/backend-boundary.svg" width="100%" alt="Backend boundary: secrets stay server-side, the APK holds only a public base URL" />
 </p>
 
-`services/auth-api` is the single server boundary: Fastify on Node 20+, PostgreSQL 16, three tracked migrations (`001_auth.sql`, `002_platform.sql`, `003_orders_quotes.sql`) and sixteen routes covering health, public feature state, OTP, identity, triage, technician application and KYC, admin KYC decisions, orders, quotes, quote acceptance, evidence, Zarinpal start and callback, and escrow release.
+`services/auth-api` is the single server boundary: Fastify on Node 20+, PostgreSQL 16, five tracked migrations (`001_auth.sql` … `005_devices.sql`, each with a matching `db/down/` rollback) and twenty-seven routes covering health, metrics, public feature state, OTP, identity, triage, technician application and KYC, admin KYC decisions, order listing and detail, order lifecycle (`start`, `complete`, `dispute`), the device passport (`GET`/`POST /v1/devices`, `GET /v1/devices/:id`), account erasure (`DELETE /v1/me`), quotes, quote acceptance, evidence, Zarinpal start and callback, escrow release and escrow refund.
 
 The Android application is given exactly one non-secret value, `AUTH_API_BASE_URL`. `KAVENEGAR_API_KEY`, `OTP_PEPPER`, `JWT_SECRET`, `DATABASE_URL`, `GEMINI_API_KEY` and `ZARINPAL_MERCHANT_ID` stay in the service environment, and `config.js` refuses to boot on placeholder values or on payments without an HTTPS callback. Full contract: [`docs/API.md`](docs/API.md); schema: [`docs/DATABASE.md`](docs/DATABASE.md).
 
@@ -219,7 +221,7 @@ Disclosure policy: [`SECURITY.md`](SECURITY.md). Risk ledger: [`RISK_REGISTER.md
   <img src="assets/readme/verification-console.svg" width="100%" alt="Verification console: executed commands, exit codes and blocked Android tasks" />
 </p>
 
-**Server — executed in this checkout.** `npm ci` then `npm test` runs the Node test runner across eight suites: **18 tests, 18 passed, 0 failed**. They cover Iranian phone normalisation, OTP hashing and constant-time comparison, session claims and rejection of invalid roles, feature-flag exposure, balanced and idempotent ledger postings, Zarinpal request/verify semantics, AI redaction, and HTTP-level behaviour of the server routes. `npm audit --omit=dev` reports **0 vulnerabilities**.
+**Server — executed in this checkout.** `npm ci` then `npm test` runs the Node test runner across eleven suites: **37 tests, 37 passed, 0 failed** with `AUDIT_DATABASE_URL` set (33 passed, 4 skipped without it). They cover Iranian phone normalisation, OTP hashing and constant-time comparison, session claims and rejection of invalid roles, feature-flag exposure, fail-closed configuration (including the refusal to log OTP codes in production), balanced and idempotent ledger postings, Zarinpal request/verify semantics, AI redaction, retry/backoff classification and circuit-breaker state, rate-limiter windows, and HTTP-level behaviour of the server routes. Two suites are integration lanes that boot the real server against a disposable PostgreSQL: one walks the money path (completion gate, dispute freeze, refund replay, ledger balance), the other the device passport, the KYC gate, account erasure and the AI rate limit. `npm audit --omit=dev` reports **0 vulnerabilities**, and [`node --test --experimental-test-coverage`](services/auth-api) reports the measured line coverage. A complete server workflow covering all of it is staged at [`ci/proposed/server.yml`](ci/proposed/server.yml) — it has **not** been installed, because pushing to `.github/workflows/` is rejected without the `workflows` permission. Until a maintainer runs the one-line `cp` in [`ci/proposed/README.md`](ci/proposed/README.md), no CI job gates this service.
 
 **Android — defined in the repository, executed in CI.** `app/src/test` holds `AiProviderRouterTest`, `ExampleRobolectricTest`, `ExampleUnitTest` and `GreetingScreenshotTest` (Robolectric 4.16 on SDK 35 with a Compose render assertion), plus an instrumented `ExampleInstrumentedTest`. A Gradle test listener converts failures into GitHub Actions annotations.
 
@@ -238,10 +240,16 @@ Testing guide: [`docs/TESTING.md`](docs/TESTING.md).
 **Android**
 
 ```bash
+# The APK is allowed to know exactly one non-secret value. Without it every server call fails
+# at runtime, because OostaApiConfig deliberately rejects a blank or placeholder base URL.
+export AUTH_API_BASE_URL=https://your-auth-api-host      # or: -PAUTH_API_BASE_URL=... per build
+
 ./gradlew testDebugUnitTest     # unit + Robolectric tests
 ./gradlew lint                  # Android lint
 ./gradlew assembleDebug         # app/build/outputs/apk/debug/*.apk
 ```
+
+`AUTH_API_BASE_URL` is declared as a `buildConfigField` in [`app/build.gradle.kts`](app/build.gradle.kts) and may also be supplied through a root `.env` file, which is git-ignored. `http://10.0.2.2:8080` is accepted only in a debug emulator build.
 
 Requires JDK 17, Android SDK platform 36/36.1 and build-tools 36.0.0; Gradle 9.3.1 arrives through the wrapper. CI provisions exactly that toolchain in [`.github/workflows/build.yml`](.github/workflows/build.yml) and uploads the debug APK as an artefact.
 

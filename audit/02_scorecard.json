@@ -1,0 +1,624 @@
+{
+  "engine": {
+    "seed": 424242,
+    "N": 10000,
+    "base": {
+      "P0": 45.0,
+      "P1": 18.0,
+      "P2": 6.0,
+      "P3": 1.5
+    },
+    "grade_mult": {
+      "A": 1.0,
+      "B": 0.9,
+      "C": 0.7,
+      "D": 0.45
+    },
+    "half_width": {
+      "A": 3.0,
+      "B": 8.0,
+      "C": 15.0,
+      "D": 25.0
+    },
+    "formula": "penalty = sum(base[sev]*confidence*grade_mult); s = clamp(100-penalty,0,100); R = sum(w/100 * s)"
+  },
+  "dimensions": {
+    "D1": {
+      "label": "Core functional completeness vs mvp_definition",
+      "weight": 18,
+      "raw_penalty": 75.21,
+      "penalty_detail": [
+        {
+          "id": "F-EXEC-008",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 18.0
+        },
+        {
+          "id": "F-EXEC-006",
+          "sev": "P1",
+          "conf": 0.8,
+          "grade": "B",
+          "penalty": 12.96
+        },
+        {
+          "id": "F-DATA-001",
+          "sev": "P0",
+          "conf": 0.95,
+          "grade": "A",
+          "penalty": 42.75
+        },
+        {
+          "id": "F-EXEC-005",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 1.5
+        }
+      ],
+      "s_before_caps": 24.79,
+      "caps_applied": [
+        "journey cap 100*4/7=57.14"
+      ],
+      "s": 24.79,
+      "dominant_evidence_grade": "A",
+      "half_width": 3.0,
+      "min": 21.79,
+      "max": 27.79
+    },
+    "D2": {
+      "label": "Correctness & test evidence (executed)",
+      "weight": 14,
+      "raw_penalty": 39.975,
+      "penalty_detail": [
+        {
+          "id": "F-EXEC-001",
+          "sev": "P0",
+          "conf": 0.95,
+          "grade": "B",
+          "penalty": 38.475
+        },
+        {
+          "id": "F-EXEC-009",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 1.5
+        }
+      ],
+      "s_before_caps": 60.025,
+      "caps_applied": [
+        "test-evidence cap 100*(0.5*1.00+0.5*min(52.35/70,1))=87.39"
+      ],
+      "s": 60.025,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 52.025,
+      "max": 68.025
+    },
+    "D3": {
+      "label": "Security & secrets hygiene",
+      "weight": 14,
+      "raw_penalty": 52.665,
+      "penalty_detail": [
+        {
+          "id": "F-SEC-001",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 18.0
+        },
+        {
+          "id": "F-SEC-002",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        },
+        {
+          "id": "F-SEC-003",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        },
+        {
+          "id": "F-SEC-004",
+          "sev": "P2",
+          "conf": 0.9,
+          "grade": "B",
+          "penalty": 4.86
+        },
+        {
+          "id": "F-SEC-006",
+          "sev": "P2",
+          "conf": 0.85,
+          "grade": "B",
+          "penalty": 4.59
+        },
+        {
+          "id": "F-SEC-007",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        },
+        {
+          "id": "F-SEC-005",
+          "sev": "P3",
+          "conf": 0.9,
+          "grade": "B",
+          "penalty": 1.215
+        },
+        {
+          "id": "F-SEC-008",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        }
+      ],
+      "s_before_caps": 47.335,
+      "caps_applied": [],
+      "s": 47.335,
+      "dominant_evidence_grade": "A",
+      "half_width": 3.0,
+      "min": 44.335,
+      "max": 50.335
+    },
+    "D4": {
+      "label": "Data integrity, migrations & persistence",
+      "weight": 8,
+      "raw_penalty": 72.24,
+      "penalty_detail": [
+        {
+          "id": "F-DATA-001",
+          "sev": "P0",
+          "conf": 0.95,
+          "grade": "A",
+          "penalty": 42.75
+        },
+        {
+          "id": "F-DATA-002",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 1.35
+        },
+        {
+          "id": "F-DATA-003",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        },
+        {
+          "id": "F-DATA-004",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 5.4
+        },
+        {
+          "id": "F-DATA-005",
+          "sev": "P1",
+          "conf": 0.95,
+          "grade": "B",
+          "penalty": 15.39
+        },
+        {
+          "id": "F-DATA-006",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 1.35
+        }
+      ],
+      "s_before_caps": 27.76,
+      "caps_applied": [],
+      "s": 27.76,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 19.76,
+      "max": 35.76
+    },
+    "D5": {
+      "label": "Build, CI & reproducibility",
+      "weight": 8,
+      "raw_penalty": 61.8,
+      "penalty_detail": [
+        {
+          "id": "F-EXEC-002",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 16.2
+        },
+        {
+          "id": "F-EXEC-003",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 18.0
+        },
+        {
+          "id": "F-EXEC-004",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 16.2
+        },
+        {
+          "id": "F-QUAL-005",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        },
+        {
+          "id": "F-OPS-001",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 5.4
+        }
+      ],
+      "s_before_caps": 38.2,
+      "caps_applied": [
+        "execution-failed cap 30 (all 10 workflow runs in history failed)"
+      ],
+      "s": 30.0,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 22.0,
+      "max": 38.0
+    },
+    "D6": {
+      "label": "Deploy & runtime readiness",
+      "weight": 8,
+      "raw_penalty": 42.39,
+      "penalty_detail": [
+        {
+          "id": "F-OPS-001",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 5.4
+        },
+        {
+          "id": "F-OPS-002",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 16.2
+        },
+        {
+          "id": "F-DATA-005",
+          "sev": "P1",
+          "conf": 0.95,
+          "grade": "B",
+          "penalty": 15.39
+        },
+        {
+          "id": "F-RELY-002",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 5.4
+        }
+      ],
+      "s_before_caps": 57.61,
+      "caps_applied": [],
+      "s": 57.61,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 49.61,
+      "max": 65.61
+    },
+    "D7": {
+      "label": "Error handling, logging & observability",
+      "weight": 7,
+      "raw_penalty": 22.8,
+      "penalty_detail": [
+        {
+          "id": "F-OBS-001",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 5.4
+        },
+        {
+          "id": "F-RELY-001",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 5.4
+        },
+        {
+          "id": "F-RELY-003",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        },
+        {
+          "id": "F-SEC-003",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        }
+      ],
+      "s_before_caps": 77.2,
+      "caps_applied": [],
+      "s": 77.2,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 69.2,
+      "max": 85.2
+    },
+    "D8": {
+      "label": "Performance & scalability at MVP load",
+      "weight": 6,
+      "raw_penalty": 10.26,
+      "penalty_detail": [
+        {
+          "id": "F-RELY-002",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 5.4
+        },
+        {
+          "id": "F-SEC-004",
+          "sev": "P2",
+          "conf": 0.9,
+          "grade": "B",
+          "penalty": 4.86
+        }
+      ],
+      "s_before_caps": 89.74,
+      "caps_applied": [],
+      "s": 89.74,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 81.74,
+      "max": 97.74
+    },
+    "D9": {
+      "label": "API/contract stability & integration correctness",
+      "weight": 6,
+      "raw_penalty": 44.175,
+      "penalty_detail": [
+        {
+          "id": "F-EXEC-008",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 18.0
+        },
+        {
+          "id": "F-EXEC-006",
+          "sev": "P1",
+          "conf": 0.8,
+          "grade": "B",
+          "penalty": 12.96
+        },
+        {
+          "id": "F-RELY-003",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        },
+        {
+          "id": "F-SEC-005",
+          "sev": "P3",
+          "conf": 0.9,
+          "grade": "B",
+          "penalty": 1.215
+        },
+        {
+          "id": "F-SEC-008",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        }
+      ],
+      "s_before_caps": 55.825,
+      "caps_applied": [],
+      "s": 55.825,
+      "dominant_evidence_grade": "A",
+      "half_width": 3.0,
+      "min": 52.825,
+      "max": 58.825
+    },
+    "D10": {
+      "label": "Code quality, architecture & maintainability",
+      "weight": 5,
+      "raw_penalty": 10.05,
+      "penalty_detail": [
+        {
+          "id": "F-QUAL-006",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 1.35
+        },
+        {
+          "id": "F-QUAL-007",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 1.35
+        },
+        {
+          "id": "F-QUAL-005",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        },
+        {
+          "id": "F-DATA-002",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 1.35
+        }
+      ],
+      "s_before_caps": 89.95,
+      "caps_applied": [],
+      "s": 89.95,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 81.95,
+      "max": 97.95
+    },
+    "D11": {
+      "label": "Documentation & onboarding",
+      "weight": 3,
+      "raw_penalty": 35.76,
+      "penalty_detail": [
+        {
+          "id": "F-QUAL-001",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        },
+        {
+          "id": "F-QUAL-002",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        },
+        {
+          "id": "F-QUAL-003",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 5.4
+        },
+        {
+          "id": "F-QUAL-004",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 5.4
+        },
+        {
+          "id": "F-EXEC-006",
+          "sev": "P1",
+          "conf": 0.8,
+          "grade": "B",
+          "penalty": 12.96
+        }
+      ],
+      "s_before_caps": 64.24,
+      "caps_applied": [],
+      "s": 64.24,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 56.24,
+      "max": 72.24
+    },
+    "D12": {
+      "label": "Legal, licensing, privacy & compliance",
+      "weight": 3,
+      "raw_penalty": 21.33,
+      "penalty_detail": [
+        {
+          "id": "F-LEGAL-001",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 16.2
+        },
+        {
+          "id": "F-LEGAL-002",
+          "sev": "P2",
+          "conf": 0.95,
+          "grade": "B",
+          "penalty": 5.13
+        }
+      ],
+      "s_before_caps": 78.67,
+      "caps_applied": [],
+      "s": 78.67,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 70.67,
+      "max": 86.67
+    }
+  },
+  "journeys": {
+    "J1": {
+      "verdict": "VERIFIED_WORKING",
+      "evidence": "harness J1.1-J1.5 all PASS against real PostgreSQL"
+    },
+    "J2": {
+      "verdict": "PARTIAL",
+      "evidence": "flag-off gate (503 human route) and auth check verified; live Gemini call untestable - no key, egress blocked"
+    },
+    "J3": {
+      "verdict": "BROKEN",
+      "evidence": "no server read API exists; GET /v1/devices and GET /v1/orders both 404"
+    },
+    "J4": {
+      "verdict": "VERIFIED_WORKING",
+      "evidence": "harness J4.1-J4.4 all PASS: order -> quote -> accept -> evidence"
+    },
+    "J5": {
+      "verdict": "PARTIAL",
+      "evidence": "intent creation + provider-failure path verified (502, status=failed); capture/ledger split untestable - Zarinpal unreachable"
+    },
+    "J6": {
+      "verdict": "VERIFIED_WORKING",
+      "evidence": "harness J6.1 released:1, J6.2 released:0 (idempotent), J6.3-J6.5 balanced ledger"
+    },
+    "J7": {
+      "verdict": "VERIFIED_WORKING",
+      "evidence": "harness J7.1-J7.3 all PASS: apply -> KYC -> operator approval"
+    }
+  },
+  "measured": {
+    "tests_total": 18,
+    "tests_passed": 18,
+    "tests_failed": 0,
+    "line_coverage_pct": 52.35,
+    "branch_coverage_pct": 79.29,
+    "func_coverage_pct": 64.86,
+    "server_js_line_coverage_pct": 18.44,
+    "npm_audit_total": 0,
+    "installed_packages": 79,
+    "copyleft_packages": 0,
+    "source": "node --test --experimental-test-coverage (exit 0); npm audit --json (total 0)"
+  },
+  "R_point": 51.645,
+  "R_mean": 51.657,
+  "R_stdev": 0.801,
+  "CI95": [
+    50.075,
+    53.194
+  ],
+  "P_GO_raw": 0.0,
+  "P_GO_final": 0.0,
+  "hard_gates": [
+    "P0_count=2 >= 1 -> P_GO capped at 0.05, verdict forced NO-GO",
+    "P1_count=9 >= 5 -> P_GO capped at 0.35",
+    "BROKEN journeys ['J3'] -> P_GO capped at 0.10"
+  ],
+  "verdict_forced": "NO-GO - BLOCKED",
+  "counts": {
+    "P0": 2,
+    "P1": 9,
+    "P2": 19,
+    "P3": 7,
+    "total": 37
+  },
+  "letter_grade": "D"
+}

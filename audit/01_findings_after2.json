@@ -1,0 +1,292 @@
+{
+  "commit": "pending",
+  "note": "Post-remediation round 2. Findings closed by executed code in this session; see audit/06_execution_log.md.",
+  "findings": [
+    {
+      "id": "F-EXEC-001",
+      "title": "RESIDUAL Android unit-test source set references AiTask/AiProviderRouter.candidates() whi",
+      "lane": "EXEC",
+      "severity": "P2",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "evidence": [
+        "[E:app/src/test/java/com/example/AiProviderRouterTest.kt:L4-L27]",
+        "[E:cmd#22 git grep -n 'fun candidates' -- '*.kt' -> no output, exit 1]",
+        "[E:cmd#22 git grep -n AiTask -- '*.kt' -> only AiProviderRouterTest.kt lines 4,12,19,26]",
+        "[E:app/src/main/java/com/example/data/remote/AiProviderRouter.kt:L16-L44 single diagnose() method, no candidates(), no AiTask enum]",
+        "[E:cmd#1 .github/workflows/ contains a file whose name begins with U+200C ZERO WIDTH NON-JOINER (ls -1b shows \\342\\200\\214apkbuild.yml); its build step runs `gradlew assembleDebug -x lint -x test`]"
+      ],
+      "impact": "The stale AiTask/candidates() references are gone (grep returns 0 for both) and the replacement test only touches symbols that exist in app/src/main. The Gradle compile itself was NOT executed - no JDK or Android SDK in this sandbox - so the compile-clean claim is unproven. || original impact: The declared test task cannot compile, so README's gradlew testDebugUnitTest, the build.yml 'Run unit tests' step and therefore every Android release proof fail. A bypass workflow that skips tests exists, which is how APKs are still produced.",
+      "exploit_or_repro": "gradlew testDebugUnitTest (NOT executed here: no JDK/Android SDK) -> unresolved reference AiTask. Static proof is complete: AiTask is imported from com.example.data.remote, the app's own namespace, and no declaration exists in the module.",
+      "blast_radius": "all-users",
+      "remediation": "Rewrite AiProviderRouterTest against the real AiProviderRouter contract (server gateway URL, bearer header, images.take(2), error mapping) or delete the stale tests.",
+      "effort_hours": 3.0,
+      "mvp_blocking": true,
+      "blocks_journey": [
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J6",
+        "J7"
+      ]
+    },
+    {
+      "id": "F-EXEC-002",
+      "title": "No CI job builds or tests the server that owns OTP, payments and the ledger",
+      "lane": "EXEC",
+      "severity": "P1",
+      "confidence": 1.0,
+      "evidence_grade": "B",
+      "evidence": [
+        "[E:cmd#14 .github/workflows/build.yml:L1-L36 only JDK, Android SDK, gradlew test, assembleDebug]",
+        "[E:cmd#14 .github/workflows/android-apk.yml:L1-L60 gradle only]",
+        "[E:cmd#22 grep -rn npm .github/workflows -> no match]"
+      ],
+      "impact": "The 18 passing server tests run only on a developer laptop. A regression in the money path can merge to main with no automated gate.",
+      "exploit_or_repro": "NONE_FOUND (absence)",
+      "blast_radius": "all-users",
+      "remediation": "Add .github/workflows/server.yml: checkout, setup-node 22, npm ci, npm audit --omit=dev --audit-level=high, npm test inside services/auth-api.",
+      "effort_hours": 2.0,
+      "mvp_blocking": true,
+      "blocks_journey": [
+        "J1",
+        "J5",
+        "J6"
+      ]
+    },
+    {
+      "id": "F-EXEC-003",
+      "title": "Every workflow run in repository history has failed; the latest main run died at Set up Android SDK",
+      "lane": "EXEC",
+      "severity": "P1",
+      "confidence": 1.0,
+      "evidence_grade": "A",
+      "evidence": [
+        "[E:cmd#15 gh run list --repo reARbitRA/Tamirkar --limit 10 -> 10 rows, all failure, newest 36493298453 on main]",
+        "[E:cmd#16 gh run view 36493298453 -> X build in 11s with X Set up Android SDK and all later steps skipped]"
+      ],
+      "impact": "There is no green build in this repository's history. The README claim that CI provisions exactly that toolchain is contradicted by observed runs.",
+      "exploit_or_repro": "gh CLI output captured in-session.",
+      "blast_radius": "all-users",
+      "remediation": "Pin android-actions/setup-android to a maintained version, install the SDK explicitly, and split the server job so the money path has a green gate independent of Android toolchain churn.",
+      "effort_hours": 4.0,
+      "mvp_blocking": true,
+      "blocks_journey": [
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J6",
+        "J7"
+      ]
+    },
+    {
+      "id": "F-EXEC-004",
+      "title": "Workflow triggers are pinned to stale branch names, so PRs run no CI at all",
+      "lane": "EXEC",
+      "severity": "P1",
+      "confidence": 1.0,
+      "evidence_grade": "B",
+      "evidence": [
+        "[E:.github/workflows/build.yml:L4-L6 branches main, master, arena/01a03dca-tamirkar]",
+        "[E:.github/workflows/android-apk.yml:L4-L7 branches arena/01a03c31-tamirkar only]",
+        "[E:cmd#14 no pull_request trigger in any workflow]"
+      ],
+      "impact": "A pull request can merge with zero checks. android-apk.yml can only ever run on one dead branch.",
+      "exploit_or_repro": "NONE_FOUND (absence)",
+      "blast_radius": "all-users",
+      "remediation": "Trigger on push to main plus pull_request; repoint the dead branch filters.",
+      "effort_hours": 1.0,
+      "mvp_blocking": false,
+      "blocks_journey": []
+    },
+    {
+      "id": "F-DATA-005",
+      "title": "RESIDUAL No backup, restore, RPO/RTO or point-in-time-recovery procedure exists anywhere",
+      "lane": "DATA",
+      "severity": "P2",
+      "confidence": 0.9,
+      "evidence_grade": "B",
+      "evidence": [
+        "[E:cmd#27 git ls-files | grep -iE backup|restore|pg_dump -> only app/src/main/res/xml/backup_rules.xml (Android auto-backup rules)]",
+        "[E:cmd#27 git grep -i backup|pg_dump|restore over yml/yaml/sh/js -> no server match]",
+        "[E:LAUNCH_CHECKLIST.md T-1 day requires backups completed and an isolated restore test meeting documented RPO/RTO]"
+      ],
+      "impact": "backup/restore scripts written and their tool preflight and populated-DB refusal executed (exit 4 with a clear message). No real pg_dump/pg_restore round-trip: postgresql-client is absent from this sandbox. RPO/RTO documented but the drill is not done. || original impact: The database holds phone numbers, KYC document references, payment intents and an append-only ledger. A lost volume is unrecoverable and the ledger cannot be reconstructed.",
+      "exploit_or_repro": "NONE_FOUND (absence)",
+      "blast_radius": "data-loss",
+      "remediation": "Script pg_dump/pg_restore on a schedule, record RPO/RTO, add a restore-drill step to the runbook. Managed Postgres with PITR is the cheaper path for a Render pilot.",
+      "effort_hours": 6.0,
+      "mvp_blocking": true,
+      "blocks_journey": [
+        "J5",
+        "J6"
+      ]
+    },
+    {
+      "id": "F-LEGAL-001",
+      "title": "All legal documents are unapproved internal drafts; the approvals matrix is 0/6",
+      "lane": "LEGAL",
+      "severity": "P1",
+      "confidence": 1.0,
+      "evidence_grade": "B",
+      "evidence": [
+        "[E:docs/legal/TERMS_FA.md:L3 status banner: internal draft, no legal approval]",
+        "[E:docs/legal/PRIVACY_FA.md:L3 same draft banner]",
+        "[E:docs/legal/APPROVALS.md:L5-L10 six unchecked boxes including counsel sign-off on privacy, terms, cancellation/refund and warranty]"
+      ],
+      "impact": "Collecting payment and holding 15% of it in escrow without counsel-approved terms, a dated privacy notice or a registered legal entity is a legal prohibition on public launch.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "legal",
+      "remediation": "Counsel review and dated publication of all five documents; fill APPROVALS.md with names and dates. Requires a human lawyer - cannot be automated.",
+      "effort_hours": 0.0,
+      "mvp_blocking": true,
+      "blocks_journey": [
+        "J5"
+      ]
+    },
+    {
+      "id": "F-QUAL-005",
+      "title": "Duplicate orphan CI files and a zero-width-named workflow that builds with tests disabled",
+      "lane": "QUAL",
+      "severity": "P2",
+      "confidence": 1.0,
+      "evidence_grade": "A",
+      "evidence": [
+        "[E:cmd#11 git ls-files lists ci/android-apk.yml and github/workflows/build.yml (github/, not .github/)]",
+        "[E:cmd#27 diff shows both differ from their .github/workflows counterparts - stale copies, not includes]",
+        "[E:.github/workflows/ apkbuild.yml filename begins with U+200C ZERO WIDTH NON-JOINER]",
+        "[E:.github/workflows/ apkbuild.yml:L20-L26 step Force Build APK (Ignore AI Errors) runs gradlew assembleDebug -x lint -x test]"
+      ],
+      "impact": "Three near-identical workflow definitions with no single source of truth, plus a workflow whose explicit purpose is to ship an APK with lint and tests skipped. That is the mechanism by which F-EXEC-001 stayed invisible.",
+      "exploit_or_repro": "Executed diffs and filename byte inspection.",
+      "blast_radius": "all-users",
+      "remediation": "Delete the ci/ and github/ duplicates, consolidate to one workflow per target, and retire the test-skipping workflow once F-EXEC-001 is fixed.",
+      "effort_hours": 2.0,
+      "mvp_blocking": false,
+      "blocks_journey": []
+    },
+    {
+      "id": "F-OPS-001",
+      "title": "RESIDUAL Dockerfile base image is a floating tag, not pinned by digest",
+      "lane": "OPS",
+      "severity": "P3",
+      "confidence": 1.0,
+      "evidence_grade": "A",
+      "evidence": [
+        "[E:services/auth-api/Dockerfile:L7 FROM node:22-alpine - floating tag, no @sha256: digest]",
+        "[E:services/auth-api/Dockerfile:L1-L6 the reason is recorded in-file rather than silently skipped]",
+        "[E:services/auth-api/Dockerfile:L9 ENV NODE_ENV=production - PRESENT]",
+        "[E:services/auth-api/Dockerfile:L23-L24 HEALTHCHECK against /health - PRESENT]",
+        "[E:services/auth-api/Dockerfile:L26 USER node - non-root]",
+        "[E:cmd#1 hub.docker.com and registry-1.docker.io both SSL_ERROR_SYSCALL from this sandbox]"
+      ],
+      "impact": "A rebuilt image can silently pull a different node:22-alpine than the one that was tested. The other two thirds of the original finding (no HEALTHCHECK, no NODE_ENV) are closed and are no longer claimed as open.",
+      "exploit_or_repro": "Static read.",
+      "blast_radius": "tenant",
+      "remediation": "Run `docker buildx imagetools inspect node:22-alpine` on a host with registry access and replace the tag with the resolved `node:22-alpine@sha256:<digest>`.",
+      "effort_hours": 0.2,
+      "mvp_blocking": false,
+      "blocks_journey": []
+    },
+    {
+      "id": "F-QUAL-006",
+      "title": "server.js is a 694-line god file holding all 16 routes, validation and money logic",
+      "lane": "QUAL",
+      "severity": "P3",
+      "confidence": 1.0,
+      "evidence_grade": "B",
+      "evidence": [
+        "[E:cmd#8 wc -l -> 694 services/auth-api/src/server.js; next largest source file is 490]"
+      ],
+      "impact": "Every change to auth, AI, KYC, orders, payments and escrow touches one file, raising merge-conflict and regression risk exactly where the money lives.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "single-user",
+      "remediation": "Extract route groups into modules sharing one app factory; keep the ledger and state machine in domain modules.",
+      "effort_hours": 8.0,
+      "mvp_blocking": false,
+      "blocks_journey": []
+    },
+    {
+      "id": "F-QUAL-007",
+      "title": "Room MIGRATION_1_2 is a no-op that exists only to absorb a version bump",
+      "lane": "QUAL",
+      "severity": "P3",
+      "confidence": 1.0,
+      "evidence_grade": "B",
+      "evidence": [
+        "[E:app/src/main/java/com/example/data/local/TamirkarDatabase.kt:L66-L72 override fun migrate(db) = Unit]"
+      ],
+      "impact": "Harmless today and correctly non-destructive, but it teaches the pattern of bumping schema versions without migration content.",
+      "exploit_or_repro": "Static read.",
+      "blast_radius": "single-user",
+      "remediation": "Either revert version to 1 or document why the bump happened; enable exportSchema and check schemas in.",
+      "effort_hours": 1.0,
+      "mvp_blocking": false,
+      "blocks_journey": [
+        "J3"
+      ]
+    },
+    {
+      "id": "F-EXEC-005",
+      "title": "Android toolchain absent in the audit sandbox - client build and test are UNTESTABLE here",
+      "lane": "EXEC",
+      "severity": "P3",
+      "confidence": 1.0,
+      "evidence_grade": "A",
+      "evidence": [
+        "[E:cmd#5 java --version -> NOT FOUND; javac NOT FOUND; gradle NOT FOUND]",
+        "[E:cmd#5 ANDROID_HOME=unset, ANDROID_SDK_ROOT=unset, no ~/Android]",
+        "[E:cmd#5 docker NOT FOUND - docker-compose.auth.yml could not be exercised either]"
+      ],
+      "impact": "Every Android claim in this audit is Grade B (read) or lower. Coverage numbers, lint and the executed compile status of F-EXEC-001 could not be produced.",
+      "exploit_or_repro": "N/A - audit limitation, recorded per protocol rather than silently skipped.",
+      "blast_radius": "single-user",
+      "remediation": "Provide a JDK 17 + Android SDK 36 image, or run the client lane in CI.",
+      "effort_hours": 0.0,
+      "mvp_blocking": false,
+      "blocks_journey": []
+    },
+    {
+      "id": "F-EXEC-009",
+      "title": "Zarinpal sandbox unreachable from the audit sandbox - payment capture and the 85/15 split are UNTESTABLE",
+      "lane": "EXEC",
+      "severity": "P3",
+      "confidence": 1.0,
+      "evidence_grade": "A",
+      "evidence": [
+        "[E:cmd#20 harness J5.1 -> POST /v1/payments/zarinpal/start returned 502 payment_unavailable]",
+        "[E:cmd#20 harness J5.2 -> payment_intents row created then marked status=failed with amount_tomans 800000 / amount_rials 8000000]",
+        "[E:cmd#17 curl repo1.maven.org -> SSL_ERROR_SYSCALL; sandbox egress is restricted to the npm registry and the GitHub API]"
+      ],
+      "impact": "The most money-critical path (callback -> verify -> ledger split -> escrow hold) has no executed evidence in this audit. The failure path IS proven correct: intent created, provider failure recorded, user gets a Persian 502.",
+      "exploit_or_repro": "N/A - audit limitation.",
+      "blast_radius": "single-user",
+      "remediation": "Run the capture path in CI against the Zarinpal sandbox with a real merchant id, or add a provider-port seam so the callback logic can be integration-tested offline.",
+      "effort_hours": 4.0,
+      "mvp_blocking": false,
+      "blocks_journey": [
+        "J5"
+      ]
+    },
+    {
+      "id": "F-LEGAL-003",
+      "title": "RESIDUAL Privacy/security mailboxes are still unproven (deletion endpoint now exists)",
+      "lane": "LEGAL",
+      "severity": "P3",
+      "confidence": 1.0,
+      "evidence_grade": "A",
+      "evidence": "DELETE /v1/me implemented and executed: 200 + phone replaced by erased:<hmac>, 409 while an escrow hold is open. The mailboxes named in docs/legal are still not verified as resolvable.",
+      "impact": "A data-subject request sent to the published address may not reach anyone, which is the actual compliance exposure.",
+      "exploit_or_repro": "send mail to the documented privacy address and confirm it is read",
+      "blast_radius": "compliance, not runtime",
+      "remediation": "Provision the mailboxes, send a test message, and record the delivery evidence in APPROVALS.md.",
+      "effort_hours": 1.0,
+      "mvp_blocking": false,
+      "blocks_journey": []
+    }
+  ]
+}

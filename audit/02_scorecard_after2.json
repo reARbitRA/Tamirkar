@@ -1,0 +1,372 @@
+{
+  "engine": {
+    "seed": 424242,
+    "N": 10000,
+    "base": {
+      "P0": 45.0,
+      "P1": 18.0,
+      "P2": 6.0,
+      "P3": 1.5
+    },
+    "grade_mult": {
+      "A": 1.0,
+      "B": 0.9,
+      "C": 0.7,
+      "D": 0.45
+    },
+    "half_width": {
+      "A": 3.0,
+      "B": 8.0,
+      "C": 15.0,
+      "D": 25.0
+    },
+    "formula": "penalty = sum(base[sev]*confidence*grade_mult); s = clamp(100-penalty,0,100); R = sum(w/100 * s)"
+  },
+  "dimensions": {
+    "D1": {
+      "label": "Core functional completeness vs mvp_definition",
+      "weight": 18,
+      "raw_penalty": 5.82,
+      "penalty_detail": [
+        {
+          "id": "F-EXEC-005",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 1.5
+        },
+        {
+          "id": "F-EXEC-001",
+          "sev": "P2",
+          "conf": 0.8,
+          "grade": "B",
+          "penalty": 4.32
+        }
+      ],
+      "s_before_caps": 94.18,
+      "caps_applied": [
+        "journey cap 100*5/7=71.43"
+      ],
+      "s": 71.429,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 63.429,
+      "max": 79.429
+    },
+    "D2": {
+      "label": "Correctness & test evidence (executed)",
+      "weight": 14,
+      "raw_penalty": 5.82,
+      "penalty_detail": [
+        {
+          "id": "F-EXEC-001",
+          "sev": "P2",
+          "conf": 0.8,
+          "grade": "B",
+          "penalty": 4.32
+        },
+        {
+          "id": "F-EXEC-009",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 1.5
+        }
+      ],
+      "s_before_caps": 94.18,
+      "caps_applied": [
+        "test-evidence cap 100*(0.5*1.00+0.5*min(78.34/70,1))=100.00"
+      ],
+      "s": 94.18,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 86.18,
+      "max": 100.0
+    },
+    "D3": {
+      "label": "Security & secrets hygiene",
+      "weight": 14,
+      "raw_penalty": 0.0,
+      "penalty_detail": [],
+      "s_before_caps": 100.0,
+      "caps_applied": [],
+      "s": 100.0,
+      "dominant_evidence_grade": "D",
+      "half_width": 25.0,
+      "min": 75.0,
+      "max": 100.0
+    },
+    "D4": {
+      "label": "Data integrity, migrations & persistence",
+      "weight": 8,
+      "raw_penalty": 4.86,
+      "penalty_detail": [
+        {
+          "id": "F-DATA-005",
+          "sev": "P2",
+          "conf": 0.9,
+          "grade": "B",
+          "penalty": 4.86
+        }
+      ],
+      "s_before_caps": 95.14,
+      "caps_applied": [],
+      "s": 95.14,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 87.14,
+      "max": 100.0
+    },
+    "D5": {
+      "label": "Build, CI & reproducibility",
+      "weight": 8,
+      "raw_penalty": 57.9,
+      "penalty_detail": [
+        {
+          "id": "F-EXEC-002",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 16.2
+        },
+        {
+          "id": "F-EXEC-003",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 18.0
+        },
+        {
+          "id": "F-EXEC-004",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 16.2
+        },
+        {
+          "id": "F-QUAL-005",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        },
+        {
+          "id": "F-OPS-001",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 1.5
+        }
+      ],
+      "s_before_caps": 42.1,
+      "caps_applied": [
+        "execution-failed cap 30 (all 10 workflow runs in history failed)"
+      ],
+      "s": 30.0,
+      "dominant_evidence_grade": "A",
+      "half_width": 3.0,
+      "min": 27.0,
+      "max": 33.0
+    },
+    "D6": {
+      "label": "Deploy & runtime readiness",
+      "weight": 8,
+      "raw_penalty": 6.36,
+      "penalty_detail": [
+        {
+          "id": "F-OPS-001",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 1.5
+        },
+        {
+          "id": "F-DATA-005",
+          "sev": "P2",
+          "conf": 0.9,
+          "grade": "B",
+          "penalty": 4.86
+        }
+      ],
+      "s_before_caps": 93.64,
+      "caps_applied": [],
+      "s": 93.64,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 85.64,
+      "max": 100.0
+    },
+    "D7": {
+      "label": "Error handling, logging & observability",
+      "weight": 7,
+      "raw_penalty": 0.0,
+      "penalty_detail": [],
+      "s_before_caps": 100.0,
+      "caps_applied": [],
+      "s": 100.0,
+      "dominant_evidence_grade": "D",
+      "half_width": 25.0,
+      "min": 75.0,
+      "max": 100.0
+    },
+    "D8": {
+      "label": "Performance & scalability at MVP load",
+      "weight": 6,
+      "raw_penalty": 0.0,
+      "penalty_detail": [],
+      "s_before_caps": 100.0,
+      "caps_applied": [],
+      "s": 100.0,
+      "dominant_evidence_grade": "D",
+      "half_width": 25.0,
+      "min": 75.0,
+      "max": 100.0
+    },
+    "D9": {
+      "label": "API/contract stability & integration correctness",
+      "weight": 6,
+      "raw_penalty": 0.0,
+      "penalty_detail": [],
+      "s_before_caps": 100.0,
+      "caps_applied": [],
+      "s": 100.0,
+      "dominant_evidence_grade": "D",
+      "half_width": 25.0,
+      "min": 75.0,
+      "max": 100.0
+    },
+    "D10": {
+      "label": "Code quality, architecture & maintainability",
+      "weight": 5,
+      "raw_penalty": 8.7,
+      "penalty_detail": [
+        {
+          "id": "F-QUAL-006",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 1.35
+        },
+        {
+          "id": "F-QUAL-007",
+          "sev": "P3",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 1.35
+        },
+        {
+          "id": "F-QUAL-005",
+          "sev": "P2",
+          "conf": 1.0,
+          "grade": "A",
+          "penalty": 6.0
+        }
+      ],
+      "s_before_caps": 91.3,
+      "caps_applied": [],
+      "s": 91.3,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 83.3,
+      "max": 99.3
+    },
+    "D11": {
+      "label": "Documentation & onboarding",
+      "weight": 3,
+      "raw_penalty": 0.0,
+      "penalty_detail": [],
+      "s_before_caps": 100.0,
+      "caps_applied": [],
+      "s": 100.0,
+      "dominant_evidence_grade": "D",
+      "half_width": 25.0,
+      "min": 75.0,
+      "max": 100.0
+    },
+    "D12": {
+      "label": "Legal, licensing, privacy & compliance",
+      "weight": 3,
+      "raw_penalty": 16.2,
+      "penalty_detail": [
+        {
+          "id": "F-LEGAL-001",
+          "sev": "P1",
+          "conf": 1.0,
+          "grade": "B",
+          "penalty": 16.2
+        }
+      ],
+      "s_before_caps": 83.8,
+      "caps_applied": [],
+      "s": 83.8,
+      "dominant_evidence_grade": "B",
+      "half_width": 8.0,
+      "min": 75.8,
+      "max": 91.8
+    }
+  },
+  "journeys": {
+    "J1": {
+      "verdict": "VERIFIED_WORKING",
+      "evidence": "harness J1.1-J1.5 all PASS against real PostgreSQL"
+    },
+    "J2": {
+      "verdict": "PARTIAL",
+      "evidence": "flag-off gate (503 human route) and auth check verified; live Gemini call untestable - no key, egress blocked"
+    },
+    "J3": {
+      "verdict": "VERIFIED_WORKING",
+      "evidence": "GET/POST /v1/devices and the passport read all PASS in e2e.mjs (J3.1-J3.4)"
+    },
+    "J4": {
+      "verdict": "VERIFIED_WORKING",
+      "evidence": "harness J4.1-J4.4 all PASS: order -> quote -> accept -> evidence"
+    },
+    "J5": {
+      "verdict": "PARTIAL",
+      "evidence": "intent creation + provider-failure path verified (502, status=failed); capture/ledger split untestable - Zarinpal unreachable"
+    },
+    "J6": {
+      "verdict": "VERIFIED_WORKING",
+      "evidence": "harness J6.1 released:1, J6.2 released:0 (idempotent), J6.3-J6.5 balanced ledger"
+    },
+    "J7": {
+      "verdict": "VERIFIED_WORKING",
+      "evidence": "harness J7.1-J7.3 all PASS: apply -> KYC -> operator approval"
+    }
+  },
+  "measured": {
+    "tests_total": 37,
+    "tests_passed": 37,
+    "tests_failed": 0,
+    "line_coverage_pct": 78.34,
+    "branch_coverage_pct": 78.21,
+    "func_coverage_pct": 79.03,
+    "server_js_line_coverage_pct": 59.06,
+    "npm_audit_total": 0,
+    "installed_packages": 79,
+    "copyleft_packages": 0,
+    "source": "node --test --experimental-test-coverage (exit 0) at commit be58bce against PostgreSQL 18.4; npm audit --omit=dev --json (total 0). server_js_line_coverage_pct read from the per-file coverage row for src/server.js, not the all-files row."
+  },
+  "R_point": 86.624,
+  "R_mean": 83.404,
+  "R_stdev": 1.334,
+  "CI95": [
+    80.651,
+    85.859
+  ],
+  "P_GO_raw": 1.0,
+  "P_GO_final": 1.0,
+  "hard_gates": [
+    "NONE"
+  ],
+  "verdict_forced": null,
+  "counts": {
+    "P0": 0,
+    "P1": 4,
+    "P2": 3,
+    "P3": 6,
+    "total": 13
+  },
+  "letter_grade": "A-"
+}

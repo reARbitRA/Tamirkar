@@ -33,6 +33,12 @@ Returns a user, JWT, and expiry after a matching unexpired code. A code gets fiv
 
 Returns the active user and role. Inactive users receive `401`.
 
+### `DELETE /v1/me`
+
+Account erasure under the privacy policy. Any authenticated role may erase their own account. In one transaction it deletes the caller's `otp_challenges`, `customer_devices`, `technician_profiles` and `kyc_cases` rows, then replaces `phone_e164` with an HMAC token derived from the OTP pepper, sets `is_active = FALSE` and clears `last_login_at`. There is no `deleted_at` column — `users` has only `created_at` and `last_login_at`, so the erasure timestamp lands in `operational_audit_log` instead. Because access tokens are stateless JWTs there is no session table to clear; `is_active = FALSE` is what revokes them, since `requireActiveUser` re-reads the row on every request.
+
+Refused with `409 erasure_blocked` — and the counts that blocked it — while the user has any escrow hold in `held`, `pending` or `frozen` state, or any order not in `completed`, `cancelled` or `refunded` state where they are either the customer or the quoting technician. Returns `200` with `{"erased": true, "retained_for": ["financial_records", "audit_log"]}`, or `404` if the account is missing or inactive.
+
 ## Public capability flags
 
 ### `GET /v1/public/features`
@@ -74,6 +80,64 @@ Technician-only. Accepts an object-storage reference and SHA-256 reference—not
 ### `POST /v1/admin/kyc/:caseId/decision`
 
 Operator/admin-only. Takes `approved`, `rejected`, or `suspended` with a mandatory reason. Only `approved` technicians pass the server-side eligibility check for a payment associated with a technician.
+
+## Device passport
+
+Authenticated. The server-side counterpart to `DeviceEntity`; it lets a device record outlive the
+phone it was created on.
+
+### `POST /v1/devices`
+
+Registers a device. Three fields are required: `name` (2–120 characters), `category` (one of
+`ac`, `washer`, `refrigerator`, `mobile`, `laptop`, `car`, `other`) and `brand` (1–80 characters).
+`model`, `serial_number`, `purchase_date`, `purchase_price` and `notes` are optional; `purchase_price`
+must be an integer between 0 and 1e12. Returns `201` with `{"device": {…}}`.
+
+Note that `serial_number` carries **no** uniqueness constraint, so the same appliance can be
+registered twice. This is deliberate: a partial unique index on `(customer_id, serial_number)` would
+have to exclude the empty string, and most devices are entered without a serial.
+
+### `GET /v1/devices`
+
+Lists the caller's devices ordered by `health_score ASC, created_at DESC`, so the machine needing
+attention appears first. Scoped to the authenticated user.
+
+### `GET /v1/devices/:deviceId`
+
+Returns one device with its repair history. Requires the device to belong to the caller; a UUID
+belonging to someone else returns `404 not_found` rather than `403`, so the endpoint does not leak
+which device IDs exist.
+
+## Order lifecycle
+
+### `GET /v1/orders`
+
+Orders created by the caller, newest first, with each order's quotes and evidences nested.
+`operator` and `admin` see all orders. **A technician does not see orders assigned to them through
+this endpoint** — the filter is on `customer_id`, and `service_orders` has no `technician_id`
+column (the technician hangs off the quote). Pagination is `limit`, clamped to 1–100, default 50.
+
+### `GET /v1/orders/:orderId`
+
+One order with its quotes, evidences and device. `404` when the caller has no relationship to it.
+
+### `POST /v1/orders/:orderId/start`
+
+Approved-technician only. Moves a `paid` order to `in_progress`. Any other state returns
+`409 invalid_order_state`. Requires `Idempotency-Key`.
+
+### `POST /v1/orders/:orderId/complete`
+
+Approved-technician only. Moves `in_progress` to `completed` and releases the escrow hold. This is
+the **completion gate**: the server refuses to complete an order that never started, so escrow
+cannot be released without a recorded service. `409 invalid_order_state` otherwise.
+
+### `POST /v1/orders/:orderId/dispute`
+
+Customer-owner, operator or admin. Moves an order in `paid`, `in_progress` or `completed` state to
+`disputed`, then claws the technician's share back into escrow liability with a balanced ledger
+entry, so a release can never race a dispute. A caller who is neither the owner nor privileged gets
+`404 not_found`, not `403`, so the endpoint does not confirm which order IDs exist.
 
 ## Booking, immutable quotes, and evidence (disabled by default)
 
@@ -121,12 +185,38 @@ Zarinpal redirects here with `Authority` and `Status`. The server never trusts t
 
 Operator/admin-only; requires `FEATURE_ESCROW_RELEASE=true`. Locks due holds with `SKIP LOCKED`, writes idempotent balanced `escrow_release` postings, and changes each hold once. The scheduled `src/escrow-worker.js` invokes this endpoint. A real payout integration and reconciliation approval must exist before enabling it.
 
+### `POST /v1/admin/escrows/:holdId/refund`
+
+Operator/admin-only. Reverses a hold by writing an offsetting balanced `escrow_refund` posting,
+requiring a reason of at least 5 characters. Idempotent: a second call with the same
+`Idempotency-Key` returns the original result rather than posting twice.
+
+## Observability
+
+### `GET /health`
+
+Unauthenticated liveness probe returning `{"status": "ok"}`. The Docker `HEALTHCHECK` calls it. It
+runs `SELECT 1` against the pool, so a database that is down makes the probe fail and the container
+unhealthy — which is the intended behaviour for a service that cannot work without PostgreSQL, but
+means a brief database outage will mark healthy containers unhealthy.
+
+### `GET /metrics`
+
+Prometheus text format (`text/plain; version=0.0.4`). The emitted series are
+`oosta_process_uptime_seconds`, `oosta_pool_waiting`, `oosta_pool_idle`, `oosta_pool_total`,
+`oosta_http_requests_total{route,status_class}`, `oosta_provider_failures_total{provider}` and
+`oosta_escrow_holds_due`. It carries **no** user data and no per-user identifiers, but it does
+expose per-route request counts and the number of escrow holds due, so treat it as internal: do not
+publish it on a public ingress.
+
 ## Error contract
 
 - `400 invalid_request`: malformed body or idempotency key.
 - `401 unauthorized`: missing/expired/invalid session.
 - `403 forbidden`: role restriction or suspended actor.
 - `409 idempotency_conflict`: previous request has a different terminal state.
+- `409 invalid_order_state`: lifecycle transition not permitted from the current state.
+- `409 erasure_blocked`: account deletion refused while a non-terminal order exists.
 - `429`: OTP cooldown/rate/attempt limit.
 - `502`: upstream SMS/payment provider failed.
 - `503 feature_unavailable` / `ai_unavailable`: intentionally disabled or unavailable safe-mode capability.

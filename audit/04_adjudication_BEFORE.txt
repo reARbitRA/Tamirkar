@@ -1,0 +1,29 @@
+
+===============================================
+  MVP LAUNCH ADJUDICATION - commit 3bd962b3d490f936f81fe333a945e35427ffc7e0
+===============================================
+
+  VERDICT          : NO-GO - BLOCKED
+  GO PROBABILITY   : 0.00 %
+  NO-GO PROBABILITY: 100.00 %
+  READINESS SCORE  : 51.65 / 100   (Grade: D)
+  95% CI           : [50.08, 53.19]
+  MONTE CARLO      : N=10000, seed=424242
+  CONFIDENCE IN
+  THIS ASSESSMENT  : 73.63%   (= evidence coverage x grade quality)
+  ---------------------------------------------
+  P0: 2   P1: 9   P2: 19   P3: 7
+  JOURNEYS: 4/7 verified working  (J2, J5 PARTIAL - external providers unreachable; J3 BROKEN)
+  HARD GATES TRIPPED:
+    - P0_count=2 >= 1 -> P_GO capped at 0.05, verdict forced NO-GO
+    - P1_count=9 >= 5 -> P_GO capped at 0.35
+    - BROKEN journeys ['J3'] -> P_GO capped at 0.10
+  ---------------------------------------------
+  DISTANCE TO GO   : 23.35 score points | 38.0 h of blocking-finding effort
+  TOP 5 BLOCKERS   :
+    F-DATA-001  Escrow releases to the technician after 30 days with no completion or dispute path
+    F-EXEC-001  Android test source imports AiTask/AiProviderRouter.candidates() that do not exist
+    F-EXEC-008  No server read API for orders/quotes/devices - the device passport dies with the install
+    F-SEC-001   Deactivated accounts keep working for up to 3600 s on a live JWT
+    F-EXEC-006  AUTH_API_BASE_URL never declared and its only default is rejected - stock APK cannot reach any backend
+===============================================

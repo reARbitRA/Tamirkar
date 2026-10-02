@@ -1,0 +1,41 @@
+--- TOKEN 1: services/auth-api/src/server.js:L24 (pg.Pool options)
+const config = loadConfig();
+--- TOKEN 2: .github/workflows/android-apk.yml:L4-L7 (branch filter)
+  push:
+    branches:
+      - "arena/01a03c31-tamirkar"
+  workflow_dispatch:
+--- TOKEN 3: render.yaml:L1-L45 (single web svc, plan free, autoDeployTrigger off, no cron)
+4:  - type: web
+8:    plan: free
+10:    autoDeployTrigger: "off"
+cron_hits=0
+--- TOKEN 4: services/auth-api/Dockerfile:L9 (USER node)
+USER node
+--- TOKEN 5: services/auth-api/src/server.js:L139-L142 (/health)
+app.get('/health', async () => {
+  await pool.query('SELECT 1');
+  return { status: 'ok' };
+});
+--- TOKEN 6: docs/legal/PRIVACY_FA.md:L3 (draft banner)
+> **وضعیت: پیش‌نویس داخلی — پیش از انتشار باید توسط مشاور حقوقی و مسئول حریم خصوصی تأیید، تاریخ‌گذاری و با اطلاعات ثبتی/تماس واقعی تکمیل شود.**
+--- TOKEN 7: .github/workflows/<ZWNJ>apkbuild.yml:L20-L26 (Force Build APK, -x test)
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Force Build APK (Ignore AI Errors)
+      env:
+        _JAVA_OPTIONS: "-Djava.awt.headless=true"
+      run: ./gradlew assembleDebug -x lint -x test --no-daemon
+--- TOKEN 8: services/auth-api/src/server.js:L396 (requireUser with no allowedRoles)
+app.post('/v1/orders', async (request, reply) => {
+  const user = requireUser(request, reply, config);
+  if (!user || !featureEnabled(reply, config.newBookingsEnabled, 'new_bookings')) return;
+--- TOKEN 9: .github/workflows/android-apk.yml:L1-L60 contains no npm step
+npm_hits=0 gradlew_hits=3
+--- TOKEN 10: app/build.gradle.kts:L55-L58 buildConfig=true; buildConfigField absent from whole file
+  buildFeatures {
+    compose = true
+    buildConfig = true
+  }
+buildConfigField_hits=0
