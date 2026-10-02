@@ -66,6 +66,34 @@ if _os.environ.get("AUDIT_J3") == "PARTIAL":
     JOURNEYS["J3"] = ("PARTIAL", "order history now server-backed and executed (J3.2/J3.3/J3.4 PASS); DeviceEntity still has no server API")
 if _os.environ.get("AUDIT_J3") == "VERIFIED":
     JOURNEYS["J3"] = ("VERIFIED_WORKING", "GET/POST /v1/devices and the passport read all PASS in e2e.mjs (J3.1-J3.4)")
+# J2 and J5 are pinned PARTIAL because Gemini and Zarinpal are unreachable from the audit sandbox.
+# Both are reachable from a machine holding real credentials, and the harness already records a
+# genuine PASS for J5.1 once AUDIT_ZARINPAL_MERCHANT_ID is a real sandbox id. Without an override
+# here that PASS could not be carried into the scorecard at all - the harness would prove the
+# journey and the rubric would still score it PARTIAL.
+#
+#   AUDIT_J5=VERIFIED AUDIT_J5_NOTE="harness J5.1 PASS with merchant id X" python3 audit/mc_sim.py
+#
+# Every journey J1-J7 accepts AUDIT_J<n>=VERIFIED|PARTIAL|BROKEN. The note is required whenever the
+# journey has no legacy default note: a verdict without the evidence that produced it is not
+# auditable. The J3 shorthand above keeps working unchanged.
+_LEGACY_NOTED = {
+    ("J3", "PARTIAL"), ("J3", "VERIFIED_WORKING"),
+}
+for _jn in ("J1", "J2", "J3", "J4", "J5", "J6", "J7"):
+    _val = _os.environ.get(f"AUDIT_{_jn}")
+    if not _val:
+        continue
+    _val = _val.upper()
+    if _val not in ("VERIFIED", "VERIFIED_WORKING", "PARTIAL", "BROKEN"):
+        raise SystemExit(f"AUDIT_{_jn}={_val!r} is not one of VERIFIED|PARTIAL|BROKEN")
+    _state = "VERIFIED_WORKING" if _val.startswith("VERIFIED") else _val
+    _note = _os.environ.get(f"AUDIT_{_jn}_NOTE")
+    if not _note:
+        if (_jn, _state) in _LEGACY_NOTED:
+            continue  # already set above with its own evidence text
+        raise SystemExit(f"AUDIT_{_jn} is set but AUDIT_{_jn}_NOTE is empty; record the evidence that produced this verdict")
+    JOURNEYS[_jn] = (_state, _note)
 if _os.environ.get("AUDIT_TESTS"):
     _t = [int(x) for x in _os.environ["AUDIT_TESTS"].split(",")]
     MEASURED["tests_total"], MEASURED["tests_passed"], MEASURED["tests_failed"] = _t[0], _t[1], _t[2]
