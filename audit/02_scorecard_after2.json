@@ -75,7 +75,7 @@
       ],
       "s_before_caps": 94.18,
       "caps_applied": [
-        "test-evidence cap 100*(0.5*1.00+0.5*min(78.34/70,1))=100.00"
+        "test-evidence cap 100*(0.5*1.00+0.5*min(89.39/70,1))=100.00"
       ],
       "s": 94.18,
       "dominant_evidence_grade": "B",
@@ -336,17 +336,17 @@
     }
   },
   "measured": {
-    "tests_total": 37,
-    "tests_passed": 37,
+    "tests_total": 40,
+    "tests_passed": 40,
     "tests_failed": 0,
-    "line_coverage_pct": 78.34,
-    "branch_coverage_pct": 78.21,
-    "func_coverage_pct": 79.03,
-    "server_js_line_coverage_pct": 59.06,
+    "line_coverage_pct": 89.39,
+    "branch_coverage_pct": 73.31,
+    "func_coverage_pct": 82.62,
+    "server_js_line_coverage_pct": 81.65,
     "npm_audit_total": 0,
     "installed_packages": 79,
     "copyleft_packages": 0,
-    "source": "node --test --experimental-test-coverage (exit 0) at commit be58bce against PostgreSQL 18.4; npm audit --omit=dev --json (total 0). server_js_line_coverage_pct read from the per-file coverage row for src/server.js, not the all-files row."
+    "source": "node --test --experimental-test-coverage (exit 0) at commit 89330a1 against PostgreSQL 18.4; npm audit --omit=dev --json (total 0). server_js_line_coverage_pct read from the per-file coverage row for src/server.js. Branch coverage is LOWER than the previous round (78.21 -> 73.31 all-files) despite more code being covered: raw V8 branch ranges for server.js went total 209 -> 364, covered 73 -> 80, so newly-executed code exposes more branch points than it covers."
   },
   "R_point": 86.624,
   "R_mean": 83.404,
