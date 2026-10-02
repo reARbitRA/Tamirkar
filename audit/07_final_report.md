@@ -1,6 +1,6 @@
 # Oosta (اوستا) — MVP Readiness Audit + Remediation
 
-**Repository** `reARbitRA/Tamirkar` · **baseline** `3bd962b3d490f936f81fe333a945e35427ffc7e0` · **head** `6d98660`
+**Repository** `reARbitRA/Tamirkar` · **baseline** `3bd962b3d490f936f81fe333a945e35427ffc7e0` · **head** `721ca75`
 **Branch** `arena/01a0fac4-tamirkar` · **audit date** 2026-10-02
 **VALIDATION: DEGRADED — SINGLE-MODEL** (no second model was reachable in this workspace; see §4)
 
@@ -35,11 +35,11 @@
 ═══════════════════════════════════════════════
 ```
 
-## 2. Adjudication — AFTER (current HEAD `6d98660`)
+## 2. Adjudication — AFTER (current HEAD `721ca75`)
 
 ```
 ═══════════════════════════════════════════════
-  MVP LAUNCH ADJUDICATION (AFTER) — commit 6d98660
+  MVP LAUNCH ADJUDICATION (AFTER) — commit 721ca75
 ═══════════════════════════════════════════════
   VERDICT          : CONDITIONAL GO
   GO PROBABILITY   : 100.00 %
@@ -171,7 +171,9 @@ Per-module, from the executed lanes:
 ## 6. What changed
 
 Commits on `arena/01a0fac4-tamirkar`: `fa844e7` (audit baseline) → `6fe6450` (remediation) →
-`485a5c0` (CI staging) → `2375fa1` (integration lane) → `6d98660` (round 2).
+`485a5c0` (CI staging) → `2375fa1` (integration lane) → `6d98660` (round 2) → `721ca75`
+(round-2 hardening: J5 made genuinely verifiable, `server.yml` made to actually exercise the money
+path, and four stale claims in the audit record and user docs corrected).
 
 | Area | Change |
 |---|---|
