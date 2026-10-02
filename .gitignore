@@ -19,3 +19,6 @@ debug.keystore
 /audit-output
 node_modules/
 __pycache__/
+
+# Test artifact written by test/zarinpal-stub.mjs
+services/auth-api/.zarinpal-stub-log.json
