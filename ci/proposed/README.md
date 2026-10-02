@@ -38,6 +38,33 @@ Every step in this file was executed locally against a real PostgreSQL 18.4 befo
 here, including the negative case: with the database absent, the "Assert no test was skipped"
 guard reports `# skipped 4` and exits 1.
 
+## Observed again on 2026-10-02, HEAD 7c8b749
+
+A third audit round attempted the install directly and reproduced the boundary exactly:
+
+```
+$ cp ci/proposed/server.yml .github/workflows/server.yml
+$ git push origin arena/01a0fbb5-tamirkar
+ ! [remote rejected] arena/01a0fbb5-tamirkar -> arena/01a0fbb5-tamirkar
+   (refusing to allow a GitHub App to create or update workflow
+    `.github/workflows/server.yml` without `workflows` permission)
+```
+
+`x-oauth-scopes` on the token is empty — it is a GitHub App installation token, so the permission
+cannot be granted from inside the session. The local probe commit was removed (it was never pushed)
+so that the branch tip remains pushable for every non-workflow change.
+
+Because of that, the same assertions now also exist as an executable local gate that does not need
+the permission:
+
+```bash
+AUDIT_DATABASE_URL=postgres://user:pw@127.0.0.1:5432/postgres bash scripts/ci-server-check.sh
+```
+
+It runs in about 11 seconds against a local PostgreSQL and exits `0` with `pass 44 / fail 0 /
+skipped 0` on the current tree. Installing `server.yml` is still the durable fix, because the local
+script only helps someone who remembers to run it.
+
 ## Also required from a human
 
 `.github/workflows/build.yml` needs its trigger block changed from

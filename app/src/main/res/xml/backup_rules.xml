@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+   Legacy auto-backup rules. Android only consults this file on API 24-30; from API 31 the platform
+   uses data_extraction_rules.xml instead. `minSdk` is 24 (app/build.gradle.kts), so a majority of
+   installable devices still take this path.
+
+   Regression being pinned (F-LEGAL-002): this element used to be empty, which means "back up
+   everything". On API 24-30 that uploaded the Room database — users, devices, orders and the phone
+   number recorded in UserEntity — to the user's Google Drive, with no notice in PRIVACY_FA.md and
+   no equivalent on newer devices. The excludes below mirror data_extraction_rules.xml exactly.
+
+   Local Room records are a cache, not an account backup. Server data is restored after sign-in.
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
 </full-backup-content>

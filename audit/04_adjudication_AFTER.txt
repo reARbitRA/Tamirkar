@@ -1,19 +1,19 @@
 ═══════════════════════════════════════════════════════════
   ARBITER-MVP v2.1 — MVP LAUNCH ADJUDICATION — 7c8b749f4ca2f69c01de5e3d86d419b713d85344
-  STATE: BEFORE — frozen at HEAD 7c8b749, 26 findings
+  STATE: AFTER — HEAD 7c8b749 + verified remediation, 21 findings open
 ═══════════════════════════════════════════════════════════
   VERDICT           : NO-GO — REMEDIABLE
-  READINESS SCORE   : 79.073 / 100  (Grade B)
-  R_MEAN (MC)       : 78.7599 | 95% CI: [72.76, 84.8252]
-  SCORE-UNCERTAINTY : P(R >= 75) = 88.92%  (threshold likelihood)
+  READINESS SCORE   : 80.9198 / 100  (Grade B+)
+  R_MEAN (MC)       : 80.4347 | 95% CI: [74.4674, 86.4556]
+  SCORE-UNCERTAINTY : P(R >= 75) = 96.24%  (threshold likelihood)
   EFFECTIVE P_GO    : 35.00%  (after hard-gate overrides)
   AUDIT CONFIDENCE  : 95.1%
   ───────────────────────────────────────────────────────────
-  P0: 0  P1: 6  P2: 11  P3: 9
+  P0: 0  P1: 5  P2: 8  P3: 8
   JOURNEYS: 3/7 VERIFIED_WORKING
-  UNMET CONDITIONS  : P_GO 0.3500 < 0.60; P1=6 > 2; 4 journey/journeys PARTIAL: ['J2', 'J3', 'J5', 'J7']
-  HARD GATES TRIPPED: P1_count=6 >= 5 -> P_GO capped at 0.35
+  UNMET CONDITIONS  : P_GO 0.3500 < 0.60; P1=5 > 2; 4 journey/journeys PARTIAL: ['J2', 'J3', 'J5', 'J7']
+  HARD GATES TRIPPED: P1_count=5 >= 5 -> P_GO capped at 0.35
   ───────────────────────────────────────────────────────────
   DOMINANT RISKS    : F-EXEC-001 (P1), F-DATA-001 (P1), F-EXEC-004 (P1)
-  DISTANCE TO GO    : 5.927 pts to R=85, plus the unmet conditions above
+  DISTANCE TO GO    : 4.0802 pts to R=85, plus the unmet conditions above
 ═══════════════════════════════════════════════════════════

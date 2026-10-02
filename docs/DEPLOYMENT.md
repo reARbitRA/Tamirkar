@@ -72,3 +72,35 @@ Create alerts for OTP provider failures/rate limits, API 5xx, AI unavailability,
 ## Release gate
 
 A production release needs the exact Git commit, Android version/signing evidence, successful JDK-17 Gradle test/lint/release build, Node test/audit output, migration log, device smoke evidence, current feature flag values, backup/restore drill, Kavenegar test result, and—before money—Zarinpal sandbox/reconciliation and legal/operations approvals.
+
+## Retention sweep
+
+`otp_challenges` receives one row per login attempt and is the only table that is deliberately
+pruned. Run the sweep from a scheduler next to the escrow worker:
+
+```bash
+node src/retention.js run        # honours OTP_RETENTION_DAYS (default 7)
+```
+
+It deletes rows older than the window whose status is not `pending` or `sending`, so a live login is
+never interrupted, and prints a JSON count for the scheduler log. `escrow_holds`, `ledger_entries`,
+`ledger_postings` and `operational_audit_log` are **not** pruned: they are accounting and dispute
+records that both parties may need, and deleting them would be data loss rather than hygiene.
+
+## The escrow cron must override the image command
+
+`services/auth-api`'s image CMD is `sh -c "npm run migrate && npm start"`. A Render cron service
+built from that image therefore boots a web server that never exits unless the blueprint supplies
+`dockerCommand`. `render.yaml` sets:
+
+```yaml
+    dockerCommand: node src/escrow-worker.js
+```
+
+**The worker needs the web service to be reachable.** It POSTs to
+`${PLATFORM_API_BASE_URL}/v1/admin/escrows/release-due` with `ESCROW_WORKER_TOKEN`, and that route is
+fail-closed behind `FEATURE_ESCROW_RELEASE`. Set that variable on the **web service** (it is
+`sync: false` in the blueprint so an operator controls it) before expecting a single hold to move.
+Turning it on before the worker runs leaves holds untouched; turning it on without the worker leaves
+them untouched too — both are safe, which is the point of the flag.
+

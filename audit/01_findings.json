@@ -1,804 +1,600 @@
 {
-  "commit": "3bd962b3d490f936f81fe333a945e35427ffc7e0",
+  "audit": "ARBITER-MVP v2.1 round 3",
+  "head": "f0274536a0d0eb0001133fde1672de825795550c",
+  "short_sha": "f027453",
+  "branch": "arena/01a0fbb5-tamirkar",
+  "generated_by": "audit/harness/arbiter_engine.py",
+  "counts": {
+    "P0": 0,
+    "P1": 6,
+    "P2": 11,
+    "P3": 9
+  },
   "findings": [
     {
-      "id": "F-EXEC-001",
-      "title": "Android unit-test source set references AiTask/AiProviderRouter.candidates() which do not exist",
-      "lane": "EXEC",
-      "severity": "P0",
-      "confidence": 0.95,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:app/src/test/java/com/example/AiProviderRouterTest.kt:L4-L27]",
-        "[E:cmd#22 git grep -n 'fun candidates' -- '*.kt' -> no output, exit 1]",
-        "[E:cmd#22 git grep -n AiTask -- '*.kt' -> only AiProviderRouterTest.kt lines 4,12,19,26]",
-        "[E:app/src/main/java/com/example/data/remote/AiProviderRouter.kt:L16-L44 single diagnose() method, no candidates(), no AiTask enum]",
-        "[E:.github/workflows/ZWNJ-apkbuild.yml:L20-L26 step 'Force Build APK (Ignore AI Errors)' runs gradlew assembleDebug -x lint -x test]"
-      ],
-      "impact": "The declared test task cannot compile, so README's gradlew testDebugUnitTest, the build.yml 'Run unit tests' step and therefore every Android release proof fail. A bypass workflow that skips tests exists, which is how APKs are still produced.",
-      "exploit_or_repro": "gradlew testDebugUnitTest (NOT executed here: no JDK/Android SDK) -> unresolved reference AiTask. Static proof is complete: AiTask is imported from com.example.data.remote, the app's own namespace, and no declaration exists in the module.",
-      "blast_radius": "all-users",
-      "remediation": "Rewrite AiProviderRouterTest against the real AiProviderRouter contract (server gateway URL, bearer header, images.take(2), error mapping) or delete the stale tests.",
-      "effort_hours": 3.0,
-      "mvp_blocking": true,
-      "blocks_journey": [
-        "J1",
-        "J2",
-        "J3",
-        "J4",
-        "J5",
-        "J6",
-        "J7"
-      ]
-    },
-    {
       "id": "F-DATA-001",
-      "title": "Escrow auto-releases after 30 days with no completion, dispute-freeze or cancellation path",
       "lane": "DATA",
-      "severity": "P0",
-      "confidence": 0.95,
+      "dimension": "D4",
+      "severity": "P1",
+      "confidence": 1.0,
       "evidence_grade": "A",
+      "title": "Backup and restore have never been executed; the required client tools are absent from every environment tested so far",
       "evidence": [
-        "[E:services/auth-api/db/003_orders_quotes.sql:L9 status CHECK includes in_progress/completed/disputed/cancelled]",
-        "[E:services/auth-api/db/002_platform.sql escrow_holds status CHECK includes frozen; ledger_entries event_type includes dispute_freeze and refund]",
-        "[E:cmd#12 route inventory: no route writes in_progress/completed/disputed/cancelled, frozen, dispute_freeze or refund]",
-        "[E:services/auth-api/src/server.js:L640-L676 release-due selects only status='held' AND release_after <= NOW()]",
-        "[E:cmd#20 harness J6.1 -> POST /v1/admin/escrows/release-due -> 200 released:1 on a hold whose order never reached completed]"
+        "[E:cmd#10]: `command -v pg_dump` and `command -v pg_restore` both return nothing; only initdb/pg_ctl/postgres are present in the PostgreSQL distribution that was installed",
+        "[E:scripts/backup-database.sh:6-9]",
+        "[E:scripts/restore-database.sh:6-9]",
+        "[E:docs/GO_NO_GO.md:64-70]"
       ],
-      "impact": "Customer money held in escrow is paid to the technician 30 days after capture regardless of whether the repair happened, was abandoned, or is being disputed. The schema anticipates freeze/refund; no code path can trigger them. Direct financial and legal exposure.",
-      "exploit_or_repro": "1) pay a quote, 2) do nothing / dispute offline, 3) run release-due -> hold flips to released and technician_payable is credited. Executed against real PostgreSQL 18.4 in this session.",
+      "impact": "The system holds the only record of captured payments, the escrow ledger and the audit trail. If the database is lost there is no proven way to get it back, and no RPO/RTO has been measured. This is the single most expensive failure mode available and it is currently unverified rather than merely undocumented.",
+      "exploit_or_repro": "NONE_FOUND",
       "blast_radius": "data-loss",
-      "remediation": "Add server transitions: technician start (paid->in_progress), completion evidence gate (in_progress->completed), dispute (->disputed, hold frozen, ledger dispute_freeze), operator refund (hold refunded, ledger refund). release-due must additionally require order status = completed.",
-      "effort_hours": 10.0,
-      "mvp_blocking": true,
-      "blocks_journey": [
-        "J5",
-        "J6"
-      ]
-    },
-    {
-      "id": "F-SEC-001",
-      "title": "Deactivated or suspended users keep full API access until their JWT expires",
-      "lane": "SEC",
-      "severity": "P1",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:cmd#20 harness S.3 -> after UPDATE users SET is_active=FALSE, POST /v1/orders returned 201]",
-        "[E:services/auth-api/src/server.js:L265-L272 only /v1/me checks is_active]",
-        "[E:services/auth-api/src/auth.js:L1-L20 requireUser validates signature and role only, never user state]",
-        "[E:services/auth-api/src/session.js:L5 ACCESS_TOKEN_SECONDS = 60*60]"
-      ],
-      "impact": "An operator who suspends an abusive customer or technician cannot stop them: for up to 3600 s the account can still create orders, accept quotes and start payments. There is no token revocation.",
-      "exploit_or_repro": "Executed in-session: deactivated the harness user mid-flight; the next authenticated POST /v1/orders returned 201.",
-      "blast_radius": "all-users",
-      "remediation": "In requireUser(), load the user row and reject when is_active is false (401 account_inactive).",
-      "effort_hours": 2.0,
-      "mvp_blocking": true,
-      "blocks_journey": [
-        "J4",
-        "J5",
-        "J7"
-      ]
-    },
-    {
-      "id": "F-EXEC-008",
-      "title": "No server read API exists for orders, quotes, devices or passport history",
-      "lane": "EXEC",
-      "severity": "P1",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:cmd#20 harness J3.1 -> GET /v1/devices 404; GET /v1/orders 404]",
-        "[E:cmd#12 route inventory: the only GET routes are /health, /v1/public/features, /v1/me]",
-        "[E:README.md device-passport section claims the history is written from server-side order state and survives reinstall]"
-      ],
-      "impact": "The device passport and order history are Room-local only. The README's central durability promise is unmet: reinstalling the app or changing phone erases the record. Support, warranty claims and disputes have nothing server-side to read.",
-      "exploit_or_repro": "GET /v1/orders with a valid bearer token -> 404 (executed).",
-      "blast_radius": "all-users",
-      "remediation": "Add GET /v1/orders and GET /v1/orders/:orderId (quotes, acceptance, evidence, escrow hold), scoped strictly to claims.sub or the approved technician/operator.",
-      "effort_hours": 6.0,
-      "mvp_blocking": true,
-      "blocks_journey": [
-        "J3",
-        "J4"
-      ]
-    },
-    {
-      "id": "F-EXEC-006",
-      "title": "AUTH_API_BASE_URL is never declared; a stock-checkout APK cannot reach any backend",
-      "lane": "EXEC",
-      "severity": "P1",
-      "confidence": 0.8,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:app/build.gradle.kts:L55-L58 buildFeatures buildConfig=true and no buildConfigField anywhere in the file]",
-        "[E:cmd#19 grep -rn AUTH_API_BASE_URL -> exactly one hit, the reflection read at OostaApiConfig.kt:8]",
-        "[E:app/src/main/java/com/example/data/remote/OostaApiConfig.kt:L8-L14 rejects blank, example.invalid and non-https]",
-        "[E:.env.example:L1-L3 default value is https://auth.example.invalid]",
-        "[E:README.md Android build block: three gradlew commands, no .env step]",
-        "[E:url:https://github.com/google/secrets-gradle-plugin reads secrets from a properties file in your root project]"
-      ],
-      "impact": "Following the README exactly, the built APK throws AuthApiException on every server call - login, diagnosis and order creation all fail. The fail-closed guard is correct security design; the defect is that the required root .env is git-ignored and undocumented for Android.",
-      "exploit_or_repro": "Static: the secrets plugin v2.0.1 injects BuildConfig fields from the root-project .env / .env.example; the only value available in a clean clone is https://auth.example.invalid, which OostaApiConfig rejects. NOT executed - no JDK/Android SDK in this sandbox.",
-      "blast_radius": "all-users",
-      "remediation": "Declare buildConfigField explicitly from a Gradle property so the wiring is visible, and document the root .env step in the README Android section.",
-      "effort_hours": 2.0,
-      "mvp_blocking": true,
-      "blocks_journey": [
-        "J1",
-        "J2",
-        "J4"
-      ]
-    },
-    {
-      "id": "F-EXEC-002",
-      "title": "No CI job builds or tests the server that owns OTP, payments and the ledger",
-      "lane": "EXEC",
-      "severity": "P1",
-      "confidence": 1.0,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:cmd#14 .github/workflows/build.yml:L1-L36 only JDK, Android SDK, gradlew test, assembleDebug]",
-        "[E:cmd#14 .github/workflows/android-apk.yml:L1-L60 gradle only]",
-        "[E:cmd#22 grep -rn npm .github/workflows -> no match]"
-      ],
-      "impact": "The 18 passing server tests run only on a developer laptop. A regression in the money path can merge to main with no automated gate.",
-      "exploit_or_repro": "NONE_FOUND (absence)",
-      "blast_radius": "all-users",
-      "remediation": "Add .github/workflows/server.yml: checkout, setup-node 22, npm ci, npm audit --omit=dev --audit-level=high, npm test inside services/auth-api.",
-      "effort_hours": 2.0,
-      "mvp_blocking": true,
-      "blocks_journey": [
-        "J1",
-        "J5",
-        "J6"
-      ]
-    },
-    {
-      "id": "F-EXEC-003",
-      "title": "Every workflow run in repository history has failed; the latest main run died at Set up Android SDK",
-      "lane": "EXEC",
-      "severity": "P1",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:cmd#15 gh run list --repo reARbitRA/Tamirkar --limit 10 -> 10 rows, all failure, newest 36493298453 on main]",
-        "[E:cmd#16 gh run view 36493298453 -> X build in 11s with X Set up Android SDK and all later steps skipped]"
-      ],
-      "impact": "There is no green build in this repository's history. The README claim that CI provisions exactly that toolchain is contradicted by observed runs.",
-      "exploit_or_repro": "gh CLI output captured in-session.",
-      "blast_radius": "all-users",
-      "remediation": "Pin android-actions/setup-android to a maintained version, install the SDK explicitly, and split the server job so the money path has a green gate independent of Android toolchain churn.",
+      "remediation": "Run scripts/backup-database.sh against a populated staging database on a host that has postgresql-client, then run scripts/restore-database.sh per the drill in docs/DEPLOYMENT.md into an isolated instance, and record the measured RPO/RTO. Record the drill result in docs/GO_NO_GO.md.",
       "effort_hours": 4.0,
       "mvp_blocking": true,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-EXEC-001",
+      "lane": "EXEC",
+      "dimension": "D1",
+      "severity": "P1",
+      "confidence": 1.0,
+      "evidence_grade": "A",
+      "title": "Android client calls 4 of the 23 bearer-authenticated routes, so four user journeys stop at the handset",
+      "evidence": [
+        "[E:app/src/main/java/com/example/data/remote/PlatformApi.kt:37-72]",
+        "[E:app/src/main/java/com/example/data/remote/AiProviderRouter.kt:24-43]",
+        "[E:app/src/main/java/com/example/data/remote/AuthApi.kt:40-61]",
+        "[E:cmd#8]: grep of app/src/main for '/v1/' returns exactly 5 call sites: /v1/auth/request-otp, /v1/auth/verify-otp, /v1/public/features, /v1/orders, /v1/ai/diagnoses",
+        "[E:docs/GO_60_ROADMAP.md:47-90]: the machine-generated census — 27 routes, 4 public, 23 bearer, 5 bearer call sites (one of which is the POST that also matches GET /v1/orders by substring), 19 bearer routes with no call site",
+        "[E:cmd#28]: route list parsed from src/server.js (27 matches of ^app.(get|post|...) ) against a literal scan of app/src/main/java/**/*.kt",
+        "[E:services/auth-api/src/server.js:554-1097]"
+      ],
+      "impact": "Nineteen of the twenty-three bearer-authenticated routes have no Android call site. A customer can sign in, submit an order and ask for a diagnosis, but cannot create a device passport on the server, cannot accept a quote, cannot pay, and a technician cannot submit KYC, quote, upload evidence, start or complete a job from the app. Device and order history still live only in Room (TamirkarRepository.addDevice), so a reinstall destroys the service history the product's 'device passport' promise is built on.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "all-users",
+      "remediation": "Add thin authenticated clients for POST /v1/devices, GET /v1/devices, POST /v1/quotes/:id/accept, POST /v1/technicians/apply, POST /v1/technicians/kyc, POST /v1/orders/:id/quotes|evidence|start|complete|dispute, POST /v1/payments/zarinpal/start, and reconcile local Room rows from the server response rather than from a locally generated id.",
+      "effort_hours": 16.0,
+      "mvp_blocking": true,
       "blocks_journey": [
-        "J1",
-        "J2",
         "J3",
-        "J4",
         "J5",
-        "J6",
         "J7"
-      ]
+      ],
+      "pre_existing": true
     },
     {
       "id": "F-EXEC-004",
-      "title": "Workflow triggers are pinned to stale branch names, so PRs run no CI at all",
       "lane": "EXEC",
+      "dimension": "D5",
       "severity": "P1",
       "confidence": 1.0,
-      "evidence_grade": "B",
+      "evidence_grade": "A",
+      "title": "No installed CI job runs the auth-api suite, so the money-path tests can regress without anyone noticing",
       "evidence": [
-        "[E:.github/workflows/build.yml:L4-L6 branches main, master, arena/01a03dca-tamirkar]",
-        "[E:.github/workflows/android-apk.yml:L4-L7 branches arena/01a03c31-tamirkar only]",
-        "[E:cmd#14 no pull_request trigger in any workflow]"
+        "[E:cmd#12]: `ls .github/workflows` lists exactly three files, all Android builds; grep for 'services/auth-api' in .github/workflows returns nothing",
+        "[E:ci/proposed/server.yml:1-16]",
+        "[E:ci/proposed/README.md:1-13]"
       ],
-      "impact": "A pull request can merge with zero checks. android-apk.yml can only ever run on one dead branch.",
-      "exploit_or_repro": "NONE_FOUND (absence)",
-      "blast_radius": "all-users",
-      "remediation": "Trigger on push to main plus pull_request; repoint the dead branch filters.",
-      "effort_hours": 1.0,
-      "mvp_blocking": false,
-      "blocks_journey": []
+      "impact": "37 tests including the completion gate, the dispute freeze, the ledger balance and the refund replay exist and pass, but nothing runs them except a developer's laptop. A one-line regression in escrow release would reach production with a green repository.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "data-loss",
+      "remediation": "A maintainer with the GitHub `workflows` permission copies ci/proposed/server.yml to .github/workflows/server.yml. See F-EXEC-005 for the evidence that the App token used here cannot do it.",
+      "effort_hours": 0.25,
+      "mvp_blocking": true,
+      "blocks_journey": [],
+      "pre_existing": true
     },
     {
-      "id": "F-DATA-005",
-      "title": "No backup, restore, RPO/RTO or point-in-time-recovery procedure exists anywhere",
-      "lane": "DATA",
+      "id": "F-EXEC-005",
+      "lane": "EXEC",
+      "dimension": "D5",
       "severity": "P1",
-      "confidence": 0.95,
-      "evidence_grade": "B",
+      "confidence": 1.0,
+      "evidence_grade": "A",
+      "title": "Every Android CI run in the repository's history has failed and the two push triggers name abandoned branches",
       "evidence": [
-        "[E:cmd#27 git ls-files | grep -iE backup|restore|pg_dump -> only app/src/main/res/xml/backup_rules.xml (Android auto-backup rules)]",
-        "[E:cmd#27 git grep -i backup|pg_dump|restore over yml/yaml/sh/js -> no server match]",
-        "[E:LAUNCH_CHECKLIST.md T-1 day requires backups completed and an isolated restore test meeting documented RPO/RTO]"
+        "[E:cmd#13]: `gh run list --limit 6` returns six consecutive runs with conclusion `failure`, all job 'Build Android APK'",
+        "[E:.github/workflows/build.yml:3-6]",
+        "[E:.github/workflows/android-apk.yml:3-7]",
+        "[E:ci/proposed/README.md:47-62]"
       ],
-      "impact": "The database holds phone numbers, KYC document references, payment intents and an append-only ledger. A lost volume is unrecoverable and the ledger cannot be reconstructed.",
-      "exploit_or_repro": "NONE_FOUND (absence)",
-      "blast_radius": "data-loss",
-      "remediation": "Script pg_dump/pg_restore on a schedule, record RPO/RTO, add a restore-drill step to the runbook. Managed Postgres with PITR is the cheaper path for a Render pilot.",
-      "effort_hours": 6.0,
+      "impact": "There is no evidence that the committed Kotlin compiles or that any app test passes, because no green run exists. build.yml fires on `arena/01a03dca-tamirkar`, android-apk.yml on `arena/01a03c31-tamirkar`; neither branch is HEAD, neither is main, and there is no pull_request trigger anywhere — so a PR against this repository runs zero checks.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Change both trigger blocks to `on: push: branches: [main, master]` plus `pull_request:` plus `workflow_dispatch:`, then fix the failing SDK setup step until one run is green.",
+      "effort_hours": 2.0,
       "mvp_blocking": true,
-      "blocks_journey": [
-        "J5",
-        "J6"
-      ]
+      "blocks_journey": [],
+      "pre_existing": true
     },
     {
       "id": "F-LEGAL-001",
-      "title": "All legal documents are unapproved internal drafts; the approvals matrix is 0/6",
       "lane": "LEGAL",
+      "dimension": "D12",
       "severity": "P1",
       "confidence": 1.0,
       "evidence_grade": "B",
+      "title": "Zero of six launch approvals are recorded and every Persian legal text is an unsigned internal draft",
       "evidence": [
-        "[E:docs/legal/TERMS_FA.md:L3 status banner: internal draft, no legal approval]",
-        "[E:docs/legal/PRIVACY_FA.md:L3 same draft banner]",
-        "[E:docs/legal/APPROVALS.md:L5-L10 six unchecked boxes including counsel sign-off on privacy, terms, cancellation/refund and warranty]"
+        "[E:docs/legal/APPROVALS.md:1-9]",
+        "[E:docs/legal/TERMS_FA.md:1-5]",
+        "[E:docs/legal/PRIVACY_FA.md:1-5]",
+        "[E:docs/GO_NO_GO.md:34-35]: “تأیید حقوقی — docs/legal/* پیش‌نویس داخلی است…” — the unsigned-draft statement, not the earlier range this finding carried"
       ],
-      "impact": "Collecting payment and holding 15% of it in escrow without counsel-approved terms, a dated privacy notice or a registered legal entity is a legal prohibition on public launch.",
+      "impact": "docs/legal/APPROVALS.md lists six required sign-offs (counsel, finance, payment gateway, operations, security, product) and every box is unchecked; the four text files carry no date, no version and no signature. Iranian private-law and PSP/escrow licensing questions cannot be resolved by any agent reading this repository — this is routed to a human, as LEGAL lane rules require, and it independently blocks a public paid launch.",
       "exploit_or_repro": "NONE_FOUND",
       "blast_radius": "legal",
-      "remediation": "Counsel review and dated publication of all five documents; fill APPROVALS.md with names and dates. Requires a human lawyer - cannot be automated.",
-      "effort_hours": 0.0,
+      "remediation": "Route docs/legal/* to licensed Iranian counsel; record each approval in APPROVALS.md with a name, a date and a document version.",
+      "effort_hours": 40.0,
       "mvp_blocking": true,
-      "blocks_journey": [
-        "J5"
-      ]
-    },
-    {
-      "id": "F-OPS-002",
-      "title": "Escrow worker has no scheduler in any deployment manifest; its two env vars are undocumented",
-      "lane": "OPS",
-      "severity": "P1",
-      "confidence": 1.0,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:services/auth-api/src/escrow-worker.js:L1-L13 invoke this process from a scheduler with ESCROW_WORKER_TOKEN]",
-        "[E:cmd#13 render.yaml:L1-L45 one web service, plan free, autoDeployTrigger off, no cron job]",
-        "[E:cmd#26 env diff: ESCROW_WORKER_TOKEN and PLATFORM_API_BASE_URL absent from services/auth-api/.env.example]"
-      ],
-      "impact": "The release path can never run in production: nothing invokes it and the two env vars it requires are documented nowhere. Escrow holds accumulate forever.",
-      "exploit_or_repro": "NONE_FOUND (absence)",
-      "blast_radius": "tenant",
-      "remediation": "Add a Render cron service or documented external scheduler running escrow-worker.js, and add both variables to .env.example, render.yaml and docs/ENVIRONMENT.md.",
-      "effort_hours": 3.0,
-      "mvp_blocking": true,
-      "blocks_journey": [
-        "J6"
-      ]
-    },
-    {
-      "id": "F-SEC-002",
-      "title": "POST /v1/orders has no role restriction - technicians and operators can create customer orders",
-      "lane": "SEC",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:cmd#20 harness S.1 -> POST /v1/orders with a technician bearer token returned 201]",
-        "[E:services/auth-api/src/server.js:L396 requireUser(request, reply, config) with no allowedRoles]"
-      ],
-      "impact": "A technician can self-create demand, then quote and be paid on an order they invented - a fraud primitive once payments are enabled.",
-      "exploit_or_repro": "Executed: technician token -> 201 Created.",
-      "blast_radius": "tenant",
-      "remediation": "requireUser(request, reply, config, ['customer']).",
-      "effort_hours": 0.5,
-      "mvp_blocking": false,
-      "blocks_journey": [
-        "J4"
-      ]
-    },
-    {
-      "id": "F-SEC-003",
-      "title": "OTP_DEV_LOG_CODE is not blocked in production and writes the plaintext OTP to logs",
-      "lane": "SEC",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:services/auth-api/src/server.js:L189-L191 request.log.warn with the code field]",
-        "[E:services/auth-api/src/config.js:L44 devLogCode is set purely from OTP_DEV_LOG_CODE with no NODE_ENV guard]",
-        "[E:cmd#20 harness J1.2 -> live OTP 857304 recovered from server stdout]"
-      ],
-      "impact": "One misconfigured env var turns every login code into a log line. Anyone with log access can log in as any user. render.yaml sets it false, but nothing prevents an operator from enabling it in production.",
-      "exploit_or_repro": "Executed: set OTP_DEV_LOG_CODE=true, requested an OTP, read the 6-digit code out of stdout, logged in as that number.",
-      "blast_radius": "all-users",
-      "remediation": "In loadConfig(), throw when OTP_DEV_LOG_CODE is true and NODE_ENV is production or staging.",
-      "effort_hours": 1.0,
-      "mvp_blocking": false,
-      "blocks_journey": [
-        "J1"
-      ]
-    },
-    {
-      "id": "F-SEC-004",
-      "title": "POST /v1/ai/diagnoses has no per-user or per-IP rate limit - unbounded provider spend",
-      "lane": "SEC",
-      "severity": "P2",
-      "confidence": 0.9,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:services/auth-api/src/server.js:L274-L294 no limiter before generateDiagnosis]",
-        "[E:services/auth-api/src/ai.js:L60-L75 one Gemini generateContent call per request, 20 s timeout]"
-      ],
-      "impact": "Any authenticated user can loop this endpoint and drive real Gemini spend and quota exhaustion; the OTP path is rate-limited but the paid AI path is not.",
-      "exploit_or_repro": "Static read; not load-tested in this sandbox.",
-      "blast_radius": "all-users",
-      "remediation": "Add a per-user sliding-window limit (e.g. 10/hour) plus a global concurrency cap around the provider call.",
-      "effort_hours": 3.0,
-      "mvp_blocking": false,
-      "blocks_journey": [
-        "J2"
-      ]
-    },
-    {
-      "id": "F-SEC-006",
-      "title": "Gemini API key is sent as a URL query parameter",
-      "lane": "SEC",
-      "severity": "P2",
-      "confidence": 0.85,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:services/auth-api/src/ai.js:L66 generateContent?key= with the encoded API key]"
-      ],
-      "impact": "Query strings are routinely captured in egress proxy, load-balancer and CDN access logs, widening the exposure surface of a billing credential.",
-      "exploit_or_repro": "NONE_FOUND",
-      "blast_radius": "tenant",
-      "remediation": "Use the x-goog-api-key header instead of the query parameter.",
-      "effort_hours": 0.5,
-      "mvp_blocking": false,
-      "blocks_journey": [
-        "J2"
-      ]
-    },
-    {
-      "id": "F-SEC-007",
-      "title": "POST /v1/technicians/apply self-elevates any customer to role=technician and re-issues the token",
-      "lane": "SEC",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:services/auth-api/src/server.js:L296-L323 UPDATE users SET role=technician then issueSession with role technician]",
-        "[E:cmd#20 harness J7.1 -> 202 with new_token_role=technician]"
-      ],
-      "impact": "Role escalation with no human gate. Downstream money actions are still blocked by requireApprovedTechnician(), so impact is limited to technician-only surfaces and to blurring the customer/technician separation the KYC flow depends on.",
-      "exploit_or_repro": "Executed: customer token in, technician token out, verification_status still unsubmitted.",
-      "blast_radius": "all-users",
-      "remediation": "Keep the applicant at role=customer until an operator approves KYC; grant the technician role inside the approval transaction.",
-      "effort_hours": 3.0,
-      "mvp_blocking": false,
-      "blocks_journey": [
-        "J7"
-      ]
-    },
-    {
-      "id": "F-DATA-003",
-      "title": "Evidence writes are untransactional and ignore order state and approval status",
-      "lane": "DATA",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:services/auth-api/src/server.js:L490-L511 two pool.query calls, no BEGIN/COMMIT, no order.status check, no requireApprovedTechnician]",
-        "[E:cmd#20 harness J4.4 -> 201 on an order still in awaiting_payment]"
-      ],
-      "impact": "Before/after photos - the proof that a repair happened - can be attached to a cancelled or unpaid order, and by a technician whose approval was revoked after acceptance.",
-      "exploit_or_repro": "Executed: evidence accepted on an order that had not been paid or started.",
-      "blast_radius": "single-user",
-      "remediation": "Wrap in a transaction, require order.status IN (paid, in_progress) and re-check requireApprovedTechnician.",
-      "effort_hours": 2.0,
-      "mvp_blocking": false,
-      "blocks_journey": [
-        "J4"
-      ]
-    },
-    {
-      "id": "F-RELY-001",
-      "title": "No retry or backoff on any outbound provider call",
-      "lane": "RELY",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:services/auth-api/src/kavenegar.js:L8-L19 single fetch, 10 s timeout, no retry]",
-        "[E:services/auth-api/src/zarinpal.js:L8-L19 single fetch, 15 s timeout, no retry]",
-        "[E:services/auth-api/src/ai.js:L60-L75 single fetch, 20 s timeout, no retry]"
-      ],
-      "impact": "One transient provider blip becomes a user-visible 502. In Iran, where cross-border egress is unstable, that will be the common case rather than the exception.",
-      "exploit_or_repro": "Static read.",
-      "blast_radius": "all-users",
-      "remediation": "Add bounded exponential backoff with jitter (2-3 attempts) for idempotent calls, plus a circuit breaker on repeated failure.",
-      "effort_hours": 4.0,
-      "mvp_blocking": false,
-      "blocks_journey": [
-        "J1",
-        "J2",
-        "J5"
-      ]
-    },
-    {
-      "id": "F-RELY-002",
-      "title": "pg.Pool has no connection, idle or statement timeouts",
-      "lane": "RELY",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:services/auth-api/src/server.js:L25 `const pool = new pg.Pool({ connectionString: config.databaseUrl, max: 10 });` - no connectionTimeoutMillis/idleTimeoutMillis/statement_timeout]",
-        "[E:cmd#27 no statement_timeout set in any migration or pool option]"
-      ],
-      "impact": "A single slow or hung query pins a request forever and, at max:10, ten of them exhaust the pool and take the whole service down.",
-      "exploit_or_repro": "Static read.",
-      "blast_radius": "total-outage",
-      "remediation": "Add connectionTimeoutMillis, idleTimeoutMillis and options -c statement_timeout=10000; emit pool error and saturation signals.",
-      "effort_hours": 2.0,
-      "mvp_blocking": false,
-      "blocks_journey": []
-    },
-    {
-      "id": "F-RELY-003",
-      "title": "Malformed UUID path parameters return 500 instead of 400",
-      "lane": "RELY",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:cmd#19 harness run 1 -> POST /v1/admin/kyc/undefined/decision -> 500 internal_error]"
-      ],
-      "impact": "Client bugs and scanners turn into 5xx noise, masking real incidents and polluting error-rate alerts.",
-      "exploit_or_repro": "Executed: a non-UUID caseId produced an unhandled pg error surfaced as HTTP 500.",
-      "blast_radius": "single-user",
-      "remediation": "Validate UUID path params with a shared helper and return 400.",
-      "effort_hours": 1.5,
-      "mvp_blocking": false,
-      "blocks_journey": []
-    },
-    {
-      "id": "F-OBS-001",
-      "title": "No metrics, no error reporting, no dashboards - only a /health probe",
-      "lane": "OBS",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:services/auth-api/src/server.js:L139-L142 the only observability surface is GET /health -> SELECT 1]",
-        "[E:services/auth-api/package.json dependencies: fastify, jsonwebtoken, pg - no metrics or error-reporting client]",
-        "[E:LAUNCH_CHECKLIST.md T-1 day requires dashboards for OTP error rate, AI failure rate, webhook failures and escrow lag]"
-      ],
-      "impact": "A payment-webhook failure or a stuck escrow queue is invisible until a customer complains. The checklist demands these signals; none exist.",
-      "exploit_or_repro": "NONE_FOUND (absence)",
-      "blast_radius": "total-outage",
-      "remediation": "Add a /metrics endpoint (requests by route/status, provider failure counters, escrow queue depth, pool saturation) and structured request logging with request IDs.",
-      "effort_hours": 6.0,
-      "mvp_blocking": false,
-      "blocks_journey": []
-    },
-    {
-      "id": "F-QUAL-001",
-      "title": "docs/ENVIRONMENT.md documents ten environment variables, none of which exist in code",
-      "lane": "QUAL",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:docs/ENVIRONMENT.md:L1-L17 GEMINI_API_KEY, APP_VERSION, APP_ENV, ESCROW_RATE, COMMISSION_RATE_*, DEFAULT_WARRANTY_DAYS, MAX_SEARCH_RADIUS_KM]",
-        "[E:cmd#24 three-way env diff: none of the ten appear in services/auth-api/src or app/ sources]"
-      ],
-      "impact": "The onboarding document points an operator at a client-side GEMINI_API_KEY, directly contradicting the server-only AI design the README and security posture depend on.",
-      "exploit_or_repro": "Executed diff of read-vs-documented-vs-provided env vars.",
-      "blast_radius": "single-user",
-      "remediation": "Regenerate docs/ENVIRONMENT.md from the actual loadConfig() surface plus the two worker variables.",
-      "effort_hours": 1.5,
-      "mvp_blocking": false,
-      "blocks_journey": []
-    },
-    {
-      "id": "F-QUAL-002",
-      "title": "ESCROW_WORKER_TOKEN and PLATFORM_API_BASE_URL are absent from .env.example and render.yaml",
-      "lane": "QUAL",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:services/auth-api/src/escrow-worker.js:L4-L5 both are required at startup]",
-        "[E:cmd#24 env diff: absent from services/auth-api/.env.example and from render.yaml]"
-      ],
-      "impact": "The escrow release path cannot be configured from the documented environment surface; a deployer following the docs gets a worker that throws on boot.",
-      "exploit_or_repro": "Executed diff.",
-      "blast_radius": "tenant",
-      "remediation": "Add both to .env.example and render.yaml.",
-      "effort_hours": 0.5,
-      "mvp_blocking": false,
-      "blocks_journey": [
-        "J6"
-      ]
-    },
-    {
-      "id": "F-QUAL-003",
-      "title": "docs/GO_NO_GO.md still declares NO-GO for reasons the current code has already fixed",
-      "lane": "QUAL",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:docs/GO_NO_GO.md:L3 headline verdict NO-GO]",
-        "[E:docs/GO_NO_GO.md:L18-L23 claims OTP is fake, escrow is local-only, provider keys are in the APK]",
-        "[E:services/auth-api/src/server.js:L146-L263 real server OTP; :512-L638 real ledger; AiProviderRouter.kt has no provider key]"
-      ],
-      "impact": "Two authoritative-looking documents give opposite verdicts on the same codebase. A release committee reading GO_NO_GO.md alone would reject a materially different system than the one that exists.",
-      "exploit_or_repro": "NONE_FOUND",
-      "blast_radius": "single-user",
-      "remediation": "Rewrite GO_NO_GO.md against the current tree, stating which of its six original objections are closed and which remain.",
-      "effort_hours": 2.0,
-      "mvp_blocking": false,
-      "blocks_journey": []
-    },
-    {
-      "id": "F-QUAL-004",
-      "title": "RISK_REGISTER.md current-control column describes the pre-server codebase",
-      "lane": "QUAL",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:RISK_REGISTER.md risk 2 current control: BuildConfig provider-key reads in client]",
-        "[E:RISK_REGISTER.md risk 3 current control: Home is start route; fixed user_default / tech_1]",
-        "[E:app/src/main/java/com/example/MainActivity.kt:L200 startDestination = Screen.AuthPhone.route]",
-        "[E:cmd#22 no provider-key BuildConfig read exists in app/ sources]"
-      ],
-      "impact": "The document an operator uses to decide what to monitor understates existing controls and misdirects mitigation effort.",
-      "exploit_or_repro": "NONE_FOUND",
-      "blast_radius": "single-user",
-      "remediation": "Refresh the control column against the current tree and re-score likelihood.",
-      "effort_hours": 2.0,
-      "mvp_blocking": false,
-      "blocks_journey": []
-    },
-    {
-      "id": "F-QUAL-005",
-      "title": "Duplicate orphan CI files and a zero-width-named workflow that builds with tests disabled",
-      "lane": "QUAL",
-      "severity": "P2",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:cmd#11 git ls-files lists ci/android-apk.yml and github/workflows/build.yml (github/, not .github/)]",
-        "[E:cmd#27 diff shows both differ from their .github/workflows counterparts - stale copies, not includes]",
-        "[E:.github/workflows/ apkbuild.yml filename begins with U+200C ZERO WIDTH NON-JOINER]",
-        "[E:.github/workflows/ apkbuild.yml:L20-L26 step Force Build APK (Ignore AI Errors) runs gradlew assembleDebug -x lint -x test]"
-      ],
-      "impact": "Three near-identical workflow definitions with no single source of truth, plus a workflow whose explicit purpose is to ship an APK with lint and tests skipped. That is the mechanism by which F-EXEC-001 stayed invisible.",
-      "exploit_or_repro": "Executed diffs and filename byte inspection.",
-      "blast_radius": "all-users",
-      "remediation": "Delete the ci/ and github/ duplicates, consolidate to one workflow per target, and retire the test-skipping workflow once F-EXEC-001 is fixed.",
-      "effort_hours": 2.0,
-      "mvp_blocking": false,
-      "blocks_journey": []
+      "blocks_journey": [],
+      "pre_existing": true
     },
     {
       "id": "F-OPS-001",
-      "title": "Dockerfile uses a floating base tag, has no HEALTHCHECK and does not set NODE_ENV",
       "lane": "OPS",
-      "severity": "P2",
-      "confidence": 1.0,
+      "dimension": "D6",
+      "severity": "P1",
+      "confidence": 0.8,
       "evidence_grade": "B",
+      "title": "The declared escrow cron starts the HTTP API instead of the worker and disables the very flag it needs",
       "evidence": [
-        "[E:services/auth-api/Dockerfile:L1 FROM node:22-alpine with no digest pin]",
-        "[E:services/auth-api/Dockerfile:L1-L10 (10 lines total) no HEALTHCHECK instruction and no ENV NODE_ENV]",
-        "[E:services/auth-api/Dockerfile:L9 USER node - non-root, correct]"
+        "[E:render.yaml:57-63]",
+        "[E:render.yaml:79-80]",
+        "[E:services/auth-api/Dockerfile:27]",
+        "[E:services/auth-api/src/escrow-worker.js:1-13]"
       ],
-      "impact": "Rebuilds are not reproducible: the same commit can produce different images. Without HEALTHCHECK an orchestrator can route traffic to a container whose migrations failed.",
-      "exploit_or_repro": "Static read.",
-      "blast_radius": "tenant",
-      "remediation": "Pin by digest, add ENV NODE_ENV=production and a HEALTHCHECK against /health.",
-      "effort_hours": 1.5,
-      "mvp_blocking": false,
-      "blocks_journey": []
-    },
-    {
-      "id": "F-SEC-005",
-      "title": "Zarinpal callback is an unauthenticated public GET with no shared secret",
-      "lane": "SEC",
-      "severity": "P3",
-      "confidence": 0.9,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:services/auth-api/src/server.js:L587-L638 no auth; authority regex then verifyZarinpalPayment]",
-        "[E:services/auth-api/src/zarinpal.js:L40-L51 verification re-checks merchant_id, amount and authority against verify.json]"
-      ],
-      "impact": "Correctness rests entirely on the provider round-trip, which is the right design for Zarinpal, but there is no second factor. Anyone who learns an authority can trigger verification attempts and enumerate callback outcomes.",
-      "exploit_or_repro": "Static read; the ledger is additionally protected by the status != paid guard and the idempotency key.",
-      "blast_radius": "single-user",
-      "remediation": "Bind the callback to the intent by embedding the intent id in the callback URL path and requiring it to match the authority's intent.",
-      "effort_hours": 2.0,
-      "mvp_blocking": false,
-      "blocks_journey": [
-        "J5"
-      ]
-    },
-    {
-      "id": "F-DATA-002",
-      "title": "Order creation and its audit row are written in two separate transactions",
-      "lane": "DATA",
-      "severity": "P3",
-      "confidence": 1.0,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:services/auth-api/src/server.js:L404-L414 pool.query INSERT order, then a second client for the audit row]"
-      ],
-      "impact": "A crash between the two leaves an order with no audit trail, breaking the claim that every state change is audited.",
-      "exploit_or_repro": "Static read.",
-      "blast_radius": "single-user",
-      "remediation": "Write both inside one transaction on one client.",
+      "impact": "The Render cron service named oosta-escrow-release uses the auth-api Docker image, whose CMD is `sh -c \"npm run migrate && npm start\"` — it boots a second web server that never exits, rather than running src/escrow-worker.js. Its environment also pins FEATURE_ESCROW_RELEASE to \"false\" (render.yaml:79-80), and config.js gates POST /v1/admin/escrows/release-due on that flag, so even a correct invocation would answer 503. Net effect: on the documented managed deployment, escrow holds are never released and the 30-day clock described in the README never fires.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "all-users",
+      "remediation": "Give the cron job a command that runs `node src/escrow-worker.js` instead of the image CMD, and set FEATURE_ESCROW_RELEASE=true on the web service (not on the cron) once the operator approves escrow release. Keep PLATFORM_API_BASE_URL pointing at the web service.",
       "effort_hours": 1.0,
-      "mvp_blocking": false,
+      "mvp_blocking": true,
       "blocks_journey": [
-        "J4"
-      ]
+        "J6"
+      ],
+      "pre_existing": true
     },
     {
-      "id": "F-DATA-004",
-      "title": "Migrations are forward-only with no down path or tested repair procedure",
-      "lane": "DATA",
+      "id": "F-API-001",
+      "lane": "EXEC",
+      "dimension": "D9",
       "severity": "P2",
-      "confidence": 1.0,
+      "confidence": 0.8,
       "evidence_grade": "B",
+      "title": "Client generates device ids that the server's UUID validator will reject once a /v1/devices client is added",
       "evidence": [
-        "[E:services/auth-api/src/migrate.js:L1-L37 applies numbered files forward and records them in schema_migrations; no reverse]",
-        "[E:LAUNCH_CHECKLIST.md rollback step 6 says roll back only the artifact until migrations have a tested down/forward repair procedure]"
+        "[E:services/auth-api/src/server.js:106-116]",
+        "[E:app/src/main/java/com/example/data/repository/TamirkarRepository.kt:79-89]: the addDevice signature together with the `dev_` + UUID.randomUUID() line the claim rests on — the earlier range stopped five lines short of it",
+        "[E:services/auth-api/db/005_devices.sql:9-10]"
       ],
-      "impact": "A bad migration in production has no rehearsed undo. The team acknowledged this in its own checklist but has not closed it.",
-      "exploit_or_repro": "Static read; migrate.js executed successfully in-session (exit 0, three migrations applied).",
-      "blast_radius": "data-loss",
-      "remediation": "Adopt a down-migration convention or document and rehearse a snapshot-restore procedure before enabling payments.",
-      "effort_hours": 4.0,
-      "mvp_blocking": false,
-      "blocks_journey": []
-    },
-    {
-      "id": "F-QUAL-006",
-      "title": "server.js is a 694-line god file holding all 16 routes, validation and money logic",
-      "lane": "QUAL",
-      "severity": "P3",
-      "confidence": 1.0,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:cmd#8 wc -l -> 694 services/auth-api/src/server.js; next largest source file is 490]"
-      ],
-      "impact": "Every change to auth, AI, KYC, orders, payments and escrow touches one file, raising merge-conflict and regression risk exactly where the money lives.",
+      "impact": "`requireUuid` rejects anything that is not 8-4-4-4-12 hex, and POST /v1/devices does not accept a client-supplied id at all — the row id comes from `gen_random_uuid()`. The app meanwhile mints `\"dev_\" + UUID.randomUUID().take(8)` (TamirkarRepository.addDevice). Any reconciliation written on the current assumption will silently mis-key the passport, and the ids it produces can never satisfy GET /v1/devices/:deviceId.",
       "exploit_or_repro": "NONE_FOUND",
       "blast_radius": "single-user",
-      "remediation": "Extract route groups into modules sharing one app factory; keep the ledger and state machine in domain modules.",
-      "effort_hours": 8.0,
-      "mvp_blocking": false,
-      "blocks_journey": []
-    },
-    {
-      "id": "F-QUAL-007",
-      "title": "Room MIGRATION_1_2 is a no-op that exists only to absorb a version bump",
-      "lane": "QUAL",
-      "severity": "P3",
-      "confidence": 1.0,
-      "evidence_grade": "B",
-      "evidence": [
-        "[E:app/src/main/java/com/example/data/local/TamirkarDatabase.kt:L66-L72 override fun migrate(db) = Unit]"
-      ],
-      "impact": "Harmless today and correctly non-destructive, but it teaches the pattern of bumping schema versions without migration content.",
-      "exploit_or_repro": "Static read.",
-      "blast_radius": "single-user",
-      "remediation": "Either revert version to 1 or document why the bump happened; enable exportSchema and check schemas in.",
+      "remediation": "Persist the server-returned UUID as the Room primary key (or keep a separate serverId column) and never synthesise an id the API will validate.",
       "effort_hours": 1.0,
       "mvp_blocking": false,
       "blocks_journey": [
         "J3"
-      ]
+      ],
+      "pre_existing": true
     },
     {
-      "id": "F-EXEC-005",
-      "title": "Android toolchain absent in the audit sandbox - client build and test are UNTESTABLE here",
-      "lane": "EXEC",
-      "severity": "P3",
-      "confidence": 1.0,
-      "evidence_grade": "A",
+      "id": "F-DATA-002",
+      "lane": "DATA",
+      "dimension": "D4",
+      "severity": "P2",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "title": "No retention job deletes expired OTP challenges or settled escrow holds, so both tables grow without bound",
       "evidence": [
-        "[E:cmd#5 java --version -> NOT FOUND; javac NOT FOUND; gradle NOT FOUND]",
-        "[E:cmd#5 ANDROID_HOME=unset, ANDROID_SDK_ROOT=unset, no ~/Android]",
-        "[E:cmd#5 docker NOT FOUND - docker-compose.auth.yml could not be exercised either]"
+        "[E:services/auth-api/db/004_operational_indexes.sql:22-26]",
+        "[E:cmd#11]: `grep -rn \"DELETE FROM otp_challenges\" services/auth-api/src` matches only the account-erasure path in server.js:407-465",
+        "[E:services/auth-api/src/escrow-worker.js:1-13]"
       ],
-      "impact": "Every Android claim in this audit is Grade B (read) or lower. Coverage numbers, lint and the executed compile status of F-EXEC-001 could not be produced.",
-      "exploit_or_repro": "N/A - audit limitation, recorded per protocol rather than silently skipped.",
-      "blast_radius": "single-user",
-      "remediation": "Provide a JDK 17 + Android SDK 36 image, or run the client lane in CI.",
-      "effort_hours": 0.0,
-      "mvp_blocking": false,
-      "blocks_journey": []
-    },
-    {
-      "id": "F-EXEC-009",
-      "title": "Zarinpal sandbox unreachable from the audit sandbox - payment capture and the 85/15 split are UNTESTABLE",
-      "lane": "EXEC",
-      "severity": "P3",
-      "confidence": 1.0,
-      "evidence_grade": "A",
-      "evidence": [
-        "[E:cmd#20 harness J5.1 -> POST /v1/payments/zarinpal/start returned 502 payment_unavailable]",
-        "[E:cmd#20 harness J5.2 -> payment_intents row created then marked status=failed with amount_tomans 800000 / amount_rials 8000000]",
-        "[E:cmd#17 curl repo1.maven.org -> SSL_ERROR_SYSCALL; sandbox egress is restricted to the npm registry and the GitHub API]"
-      ],
-      "impact": "The most money-critical path (callback -> verify -> ledger split -> escrow hold) has no executed evidence in this audit. The failure path IS proven correct: intent created, provider failure recorded, user gets a Persian 502.",
-      "exploit_or_repro": "N/A - audit limitation.",
-      "blast_radius": "single-user",
-      "remediation": "Run the capture path in CI against the Zarinpal sandbox with a real merchant id, or add a provider-port seam so the callback logic can be integration-tested offline.",
+      "impact": "Every login attempt writes an otp_challenges row that is never removed; every settled hold stays in escrow_holds forever. At 10k logins/day that is 3.6M rows/year of pure liability data (a hashed phone number plus a timestamp) retained with no legal basis and no purge path, alongside slowing the retention lookups migration 004 was written to serve.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Add src/retention.js plus a scheduled entry point that deletes otp_challenges older than N days and anonymises release_after on holds settled more than N days ago, with a documented retention window in docs/DEPLOYMENT.md.",
       "effort_hours": 4.0,
       "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-EXEC-002",
+      "lane": "EXEC",
+      "dimension": "D1",
+      "severity": "P2",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "title": "Access token is memory-only, so every process death forces a fresh OTP login",
+      "evidence": [
+        "[E:app/src/main/java/com/example/data/remote/AuthSessionStore.kt:3-19]",
+        "[E:app/src/main/java/com/example/ui/viewmodel/TamirkarViewModel.kt:88-92]"
+      ],
+      "impact": "Android reclaims an idle app's process routinely. After that the user must request a new OTP and pay for a new SMS before they can see their own order history. The code documents this as deliberate, so it is a scoped gap rather than a defect, but it is user-visible.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "all-users",
+      "remediation": "Store the session in EncryptedSharedPreferences or the Android Keystore and add a refresh-token rotation endpoint before session restoration is claimed.",
+      "effort_hours": 8.0,
+      "mvp_blocking": false,
       "blocks_journey": [
-        "J5"
-      ]
+        "J1"
+      ],
+      "pre_existing": true
+    },
+    {
+      "id": "F-EXEC-006",
+      "lane": "EXEC",
+      "dimension": "D5",
+      "severity": "P2",
+      "confidence": 1.0,
+      "evidence_grade": "A",
+      "title": "A workflow file whose name starts with U+200C runs assembleDebug with tests and lint explicitly disabled",
+      "evidence": [
+        "[E:cmd#14]: `ls -b .github/workflows` prints `\\342\\200\\214apkbuild.yml` — the leading byte sequence is the UTF-8 encoding of ZERO WIDTH NON-JOINER (U+200C)",
+        "[E:.github/workflows/‌apkbuild.yml:23-26]",
+        "[E:.github/workflows/‌apkbuild.yml:28-33]"
+      ],
+      "impact": "`./gradlew assembleDebug -x lint -x test` is the only job in the repository that deliberately bypasses the test and lint gates, and it uploads its artefact with `if: always()`. A non-ASCII filename also breaks tab-completion, some Windows/GitHub tooling and any script that globs `.github/workflows/*.yml` on a non-UTF-8 locale.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Delete the file, or rename it to apkbuild.yml and drop `-x lint -x test` so it cannot report a passing build over a failing test suite.",
+      "effort_hours": 0.25,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
     },
     {
       "id": "F-LEGAL-002",
-      "title": "No data-deletion capability; the privacy and security mailboxes are unproven",
       "lane": "LEGAL",
+      "dimension": "D12",
       "severity": "P2",
-      "confidence": 0.95,
+      "confidence": 0.8,
       "evidence_grade": "B",
+      "title": "On API 24-30 the local Room database is included in cloud backup because the legacy backup rule file excludes nothing",
       "evidence": [
-        "[E:docs/legal/PRIVACY_FA.md:L9 users may request deletion via privacy@oosta.app]",
-        "[E:SECURITY.md:L8 states if that mailbox has not been configured yet, contact the repository owner privately]",
-        "[E:cmd#12 route inventory: no DELETE route exists on any resource]"
+        "[E:app/src/main/AndroidManifest.xml:8-16]",
+        "[E:app/src/main/res/xml/backup_rules.xml:1-15]",
+        "[E:app/src/main/res/xml/data_extraction_rules.xml:1-12]",
+        "[E:app/build.gradle.kts:22-23]"
       ],
-      "impact": "The privacy notice promises a deletion right the API cannot honour. Under GDPR/CCPA-equivalent regimes that is a compliance gap, and the named mailbox is admitted to possibly not exist.",
-      "exploit_or_repro": "NONE_FOUND (absence)",
-      "blast_radius": "legal",
-      "remediation": "Add an operator-only account-deletion/redaction path and confirm both mailboxes resolve before publishing the notice.",
-      "effort_hours": 6.0,
+      "impact": "dataExtractionRules correctly excludes database and sharedpref domains, but it only applies from API 31. `minSdk = 24`, and for API 24-30 Android uses `fullBackupContent` → backup_rules.xml, whose <full-backup-content> element contains no <exclude> at all (the two sample excludes are commented out). Those devices therefore back the Room database up to the user's Google Drive: users, devices, orders and the phone number recorded in UserEntity. That is personal data leaving the operator's control with no notice in PRIVACY_FA.md.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Add <exclude domain=\"database\" path=\".\"/> and <exclude domain=\"sharedpref\" path=\".\"/> inside <full-backup-content> in backup_rules.xml, or set android:allowBackup=\"false\".",
+      "effort_hours": 0.25,
       "mvp_blocking": false,
-      "blocks_journey": []
+      "blocks_journey": [],
+      "pre_existing": true
     },
     {
-      "id": "F-SEC-008",
-      "title": "acceptance_ip records the reverse proxy, not the customer - trustProxy is never enabled",
-      "lane": "SEC",
+      "id": "F-OBS-001",
+      "lane": "OBS",
+      "dimension": "D7",
+      "severity": "P2",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "title": "Metrics live only in process memory and nothing scrapes or alerts on them",
+      "evidence": [
+        "[E:services/auth-api/src/server.js:39-46]",
+        "[E:services/auth-api/src/server.js:236-262]",
+        "[E:cmd#15]: grep -rniE 'prometheus|grafana|sentry|datadog|otel|opentelemetry|alert' over the tracked tree matches only two strings inside audit/*.md, never a config file"
+      ],
+      "impact": "Every counter resets when the container restarts, and a deploy on Render replaces the container. There is no scrape config, no dashboard and no alert, so the escrow backlog, the provider failure counter and the 5xx rate are all invisible unless a human curls /metrics. The repository additionally has no correlation id surfaced to callers.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Add a scrape job (Render does not provide one; a free Grafana Cloud / Uptime agent is enough) for /health and /metrics, and alert on oosta_provider_failures_total increasing and on oosta_escrow_holds_due not decreasing.",
+      "effort_hours": 2.0,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-QUAL-001",
+      "lane": "QUAL",
+      "dimension": "D10",
       "severity": "P2",
       "confidence": 1.0,
       "evidence_grade": "A",
+      "title": "server.js is a 1297-line god file that repeats the BEGIN/ROLLBACK/release transaction dance 17 times",
       "evidence": [
-        "[E:services/auth-api/src/server.js:L26 `const app = Fastify({ logger: true, bodyLimit: MAX_REQUEST_BODY_BYTES });` - trustProxy absent, `grep -c trustProxy` returns 0]",
-        "[E:services/auth-api/src/server.js:L478 INSERT INTO quote_acceptances (... acceptance_ip) VALUES (... request.ip)]",
-        "[E:render.yaml:L4-L8 the service runs as a Render web service behind the platform proxy]"
+        "[E:cmd#18]: `wc -l services/auth-api/src/server.js` = 1297, above the 600-line threshold",
+        "[E:cmd#19]: `grep -c \"await client.query('BEGIN')\" services/auth-api/src/server.js` = 17",
+        "[E:services/auth-api/src/server.js:1-30]"
       ],
-      "impact": "quote_acceptances.acceptance_ip is the only forensic record of who accepted a binding quote. Behind any reverse proxy it stores the proxy address for every customer, so it cannot support a dispute, a chargeback defence or fraud correlation - exactly the cases it exists for.",
-      "exploit_or_repro": "Static read plus Fastify's documented default (trustProxy false -> request.ip is the socket peer). Not load-tested behind a proxy in this sandbox.",
-      "blast_radius": "legal",
-      "remediation": "Enable trustProxy with the platform's proxy hop count and document it, or capture the client address from the platform's forwarded-for header explicitly.",
+      "impact": "Every route handler, all 27 route registrations, the metrics registry, the CORS hook, the error handler and the config load sit in one module. Twelve of the seventeen transaction blocks are byte-identical apart from the body, so a change to the rollback policy has to be made in twelve places. No function exceeds the 80-line threshold, so this is file-level complexity rather than a hot spot.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Extract a `withTransaction(pool, fn)` helper and split route groups into src/routes/*.js registered from a small app factory; keep server.js as composition root only.",
+      "effort_hours": 8.0,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-QUAL-002",
+      "lane": "QUAL",
+      "dimension": "D2",
+      "severity": "P2",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "title": "Android test suite has four files, one of which asserts 2+2 and none of which pins the client/server contract",
+      "evidence": [
+        "[E:app/src/test/java/com/example/ExampleUnitTest.kt:11-15]",
+        "[E:app/src/test/java/com/example/AiProviderRouterTest.kt:19-77]",
+        "[E:app/src/test/java/com/example/ExampleRobolectricTest.kt:24-136]",
+        "[E:app/src/test/java/com/example/GreetingScreenshotTest.kt:26-39]",
+        "[E:cmd#20]: ./gradlew was NOT executed — java/javac/gradle are absent from this environment (UNEXECUTABLE, not failed)"
+      ],
+      "impact": "The gateway client's request/response shape and every other app-side contract are unpinned. F-API-001 (device id format) is exactly the class of drift a contract test would have caught. Server-side coverage is strong (measured 78.34% lines), so this is an app-side gap only.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "single-user",
+      "remediation": "Add MockWebServer contract tests for each PlatformApi/AuthApi call, asserting path, method, auth header and the JSON field names the server actually returns.",
+      "effort_hours": 6.0,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-RELY-001",
+      "lane": "RELY",
+      "dimension": "D7",
+      "severity": "P2",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "title": "The OTP send window counts failed sends, so one SMS-provider outage locks out every user for 15 minutes",
+      "evidence": [
+        "[E:services/auth-api/src/server.js:277-289]",
+        "[E:services/auth-api/src/server.js:316-325]"
+      ],
+      "impact": "`recent` selects every otp_challenges row created in the last 15 minutes with no status filter, and the third row trips OTP_MAX_SENDS_PER_WINDOW. When Kavenegar returns a 5xx the code path writes status='failed' and returns 502 — but the row still counts. Three failed sends therefore answer 429 'too many requests' to a user who never received a code, for the rest of the window. The outage and the lockout compound.",
+      "exploit_or_repro": "With FEATURE flags default and a Kavenegar key pointed at a host that returns 500, POST /v1/auth/request-otp returns 502 three times and then 429 on the fourth call.",
+      "blast_radius": "all-users",
+      "remediation": "Filter the window count on `status IN ('sending','pending','verified')`, or exclude status='failed' from the eligibility count while still keeping the row for diagnostics.",
       "effort_hours": 1.0,
       "mvp_blocking": false,
       "blocks_journey": [
-        "J4"
-      ]
+        "J1"
+      ],
+      "pre_existing": true
     },
     {
-      "id": "F-DATA-006",
-      "title": "otp_challenges and operational_audit_log grow without bound and the audit log has no index",
-      "lane": "DATA",
-      "severity": "P3",
+      "id": "F-SEC-001",
+      "lane": "SEC",
+      "dimension": "D3",
+      "severity": "P2",
       "confidence": 1.0,
-      "evidence_grade": "B",
+      "evidence_grade": "A",
+      "title": "Unauthenticated GET /metrics discloses route mix, provider failures and the due-escrow backlog",
       "evidence": [
-        "[E:services/auth-api/db/001_auth.sql:L25-L29 two indexes on otp_challenges, no retention or partitioning]",
-        "[E:cmd#31 grep of db/*.sql for indexes on operational_audit_log -> no match; the table has no index at all]",
-        "[E:cmd#27 no cleanup job, cron or scheduled task exists in the repository]"
+        "[E:services/auth-api/src/server.js:236-262]",
+        "[E:cmd#9]: the /metrics handler has no requireActiveUser/requireUser call"
       ],
-      "impact": "Every login attempt and every state change appends a row forever. On a free-tier database the audit log becomes the largest table, and any query by actor/subject/action is a sequential scan.",
-      "exploit_or_repro": "Static read.",
-      "blast_radius": "tenant",
-      "remediation": "Add indexes on operational_audit_log(actor_user_id, created_at) and (subject_type, subject_id, created_at); add a retention/partitioning plan for otp_challenges.",
-      "effort_hours": 2.0,
+      "impact": "Any internet caller learns per-route request volumes and status classes, how many provider calls are failing, the PostgreSQL pool occupancy and the number of escrow holds past their release date. That is reconnaissance for a targeted fault (e.g. timing a Kavenegar outage) and it leaks the commercial backlog. No credential or PII is exposed.",
+      "exploit_or_repro": "GET /metrics with no Authorization header returns 200 with the counter set.",
+      "blast_radius": "reputation",
+      "remediation": "Either gate /metrics behind an operator bearer token, or bind it to a private port and have Render's health check use /health.",
+      "effort_hours": 1.0,
       "mvp_blocking": false,
-      "blocks_journey": []
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-SEC-003",
+      "lane": "SEC",
+      "dimension": "D3",
+      "severity": "P2",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "title": "A CI job holds contents:write and force-pushes an orphan branch on every successful run",
+      "evidence": [
+        "[E:.github/workflows/android-apk.yml:9-14]",
+        "[E:.github/workflows/android-apk.yml:114-133]"
+      ],
+      "impact": "`permissions: contents: write` plus `git push -f origin apk-artifacts` means any commit that lands on the triggered branch can rewrite a repository branch. The job also deletes every top-level file in its working tree before committing. A compromise of the build step (supply-chain, dependency confusion) escalates from 'build output' to 'repository write'.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Drop the force-push, publish the APK with actions/upload-artifact or actions/upload-release-asset, and set permissions: contents: read.",
+      "effort_hours": 1.0,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-API-002",
+      "lane": "QUAL",
+      "dimension": "D9",
+      "severity": "P3",
+      "confidence": 0.6,
+      "evidence_grade": "B",
+      "title": "The HTTP contract is prose plus code; there is no machine-readable schema to diff",
+      "evidence": [
+        "[E:docs/API.md:1-14]",
+        "[E:cmd#16]: docs/API.md documents 27 endpoints and server.js declares 27 routes — they agree today",
+        "[E:cmd#17]: no openapi/swagger/*.json or *.yaml exists in the tracked tree"
+      ],
+      "impact": "Documentation and code agree right now, which is the good case. Nothing prevents the next route or field from drifting, and there is no generated client to keep the Android side honest. Recorded as a maintainability risk, not a present defect.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Emit an OpenAPI document from the Fastify route schemas (fastify-swagger) and diff the client contract tests in CI against it.",
+      "effort_hours": 4.0,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-DOC-001",
+      "lane": "QUAL",
+      "dimension": "D11",
+      "severity": "P3",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "title": "README describes the Android tests as 'executed in CI' while every CI run in the repository's history has failed",
+      "evidence": [
+        "[E:README.md:232-234]",
+        "[E:cmd#13]: `gh run list --limit 6` — six consecutive `failure` conclusions"
+      ],
+      "impact": "A reader onboarding from the README will believe the Kotlin in the tree is known to compile and that a device-testable APK exists. It is not known to compile. Everything else in the README's Tests section is precise and matches what was executed in this round, so this is one overstated clause rather than a pattern.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Say 'defined in the repository; CI is currently red and the toolchain has not been executed locally' until one green run exists.",
+      "effort_hours": 0.25,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-OPS-002",
+      "lane": "OPS",
+      "dimension": "D6",
+      "severity": "P3",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "title": "Container base image is a floating tag, so two builds of the same commit can differ",
+      "evidence": [
+        "[E:services/auth-api/Dockerfile:1-7]",
+        "[E:services/auth-api/Dockerfile:21-27]"
+      ],
+      "impact": "`FROM node:22-alpine` resolves to whatever the tag points at on the build day. The file already documents this as an open item and correctly refuses to invent a digest, so this is a recorded reproducibility gap, not a surprise. Multi-stage build, non-root `USER node` and a HEALTHCHECK are all present, which is why the severity is P3.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Run `docker buildx imagetools inspect node:22-alpine` on a host with registry access and pin the RepoDigests sha256.",
+      "effort_hours": 0.25,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-OPS-003",
+      "lane": "OPS",
+      "dimension": "D6",
+      "severity": "P3",
+      "confidence": 0.6,
+      "evidence_grade": "B",
+      "title": "Container has no read-only root filesystem, dropped capabilities or memory/CPU ceiling",
+      "evidence": [
+        "[E:services/auth-api/Dockerfile:19-27]: EXPOSE 8080, HEALTHCHECK, USER node and CMD — the read shows what IS hardened, so the absence of read-only/cap-drop/memory limits is meaningful rather than an unread file",
+        "[E:cmd#35]: grep over render.yaml and docker-compose.auth.yml for read_only|cap_drop|security_opt|mem_limit|cpus returns exit 1 with no matches, which is what an absence claim needs as evidence"
+      ],
+      "impact": "`USER node` is set, which covers the main privilege risk, but a runaway process in this container can consume the whole instance and a compromised process keeps a writable filesystem and the default capability set. Severity is bounded by the fact that the declared target is a single-tenant free-tier pilot.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "total-outage",
+      "remediation": "Add `--read-only --tmpfs /tmp --cap-drop ALL --memory 512m` at the platform level and pin them in render.yaml.",
+      "effort_hours": 0.5,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-QUAL-003",
+      "lane": "QUAL",
+      "dimension": "D10",
+      "severity": "P3",
+      "confidence": 0.8,
+      "evidence_grade": "A",
+      "title": "Five declared Gradle dependencies have zero references in app source",
+      "evidence": [
+        "[E:cmd#21]: grep -rli for retrofit, moshi, coil, loggingInterceptor and firebase in app/src/main/java returns 0 files for each",
+        "[E:app/build.gradle.kts:111-133]",
+        "[E:app/build.gradle.kts:86-87]"
+      ],
+      "impact": "retrofit, converter-moshi, moshi-kotlin, coil-compose, logging-interceptor and the whole Firebase BOM + firebase-ai + appcheck-recaptcha set are compiled and packaged while no application source references them, which grows the APK, widens the third-party attack surface and forces the google-services plugin to run. The build file itself notes the related habit: 'Some unused dependencies are commented out below instead of being removed.'",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Remove the unused implementation() lines (or move them behind a comment) and re-run the APK size and dependency report.",
+      "effort_hours": 0.5,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-RELY-002",
+      "lane": "RELY",
+      "dimension": "D7",
+      "severity": "P3",
+      "confidence": 0.6,
+      "evidence_grade": "B",
+      "title": "Graceful shutdown has no drain deadline, so a stuck request can block SIGTERM handling",
+      "evidence": [
+        "[E:services/auth-api/src/server.js:1288-1296]",
+        "[E:services/auth-api/src/server.js:24-33]"
+      ],
+      "impact": "`closeGracefully` awaits app.close() before pool.end(); with a 15s statement_timeout, a request caught mid-lookup can hold the drain open and the platform then SIGKILLs the container, dropping whatever was still in flight. A bounded `Promise.race` with a 10s deadline would make the shutdown deterministic.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "single-user",
+      "remediation": "Wrap app.close() in Promise.race([...], 10s) and log when the deadline wins.",
+      "effort_hours": 0.5,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-RELY-003",
+      "lane": "RELY",
+      "dimension": "D8",
+      "severity": "P3",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "title": "Every /metrics scrape runs an unbounded COUNT(*) over escrow_holds",
+      "evidence": [
+        "[E:services/auth-api/src/server.js:257-261]",
+        "[E:services/auth-api/db/002_platform.sql:74]"
+      ],
+      "impact": "The count is filtered by `status='held' AND release_after <= NOW()`, which index escrow_holds_due_idx covers, so it is cheap on a warm table — but it is still executed on each unauthenticated scrape and the index is on (status, release_after), not on the partial predicate. At pilot scale it is a non-issue; it is recorded because /metrics is public (F-SEC-001) and therefore callable at will.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "single-user",
+      "remediation": "Cache the gauge for 30s, or remove the query and let the release worker publish it.",
+      "effort_hours": 0.5,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-RELY-004",
+      "lane": "RELY",
+      "dimension": "D8",
+      "severity": "P3",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "title": "Escrow release is capped at 100 holds per daily run, so a backlog can persist for days",
+      "evidence": [
+        "[E:services/auth-api/src/server.js:1247-1252]",
+        "[E:render.yaml:62]"
+      ],
+      "impact": "`FOR UPDATE SKIP LOCKED LIMIT 100` against a schedule of `17 3 * * *` means the release sweep drains 100 holds a day. This is bounded and idempotent, so nothing is lost, but past roughly 100 completions a day the escrow backlog grows faster than the worker drains it — and the technician is the party who waits.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "single-user",
+      "remediation": "Raise the daily schedule to hourly once escrow release is enabled, or make the limit configurable.",
+      "effort_hours": 0.25,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
+    },
+    {
+      "id": "F-SEC-002",
+      "lane": "SEC",
+      "dimension": "D3",
+      "severity": "P3",
+      "confidence": 0.8,
+      "evidence_grade": "B",
+      "title": "AI spend ceiling is per-process, so the effective cap is limit x instance count",
+      "evidence": [
+        "[E:services/auth-api/src/ratelimit.js:1-8]",
+        "[E:services/auth-api/src/config.js:78-81]",
+        "[E:services/auth-api/.env.example:31-34]"
+      ],
+      "impact": "On a multi-instance deployment one authenticated caller can spend N x AI_RATE_LIMIT_PER_MINUTE billable Gemini calls. The code and .env.example both disclose the limitation, so it is a known residual rather than a hidden one.",
+      "exploit_or_repro": "NONE_FOUND",
+      "blast_radius": "reputation",
+      "remediation": "Move the bucket to Redis or Postgres before raising the instance count above one.",
+      "effort_hours": 6.0,
+      "mvp_blocking": false,
+      "blocks_journey": [],
+      "pre_existing": true
     }
   ]
 }

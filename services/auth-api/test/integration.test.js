@@ -388,3 +388,42 @@ test('the migration runner refuses a destructive rollback without explicit confi
 
   assert.equal((await run(['nonsense'])).code, 2, 'an unknown command must fail loudly');
 });
+
+/**
+ * Regression for F-RELY-001. The send-window query counted every otp_challenges row created inside
+ * the window, including rows whose Kavenegar call failed. Three provider 5xx responses therefore
+ * answered 429 to a user who never received a code, for the rest of the window — the outage and the
+ * lockout compounded. A failed send is a provider problem and must not consume the user's budget.
+ */
+test("an SMS-provider outage must not consume a user's send window", skip, async (t) => {
+  const api = await bootApi(t);
+  const { pool } = api;
+  const outagePhone = '+989120000001';
+  const deliveredPhone = '+989120000002';
+
+  for (let i = 0; i < 3; i += 1) {
+    await pool.query(
+      `INSERT INTO otp_challenges (id, phone_e164, code_hash, status, expires_at, failure_reason)
+       VALUES (gen_random_uuid(), $1, $2, 'failed', NOW() + INTERVAL '5 minutes', 'provider 500')`,
+      [outagePhone, 'a'.repeat(64)]
+    );
+  }
+  const retry = await api.POST('/v1/auth/request-otp', null, { phone: outagePhone });
+  assert.notEqual(retry.status, 429, 'a failed send must not lock the number out of the window');
+  assert.equal(retry.status, 202, 'the send must be attempted again after a provider failure');
+
+  // Positive control: codes that were actually delivered still consume the window. `sent_at` is
+  // deliberately older than the 60-second resend cooldown so this exercises the window rule rather
+  // than the cooldown rule, which is asserted separately by the row-count path above.
+  for (let i = 0; i < 3; i += 1) {
+    await pool.query(
+      `INSERT INTO otp_challenges (id, phone_e164, code_hash, status, created_at, expires_at, sent_at)
+       VALUES (gen_random_uuid(), $1, $2, 'pending', NOW() - INTERVAL '5 minutes',
+               NOW() + INTERVAL '5 minutes', NOW() - INTERVAL '5 minutes')`,
+      [deliveredPhone, 'b'.repeat(64)]
+    );
+  }
+  const limited = await api.POST('/v1/auth/request-otp', null, { phone: deliveredPhone });
+  assert.equal(limited.status, 429, 'three delivered codes in the window must still be refused');
+  assert.equal((await limited.json()).error, 'too_many_requests');
+});

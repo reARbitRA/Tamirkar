@@ -1,75 +1,352 @@
 {
-  "phase": "5 - independent cross-LLM validation",
+ "audit": "ARBITER-MVP v2.1 round 3",
+ "head": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
+ "branch": "arena/01a0fbb5-tamirkar",
+ "phase_5": {
   "validator_model": "NONE_AVAILABLE",
-  "invocation_method": "none - this workspace exposes no sub-agent or LLM-invocation tool. The tools available in this session are: bash, read_file, write_file, edit_file, web_search, fetch_page, image_search, generate_image, add_voice, generate_speech, start_process, get_process_output, stop_process, present_files, ask_user. None of them can instantiate a second model.",
-  "context_isolation": null,
-  "status": "DEGRADED - SINGLE-MODEL",
-  "fabrication_refusal": "Phase 5.1 forbids faking a validator. No validator scores, no blind re-score and no hostile-reviewer JSON have been invented. The metrics below that require a second model are reported as NOT_COMPUTED rather than as numbers.",
-  "metrics_requiring_second_model": {
-    "MAD": "NOT_COMPUTED (requires validator s_d for D1..D12)",
-    "MAX_DEV": "NOT_COMPUTED",
-    "delta_P_GO": "NOT_COMPUTED",
-    "P0_JACCARD": "NOT_COMPUTED",
-    "HALLUC": "NOT_COMPUTED by an external reviewer"
+  "invocation_method": "Attempted in order: (1) environment scan for an LLM API key or endpoint — the only credential in the environment is GH_TOKEN/GITHUB_TOKEN; (2) curl to api.openai.com/v1/models and api.anthropic.com/v1/models — both return HTTP 000 (egress blocked); (3) npm registry reachable (200) but installing a provider SDK cannot supply a key; (4) `gh` is authenticated but the GitHub API exposes no model-inference endpoint. No genuinely separate model is reachable.",
+  "model_family_mine": "UNKNOWN (the platform does not disclose the underlying model)",
+  "model_family_validator": "NONE",
+  "context_isolation": false,
+  "result": "DEGRADED — SINGLE-MODEL",
+  "degraded_rationale": "The rubric's 5.1 exit path is explicit: when no genuinely separate model is reachable, record NONE_AVAILABLE and do not simulate its output. No second LLM score was invented and no agreement metric is reported as if it had been measured. Instead of a simulated peer, a MECHANICAL validator was run: an independent re-implementation of the arithmetic that re-derives every penalty term from the raw severity/confidence/grade triple, re-sums R_point from the published per-dimension scores, re-applies the hard gates, re-runs the Monte Carlo from the published bands and re-opens a seeded 10-token evidence sample by reading the cited file ranges. That checks arithmetic and citation, not judgement, and the gap is stated plainly.",
+  "mechanical_validator": {
+   "script": "audit/harness/arbiter_engine.py cross-check",
+   "exit_code": 0,
+   "checks": [
+    "per-dimension penalty recomputed from BASE x confidence x GRADE_MULT",
+    "R_point re-summed from the published dimension scores",
+    "weights sum to 100",
+    "hard gates re-derived from the published counts and journey verdicts",
+    "Monte Carlo re-run from the published bands (mean drift tolerance 0.30)",
+    "10-token seeded evidence spot-check re-opened against the working tree"
+   ],
+   "failures": [],
+   "recomputed": {
+    "R_point": 79.072978,
+    "P_GO_effective": 0.35,
+    "MC_mean": 78.7599
+   }
   },
-  "fallback_5_5_executed": {
-    "name": "adversarial self-red-team + independent arithmetic re-derivation (single-model substitute)",
-    "a_hallucinated_entities": {
-      "method": "every finding id referenced by the dimension map was resolved against audit/01_findings.json; every named file in the evidence tokens was re-opened",
-      "result": "PASS - 0 dangling finding references, 0 orphan findings, 0 nonexistent files",
-      "evidence": [
-        "[E:cmd#34 /tmp/valcheck.py -> 'referenced findings that do not exist (hallucination check): NONE' and 'findings with no owning dimension: NONE']"
-      ]
-    },
-    "b_severity_inflation_or_deflation": {
-      "method": "re-tested each P0/P1 against the literal severity definitions",
-      "adjustments": [
-        "F-EXEC-006 was initially drafted as P0 ('core journey broken'). Downgraded to P1: the guard is deliberate fail-closed design, a developer can satisfy it with one git-ignored file, and the claim rests on Grade B/C evidence about a Gradle plugin this sandbox cannot execute. Kept mvp_blocking=true.",
-        "F-SEC-005 was initially drafted as P2. Downgraded to P3: Zarinpal's documented integration model has no webhook signature, the code re-verifies against verify.json, and the ledger is additionally guarded by status!=paid plus an idempotency key. P2 would have been inflation."
-      ]
-    },
-    "c_missed_issues_found_by_the_red_team": {
-      "added": [
-        "F-SEC-008 (P2) - trustProxy is never enabled, so quote_acceptances.acceptance_ip stores the reverse proxy for every customer. Found by re-reading server.js:L26 and L478 after the first pass had already scored D3.",
-        "F-DATA-006 (P3) - operational_audit_log has no index and neither it nor otp_challenges has any retention policy."
-      ],
-      "score_impact": "R_point moved 52.953 -> 51.645 (-1.308). The red team made the report more pessimistic, not less."
-    },
-    "d_arithmetic_errors": {
-      "method": "the whole of Phase 3 was re-implemented from the rubric text in a separate script that does not import mc_sim.py",
-      "result": "PASS - independent R_point 51.644900 vs engine 51.645000 (delta 1e-4, rounding only); max per-dimension deviation 0.000000000; weights sum to 100",
-      "evidence": [
-        "[E:cmd#34 /tmp/valcheck.py stdout]"
-      ]
-    },
-    "e_unjustified_optimism_or_pessimism": {
-      "checked": [
-        "D2 is NOT capped at 30 despite the Android test task being broken, because the server test suite was executed and passed 18/18; the breakage is charged as a P0 penalty instead of a blanket cap. This is the rubric's 'execution was attempted and failed' rule applied to the thing that was actually attempted.",
-        "D5 IS capped at 30 on Grade A evidence: all 10 workflow runs in the repository's history failed, observed via gh run list and gh run view 36493298453.",
-        "J5 is recorded PARTIAL, not VERIFIED_WORKING, even though the intent row and failure path were proven, because the ledger capture and 85/15 split never executed. Marking it working would have been the single most tempting inflation in this audit."
-      ]
-    }
+  "llm_agreement_metrics": {
+   "MAD": "UNKNOWN — no independent model was reachable",
+   "MAX_DEV": "UNKNOWN",
+   "delta_R": "UNKNOWN",
+   "P0_JACCARD": "UNKNOWN",
+   "HALLUC": "UNKNOWN",
+   "note": "Reporting these as numbers would be fabrication. The rubric's PASS criteria are therefore not claimed as met."
   },
-  "evidence_spotcheck": {
-    "tokens_selected": 10,
-    "passed": 9,
-    "failed": 1,
-    "failure": "[E:services/auth-api/src/server.js:L24] cited for the pg.Pool options; line 24 is `const config = loadConfig();`. The pool is at L25.",
-    "action": "Token corrected to L25 in audit/01_findings.json. Per protocol the owning dimensions (D6, D8) were re-audited claim-by-claim; all four findings (F-OPS-001, F-OPS-002, F-DATA-005, F-RELY-002, F-SEC-004) re-confirmed on content. No score changed.",
-    "also_corrected": "[E:services/auth-api/Dockerfile:L1-L11] -> L1-L10; the file is 10 lines."
+  "evidence_spotcheck": [
+   {
+    "token": "[E:services/auth-api/Dockerfile:19-27]",
+    "finding": "F-OPS-003",
+    "pass": true,
+    "check": "content+anchor",
+    "anchor_regex": "USER node|EXPOSE|read-only|cap",
+    "anchor_matched": true,
+    "auto_anchors_matched": [
+     "USER node"
+    ],
+    "reason": "services/auth-api/Dockerfile:19-27 in bounds (27 lines); required anchor /USER node|EXPOSE|read-only|cap/ matched"
+   },
+   {
+    "token": "[E:services/auth-api/db/005_devices.sql:9-10]",
+    "finding": "F-API-001",
+    "pass": true,
+    "check": "content+anchor",
+    "anchor_regex": "UUID|requireUuid|dev_",
+    "anchor_matched": true,
+    "auto_anchors_matched": [
+     "UUID",
+     "gen_random_uuid()"
+    ],
+    "reason": "services/auth-api/db/005_devices.sql:9-10 in bounds (38 lines); required anchor /UUID|requireUuid|dev_/ matched"
+   },
+   {
+    "token": "[E:services/auth-api/db/004_operational_indexes.sql:22-26]",
+    "finding": "F-DATA-002",
+    "pass": true,
+    "check": "content+anchor",
+    "anchor_regex": "otp_challenges|escrow_holds|retention",
+    "anchor_matched": true,
+    "auto_anchors_matched": [
+     "escrow_holds",
+     "otp_challenges"
+    ],
+    "reason": "services/auth-api/db/004_operational_indexes.sql:22-26 in bounds (26 lines); required anchor /otp_challenges|escrow_holds|retention/ matched"
+   },
+   {
+    "token": "[E:docs/GO_60_ROADMAP.md:47-90]",
+    "finding": "F-EXEC-001",
+    "pass": true,
+    "check": "content+anchor",
+    "anchor_regex": "/v1/",
+    "anchor_matched": true,
+    "auto_anchors_matched": [
+     "AiProviderRouter",
+     "AiProviderRouter.kt",
+     "AuthApi",
+     "AuthApi.kt"
+    ],
+    "reason": "docs/GO_60_ROADMAP.md:47-90 in bounds (219 lines); required anchor //v1// matched"
+   },
+   {
+    "token": "[E:app/src/main/java/com/example/data/remote/AuthApi.kt:40-61]",
+    "finding": "F-EXEC-001",
+    "pass": true,
+    "check": "content+anchor",
+    "anchor_regex": "/v1/",
+    "anchor_matched": true,
+    "auto_anchors_matched": [
+     "AuthApi"
+    ],
+    "reason": "app/src/main/java/com/example/data/remote/AuthApi.kt:40-61 in bounds (79 lines); required anchor //v1// matched"
+   },
+   {
+    "token": "[E:app/src/main/res/xml/data_extraction_rules.xml:1-12]",
+    "finding": "F-LEGAL-002",
+    "pass": true,
+    "check": "content+anchor",
+    "anchor_regex": "sharedpref|database|backup|Eclude|exclude",
+    "anchor_matched": true,
+    "auto_anchors_matched": [],
+    "reason": "app/src/main/res/xml/data_extraction_rules.xml:1-12 in bounds (12 lines); required anchor /sharedpref|database|backup|Eclude|exclude/ matched"
+   },
+   {
+    "token": "[E:app/src/main/java/com/example/data/remote/AiProviderRouter.kt:24-43]",
+    "finding": "F-EXEC-001",
+    "pass": true,
+    "check": "content+anchor",
+    "anchor_regex": "/v1/",
+    "anchor_matched": true,
+    "auto_anchors_matched": [],
+    "reason": "app/src/main/java/com/example/data/remote/AiProviderRouter.kt:24-43 in bounds (46 lines); required anchor //v1// matched"
+   },
+   {
+    "token": "[E:services/auth-api/src/config.js:78-81]",
+    "finding": "F-SEC-002",
+    "pass": true,
+    "check": "content+anchor",
+    "anchor_regex": "bucket|limit|window",
+    "anchor_matched": true,
+    "auto_anchors_matched": [
+     "AI_RATE_LIMIT_PER_MINUTE"
+    ],
+    "reason": "services/auth-api/src/config.js:78-81 in bounds (86 lines); required anchor /bucket|limit|window/ matched"
+   },
+   {
+    "token": "[E:services/auth-api/src/config.js:78-81]",
+    "finding": "F-SEC-002",
+    "pass": true,
+    "check": "content+anchor",
+    "anchor_regex": "bucket|limit|window",
+    "anchor_matched": true,
+    "auto_anchors_matched": [
+     "AI_RATE_LIMIT_PER_MINUTE"
+    ],
+    "reason": "services/auth-api/src/config.js:78-81 in bounds (86 lines); required anchor /bucket|limit|window/ matched"
+   },
+   {
+    "token": "[E:docs/legal/APPROVALS.md:1-9]",
+    "finding": "F-LEGAL-001",
+    "pass": true,
+    "check": "content+anchor",
+    "anchor_regex": "\\[ \\]|APPROVALS|\\u062a\\u0623\\u06cc\\u06cc\\u062f",
+    "anchor_matched": true,
+    "auto_anchors_matched": [],
+    "reason": "docs/legal/APPROVALS.md:1-9 in bounds (10 lines); required anchor /\\[ \\]|APPROVALS|\\u062a\\u0623\\u06cc\\u06cc\\u062f/ matched"
+   }
+  ],
+  "evidence_spotcheck_pass_rate": 1.0,
+  "iterations": 1,
+  "evidence_spotcheck_method": "Seeded selection hash(HEAD + i) mod N over every non-command token in the frozen finding set, then a CONTENT check: the cited range must be in bounds AND must match the finding's required anchor regex (audit/harness/arbiter_engine.py SPOT_ANCHOR), so a token passes only if the cited lines really are about the claim. Command tokens are re-inspected by re-running the command.",
+  "revalidation_after_merge": {
+   "when": "after merging origin/main into the audit branch",
+   "cross_check": "audit seed 10/10 and live-tip seed 10/10 (20/20 citations re-opened), exit 0",
+   "certificate_is_still": "DEGRADED — SINGLE-MODEL: a peer model remains unreachable, so no agreement metric exists; the mechanical validator was strengthened instead and this is reported as such rather than as validation by a second model."
+  }
+ },
+ "freeze": {
+  "frozen_at": "phase 5 close, HEAD unchanged since phase 0",
+  "sha256_mvp_definition": "61604e9dd607e6706106b275403edf0bb1f052eac64b8165dcc1036fd16448b8",
+  "sha256_initial_findings_sorted": "13a3e1aac591792e2c7c04aeaa1416af32580a1a1231b112c33687ee3e60a61e",
+  "sha256_relevant_file_set_sorted": "af7f2d6eadafd5ac880a7ab8cfe8efda6e363a01617c7f4370fe8aa6fe835f1a",
+  "head_at_freeze": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
+  "head_at_phase_0": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
+  "head_changed_mid_audit": false,
+  "freeze_exceptions": [
+   {
+    "id": "FREEZE_EXCEPTION-001",
+    "issue": "The rubric's execution contract names the audit branch `audit/mvp-readiness-<shortsha>`. This session's execution environment pins all work to `arena/01a0fbb5-tamirkar` and forbids creating, checking out or pushing any other branch.",
+    "evidence": [
+     "[E:cmd#1]: git branch -a lists only main, remotes/origin/main and arena/01a0fbb5-tamirkar",
+     "[E:cmd#26]: gh api repos/reARbitRA/Tamirkar reports default_branch main and admin permission"
+    ],
+    "resolution": "All artifacts were written under ./audit/ on arena/01a0fbb5-tamirkar, which is the only branch this session may write. No commit was made to main, master, trunk or production.",
+    "validator_acknowledgement": "NONE_AVAILABLE — recorded as unacknowledged; the deviation is documented rather than hidden."
+   },
+   {
+    "id": "FREEZE_EXCEPTION-002",
+    "issue": "F-EXEC-001's arithmetic was corrected after the Phase 5 freeze.",
+    "detail": "Phase 2 estimated the client gap as '13 of the 18 authenticated MVP routes'. Task T-007 then produced a machine-counted census (docs/GO_60_ROADMAP.md:47-90) showing 27 routes, 4 public, 23 bearer-authenticated and 4 genuinely wired (the fifth candidate was a substring false positive on the POST /v1/orders call site). The finding text and its evidence were corrected to '4 of 23 wired, 19 unwired'.",
+    "direction": "The correction makes the finding STRONGER, not weaker, so it cannot have been trimming to reach a verdict.",
+    "evidence": [
+     "[E:cmd#28]",
+     "[E:docs/GO_60_ROADMAP.md:47-90]"
+    ],
+    "rehash_performed": true,
+    "validator_acknowledgement": "NONE_AVAILABLE — no independent validator exists in this environment; recorded as unacknowledged."
+   },
+   {
+    "id": "FREEZE_EXCEPTION-003",
+    "issue": "audit_confidence_pct is 95.1 in the re-scored artifacts but was 93.62 at the Phase 5 freeze.",
+    "detail": "At freeze time the coverage_ratio input was an estimate over the files read during Phases 0-2. The Phase 7 inventory closed with a machine-built inspected-file list (harness/inventory_extra.json, 92 files, coverage_ratio 0.902), which raised the deterministic confidence product to 95.1. No finding, severity, weight, cap or R_point value changed; the engine is re-run from the same frozen inputs.",
+    "direction": "Evidence coverage rose because more files were actually inspected; the change is a measurement correction, not a scoring adjustment.",
+    "evidence": [
+     "[E:audit/harness/inventory_extra.json]",
+     "[E:cmd#34]"
+    ],
+    "rehash_performed": false,
+    "validator_acknowledgement": "NONE_AVAILABLE — no independent validator exists in this environment; recorded as unacknowledged."
+   },
+   {
+    "id": "FREEZE_EXCEPTION-004",
+    "issue": "Four evidence citations were corrected after the merge, when the strengthened content check began sampling cmd# tokens and re-checked every range against the shipped tree.",
+    "detail": "(1) F-OPS-003 cited render.yaml:3-10 (a service header) for an ABSENCE claim; replaced with a recorded grep, cmd#35, plus the Dockerfile read that shows what is hardened. (2) F-LEGAL-001 cited docs/GO_NO_GO.md:47-51, which does not mention legal approval; the unsigned-draft statement is at 34-35. (3) F-API-001 cited TamirkarRepository.kt:80-84, which stops five lines short of the `dev_` minting line at 89. (4) F-DATA-002 cites two facets of one claim, so its escrow-worker citation now carries its own per-token anchor.",
+    "direction": "No severity, confidence, evidence grade, weight or score changed — verified by re-running emit/emit-after, which reproduce R_point 79.073 and 80.9198 exactly. Every correction makes the evidence behind a finding easier to verify, not the finding weaker.",
+    "evidence": [
+     "[E:audit/harness/cross_check_results.json]",
+     "[E:cmd#35]"
+    ],
+    "rehash_performed": true,
+    "previous_sha256_initial_findings_sorted": "bc98a8d4cc6fc819185feb0607248dff02f6946efd2b3f9258b53117dfa7425a",
+    "validator_acknowledgement": "NONE_AVAILABLE — no independent validator exists in this environment; the corrections were instead forced by the mechanical content check."
+   },
+   {
+    "id": "FREEZE_EXCEPTION-005",
+    "issue": "The evidence checker itself was strengthened, which changes what the certificate claims.",
+    "detail": "Four defects in the checker were found and fixed at the merge: (a) only `path:lo-hi` tokens parsed, so the three single-line tokens raised ValueError; (b) `cmd#N` tokens were accepted without ever resolving the number (now they must exist in the evidence inventory); (c) `cmd#N` tokens were also excluded from the sampling pool, so 16 citations could never be tested; (d) anchors matched case-sensitively, which failed an env var named AI_RATE_LIMIT_PER_MINUTE. The check now also resolves a range against the audited revision when remediation edited those lines, reporting it as a supersession rather than an error.",
+    "direction": "Strictly stronger: 20 citations are re-opened per run across two seeds instead of 10 against one, and more token shapes are actually verified.",
+    "evidence": [
+     "[E:audit/harness/arbiter_engine.py]",
+     "[E:audit/harness/cross_check_results.json]"
+    ],
+    "rehash_performed": false,
+    "validator_acknowledgement": "NONE_AVAILABLE"
+   }
+  ],
+  "frozen_figures": {
+   "R_point": 79.073,
+   "letter_grade": "B",
+   "R_mean_mc": 78.7599,
+   "CI95": [
+    72.76,
+    84.8252
+   ],
+   "P_GO_raw": 0.8892,
+   "P_GO_effective": 0.35,
+   "verdict": "NO-GO — REMEDIABLE",
+   "counts": {
+    "P0": 0,
+    "P1": 6,
+    "P2": 11,
+    "P3": 9
+   },
+   "journeys_verified_working": "3/7",
+   "audit_confidence_pct": 95.1,
+   "audit_confidence_pct_note": "93.62 at freeze with an estimated coverage ratio; 95.1 from the Phase 7 file census onward (FREEZE_EXCEPTION-003).",
+   "note_on_hashes": "Hashes recomputed after FREEZE_EXCEPTION-004; the previous findings hash is retained in that exception."
   },
-  "certificate": {
-    "validator": "NONE_AVAILABLE",
-    "context_isolated": "n/a",
-    "iterations": 1,
-    "MAD": "n/a",
-    "MAX_DEV": "n/a",
-    "delta_P_GO": "n/a",
-    "P0_Jaccard": "n/a",
-    "hallucinations": "0 detected by self-red-team; no external reviewer available",
-    "spot_check": "9/10 passed (1 line-number error, corrected, owning dimensions re-audited)",
-    "RESULT": "DEGRADED",
-    "final_P_GO_pct": 0.0
+  "head_at_merge": "f0274536a0d0eb0001133fde1672de825795550c",
+  "merge_note": "`main` advanced by PR #22 (a sibling round-2 session) after this audit was frozen. The upstream commits were merged into the audit branch at the human's instruction, because the PR was otherwise unresolvable. The audited revision stays 7c8b749f4ca2f69c01de5e3d86d419b713d85344: scoring, judgments and the journey verdicts are unaffected by the merge, and both gate suites were re-run on the merged tree. Two upstream audit artifacts (round-2 findings/scorecard) coexist under ./audit/ and are labelled."
+ },
+ "certificate": "── ARBITER VALIDATION CERTIFICATE v2.0 ──\nvalidator         : NONE_AVAILABLE\nmodel families    : UNKNOWN / NONE\ncontext isolated  : no\niterations        : 1\nMAD               : UNKNOWN (no peer model reachable)\nMAX_DEV           : UNKNOWN\nΔR (points)       : UNKNOWN\nP0 Jaccard        : UNKNOWN\nhallucinations    : 0 observed by the mechanical validator (all 10 spot-checked citations resolve)\nspot-check        : 10/10\nRESULT            : DEGRADED — SINGLE-MODEL\neffective R_point : 79.073 / 100\neffective P_GO    : 35.00%\n────────────────────────────────────────────",
+ "frozen_figures": {
+  "R_point": 79.073,
+  "letter_grade": "B",
+  "R_mean_mc": 78.7599,
+  "CI95": [
+   72.76,
+   84.8252
+  ],
+  "P_GO_raw": 0.8892,
+  "P_GO_effective": 0.35,
+  "verdict": "NO-GO — REMEDIABLE",
+  "counts": {
+   "P0": 0,
+   "P1": 6,
+   "P2": 11,
+   "P3": 9
   },
-  "consequence": "Per Phase 5.1 the final report is stamped VALIDATION: DEGRADED - SINGLE-MODEL. The report is usable, but no independent model has confirmed these scores and the committee should weight that accordingly."
+  "journeys_verified_working": "3/7",
+  "audit_confidence_pct": 93.62
+ },
+ "after_phase_7_figures": {
+  "R_point": 80.9198,
+  "letter_grade": "B+",
+  "R_mean_mc": 80.4347,
+  "CI95": [
+   74.4674,
+   86.4556
+  ],
+  "P_GO_raw": 0.9624,
+  "P_GO_effective": 0.35,
+  "verdict": "NO-GO — REMEDIABLE",
+  "counts": {
+   "P0": 0,
+   "P1": 5,
+   "P2": 8,
+   "P3": 8
+  },
+  "audit_confidence_pct": 95.1,
+  "closed_findings": [
+   "F-DATA-002",
+   "F-DOC-001",
+   "F-LEGAL-002",
+   "F-OPS-001",
+   "F-RELY-001"
+  ]
+ },
+ "certificates_by_milestone": [
+  {
+   "milestone": "BEFORE (HEAD 7c8b749, frozen)",
+   "R_point": 79.073,
+   "P_GO_effective": 0.35,
+   "verdict": "NO-GO — REMEDIABLE",
+   "counts": {
+    "P0": 0,
+    "P1": 6,
+    "P2": 11,
+    "P3": 9
+   },
+   "certificate": "DEGRADED — SINGLE-MODEL, spot-check 10/10"
+  },
+  {
+   "milestone": "M0 UNBLOCK",
+   "status": "already met at HEAD (0 P0)",
+   "R_point": 79.073,
+   "P_GO_effective": 0.35
+  },
+  {
+   "milestone": "M1 PARTIAL (T-001..T-007 + probes)",
+   "R_point": 80.9198,
+   "P_GO_effective": 0.35,
+   "verdict": "NO-GO — REMEDIABLE",
+   "counts": {
+    "P0": 0,
+    "P1": 5,
+    "P2": 8,
+    "P3": 8
+   },
+   "certificate": "DEGRADED — SINGLE-MODEL, spot-check 10/10"
+  },
+  {
+   "milestone": "M2 HARDEN",
+   "status": "exit R_point >= 75 met both before and after"
+  },
+  {
+   "milestone": "M3 LAUNCH",
+   "status": "not attempted — requires P1 <= 2, zero PARTIAL journeys and external legal sign-off"
+  }
+ ]
 }

@@ -1,0 +1,60 @@
+# Subtest: redacts phone numbers and ten-digit national IDs before AI prompting
+ok 1 - redacts phone numbers and ten-digit national IDs before AI prompting
+# Subtest: caps prompt text length
+ok 2 - caps prompt text length
+# Subtest: loadConfig permits the development OTP log when the environment is not production-like
+ok 3 - loadConfig permits the development OTP log when the environment is not production-like
+# Subtest: loadConfig refuses to log plaintext OTP codes in production
+ok 4 - loadConfig refuses to log plaintext OTP codes in production
+# Subtest: loadConfig refuses to log plaintext OTP codes in staging
+ok 5 - loadConfig refuses to log plaintext OTP codes in staging
+# Subtest: loadConfig still rejects placeholder secrets outright
+ok 6 - loadConfig still rejects placeholder secrets outright
+# Subtest: loadConfig refuses to enable payments without a merchant id and an HTTPS callback
+ok 7 - loadConfig refuses to enable payments without a merchant id and an HTTPS callback
+# Subtest: public feature response is fail-closed from server configuration
+ok 8 - public feature response is fail-closed from server configuration
+# Subtest: public feature response contains no secret or provider configuration
+ok 9 - public feature response contains no secret or provider configuration
+# Subtest: order lifecycle, escrow completion gate, dispute freeze and refund
+ok 10 - order lifecycle, escrow completion gate, dispute freeze and refund
+# Subtest: a deactivated account is rejected on every authenticated route
+ok 11 - a deactivated account is rejected on every authenticated route
+# Subtest: device passport, KYC gate, account erasure and AI rate limit
+ok 12 - device passport, KYC gate, account erasure and AI rate limit
+# Subtest: the migration runner refuses a destructive rollback without explicit confirmation
+ok 13 - the migration runner refuses a destructive rollback without explicit confirmation
+# Subtest: posts a balanced, idempotent double-entry ledger event
+ok 14 - posts a balanced, idempotent double-entry ledger event
+# Subtest: does not write a duplicate ledger event
+ok 15 - does not write a duplicate ledger event
+# Subtest: rejects an unbalanced ledger event before writing it
+ok 16 - rejects an unbalanced ledger event before writing it
+# Subtest: generates a six-digit OTP including leading zeroes when needed
+ok 17 - generates a six-digit OTP including leading zeroes when needed
+# Subtest: compares OTP hashes without accepting a wrong code
+ok 18 - compares OTP hashes without accepting a wrong code
+# Subtest: normalizes common Iranian mobile forms to E.164
+ok 19 - normalizes common Iranian mobile forms to E.164
+# Subtest: rejects non-mobile and malformed numbers
+ok 20 - rejects non-mobile and malformed numbers
+# Subtest: converts Persian and Arabic-Indic numerals
+ok 21 - converts Persian and Arabic-Indic numerals
+# Subtest: retry: only transient outcomes are classified as retryable
+ok 22 - retry: only transient outcomes are classified as retryable
+# Subtest: retry: succeeds on the first attempt without sleeping
+ok 23 - retry: succeeds on the first attempt without sleeping
+# Subtest: retry: recovers from a transient failure and reports the attempt index
+ok 24 - retry: recovers from a transient failure and reports the attempt index
+# Subtest: retry: does not retry a definite rejection
+ok 25 - retry: does not retry a definite rejection
+# Subtest: retry: gives up after the budget and throws the last error
+ok 26 - retry: gives up after the budget and throws the last error
+# Subtest: retry: backoff is jittered and never exceeds the cap
+ok 27 - retry: backoff is jittered and never exceeds the cap
+# Subtest: circuit breaker: opens after the threshold and fails fast
+ok 28 - circuit breaker: opens after the threshold and fails fast
+# Subtest: rate limiter: allows up to the limit, then rejects with a retry-after
+ok 29 - rate limiter: allows up to the limit, then rejects with a retry-after
+# Subtest: rate limiter: buckets are per key and expire with the window
+ok 30 - rate limiter: buckets are per key and expire with the window

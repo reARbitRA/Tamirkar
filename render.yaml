@@ -25,8 +25,12 @@ services:
         value: "false"
       - key: FEATURE_TECHNICIAN_MATCHING
         value: "false"
+      # Operator-set on purpose. Escrow release stays fail-closed until it is separately approved,
+      # so this is deliberately NOT defaulted to true here — but it must be settable without editing
+      # the blueprint, because the scheduled worker below calls POST /v1/admin/escrows/release-due
+      # and that route answers 503 while the flag is false.
       - key: FEATURE_ESCROW_RELEASE
-        value: "false"
+        sync: false
       - key: ZARINPAL_SANDBOX
         value: "true"
       # Render prompts for `sync: false` values during Blueprint setup.
@@ -54,6 +58,10 @@ services:
 
   # Escrow release runs as a scheduled one-shot. It is idempotent, so a missed or duplicated
   # run is safe; what is not safe is never running it, because holds would accumulate forever.
+  #
+  # `dockerCommand` is required. The auth-api image CMD is `sh -c "npm run migrate && npm start"`,
+  # so without this override the cron would boot a second web server that never exits instead of
+  # running the worker, and no hold would ever reach `released`.
   - type: cron
     name: oosta-escrow-release
     runtime: docker
@@ -61,23 +69,13 @@ services:
     plan: free
     schedule: "17 3 * * *"
     autoDeployTrigger: "off"
+    dockerCommand: node src/escrow-worker.js
     envVars:
+      # Only the variables src/escrow-worker.js and src/config.js actually read. The worker does not
+      # serve traffic and does not migrate, so it needs no database URL and no provider keys — and
+      # must not be given generated secrets that would differ from the web service's.
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        sync: false
-      - key: JWT_SECRET
-        generateValue: true
-      - key: OTP_PEPPER
-        generateValue: true
-      - key: KAVENEGAR_API_KEY
-        sync: false
-      - key: KAVENEGAR_TEMPLATE
-        sync: false
-      - key: OTP_DEV_LOG_CODE
-        value: "false"
-      - key: FEATURE_ESCROW_RELEASE
-        value: "false"
       - key: PLATFORM_API_BASE_URL
         sync: false
       - key: ESCROW_WORKER_TOKEN

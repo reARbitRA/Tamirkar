@@ -44,6 +44,54 @@
 
 ---
 
+## Client wiring census for the 27 server routes
+
+**19 of the 23 bearer-authenticated routes have no call site anywhere in `app/src/main`, and one
+more is a public route the app never reads.** The census below is generated, not asserted: the
+route list comes from `services/auth-api/src/server.js` and the call sites from a literal scan of
+`app/src/main/java/**/*.kt`. It exists so the gap is auditable instead of implied, and so the next
+person to claim a journey is "done" has to move a row from `none` to a file:line.
+
+Generated on HEAD `7c8b749`; regenerate with the same two-step scan.
+
+| Route | Auth | Android call site |
+| --- | --- | --- |
+| `GET /health` | public | **none** |
+| `GET /metrics` | public | **none** |
+| `GET /v1/public/features` | public | `PlatformApi.kt:38` |
+| `POST /v1/auth/request-otp` | bearer | `AuthApi.kt:41` |
+| `POST /v1/auth/verify-otp` | bearer | `AuthApi.kt:50` |
+| `GET /v1/me` | bearer | **none** |
+| `DELETE /v1/me` | bearer | **none** |
+| `GET /v1/orders` | bearer | **none** |
+| `GET /v1/orders/:orderId` | bearer | **none** |
+| `GET /v1/devices` | bearer | **none** |
+| `POST /v1/devices` | bearer | **none** |
+| `GET /v1/devices/:deviceId` | bearer | **none** |
+| `POST /v1/ai/diagnoses` | bearer | `AiProviderRouter.kt:31` |
+| `POST /v1/technicians/apply` | bearer | **none** |
+| `POST /v1/technicians/kyc` | bearer | **none** |
+| `POST /v1/admin/kyc/:caseId/decision` | bearer | **none** |
+| `POST /v1/orders` | bearer | `PlatformApi.kt:58` |
+| `POST /v1/orders/:orderId/quotes` | bearer | **none** |
+| `POST /v1/quotes/:quoteId/accept` | bearer | **none** |
+| `POST /v1/orders/:orderId/evidence` | bearer | **none** |
+| `POST /v1/orders/:orderId/start` | bearer | **none** |
+| `POST /v1/orders/:orderId/complete` | bearer | **none** |
+| `POST /v1/orders/:orderId/dispute` | bearer | **none** |
+| `POST /v1/admin/escrows/:holdId/refund` | bearer | **none** |
+| `POST /v1/payments/zarinpal/start` | bearer | **none** |
+| `GET /v1/payments/zarinpal/callback` | public | **none** |
+| `POST /v1/admin/escrows/release-due` | bearer | **none** |
+
+Method matters: the single `/v1/orders` call site is a POST built by `Request.Builder().post(...)`,
+so it wires order submission, not order history. `GET /v1/orders`, `GET /v1/orders/:orderId` and
+`DELETE /v1/me` therefore have no client despite the product copy describing server-backed history
+and an in-app erasure path.
+
+What this means for the launch decision: the server owns these journeys and they are tested, but a
+customer holding the APK cannot reach them. Nothing here should be read as "implemented".
+
 ## Phase 1 — finish repository proof (next 3–5 engineering days)
 
 | Item | English definition of done | تعریف پایان کار فارسی | Owner | Evidence |

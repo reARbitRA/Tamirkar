@@ -2,31 +2,30 @@
   "head": "f0274536a0d0eb0001133fde1672de825795550c",
   "short_sha": "f027453",
   "branch": "arena/01a0fbb5-tamirkar",
+  "state": "after phase 7 remediation",
   "verdict": "NO-GO — REMEDIABLE",
   "unmet_conditions": [
     "P_GO 0.3500 < 0.60",
-    "P1=6 > 2",
+    "P1=5 > 2",
     "4 journey/journeys PARTIAL: ['J2', 'J3', 'J5', 'J7']"
   ],
-  "prompt_freezing_enabled": false,
-  "R_point": 79.073,
-  "letter_grade": "B",
-  "R_mean_mc": 78.7026,
+  "R_point": 80.9198,
+  "letter_grade": "B+",
+  "R_mean_mc": 80.3776,
   "CI95": [
-    72.7869,
-    84.6568
+    74.4986,
+    86.3241
   ],
-  "score_uncertainty_p_ge_75": 0.8869,
-  "P_GO_raw": 0.8869,
+  "P_GO_raw": 0.963,
   "P_GO_effective": 0.35,
   "audit_confidence_pct": 95.1,
   "counts": {
     "P0": 0,
-    "P1": 6,
-    "P2": 11,
-    "P3": 9
+    "P1": 5,
+    "P2": 8,
+    "P3": 8
   },
-  "total_findings": 26,
+  "total_open_findings": 21,
   "journeys_verified_working": "3/7",
   "journey_verdicts": {
     "J1": "VERIFIED_WORKING",
@@ -38,7 +37,7 @@
     "J7": "PARTIAL"
   },
   "hard_gates_tripped": [
-    "P1_count=6 >= 5 -> P_GO capped at 0.35"
+    "P1_count=5 >= 5 -> P_GO capped at 0.35"
   ],
   "dominant_risks": [
     {
@@ -56,10 +55,5 @@
       "title": "No installed CI job runs the auth-api suite, so the money-path tests can regress without anyone noticing",
       "severity": "P1"
     }
-  ],
-  "distance_to_go": {
-    "delta_score_points_to_85": 5.927,
-    "sum_effort_hours_mvp_blocking": 63.25,
-    "sum_effort_hours_all": 108.5
-  }
+  ]
 }

@@ -1,0 +1,18 @@
+AFTER PHASE 7 — HEAD f0274536a0d0eb0001133fde1672de825795550c
+closed: ['F-DATA-002', 'F-DOC-001', 'F-LEGAL-002', 'F-OPS-001', 'F-RELY-001']
+implementation: LCG fallback (seed 424242) + Irwin-Hall normal approximation
+R_point 80.9198 | R_mean 80.3776 | CI95 [74.4986, 86.3241]
+P(R>=75) raw 0.9630 | P_GO effective 0.3500 | verdict NO-GO — REMEDIABLE
+counts {'P0': 0, 'P1': 5, 'P2': 8, 'P3': 8}
+  D1   s=42.8571 grade=A
+  D2   s=95.6800 grade=B
+  D3   s=88.6000 grade=A
+  D4   s=82.0000 grade=A
+  D5   s=58.0000 grade=A
+  D6   s=98.1100 grade=B
+  D7   s=94.8700 grade=B
+  D8   s=97.8400 grade=B
+  D9   s=94.8700 grade=B
+  D10  s=92.8000 grade=A
+  D11  s=100.0000 grade=B
+  D12  s=83.8000 grade=B

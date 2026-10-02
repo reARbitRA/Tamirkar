@@ -10,6 +10,7 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test": "node --test",
+    "retention": "node src/retention.js run",
     "test:coverage": "node --test --experimental-test-coverage",
     "harness": "node ../../audit/harness/e2e.mjs",
     "harness:smoke": "node ../../audit/harness/smoke.mjs"
