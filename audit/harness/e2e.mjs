@@ -45,7 +45,8 @@ function freePort() {
 async function resetDatabase() {
   const admin = new pg.Client({ host: PGHOST, port: PGPORT, user: 'oosta', database: 'postgres' });
   await admin.connect();
-  await admin.query(`DROP DATABASE IF EXISTS ${DBNAME}`);
+  await admin.query(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()`, [DBNAME]);
+  await admin.query(`DROP DATABASE IF EXISTS ${DBNAME} WITH (FORCE)`);
   await admin.query(`CREATE DATABASE ${DBNAME}`);
   await admin.end();
 }
@@ -131,7 +132,8 @@ const POST = (url, tok, body = {}) => fetch(url, { method: 'POST', headers: H(to
   // ---------- J3 device passport ----------
   const r6 = await fetch(`${base}/v1/devices`, { headers: H(custToken) });
   const r6b = await fetch(`${base}/v1/orders`, { headers: H(custToken) });
-  rec('J3.1', 'J3', 'FAIL', `GET /v1/devices -> ${r6.status}; GET /v1/orders -> ${r6b.status}. No read API exists for server-side device passport / order history.`);
+  rec('J3.1', 'J3', r6.status === 404 ? 'PARTIAL' : 'INFO',
+    `GET /v1/devices -> ${r6.status} (still no device API; passports remain Room-local); GET /v1/orders -> ${r6b.status} (now present after T-004)`);
 
   // ---------- J7 technician apply + KYC + admin approval ----------
   const r7 = await POST(`${base}/v1/technicians/apply`, custToken);
@@ -160,10 +162,36 @@ const POST = (url, tok, body = {}) => fetch(url, { method: 'POST', headers: H(to
   const r12 = await POST(`${base}/v1/quotes/${b11.id}/accept`, custToken);
   const b12 = await j(r12);
   rec('J4.3', 'J4', r12.status === 200 ? 'PASS' : 'FAIL', `POST /v1/quotes/:id/accept -> ${r12.status} ${JSON.stringify(b12)}`);
-  const r12b = await fetch(`${base}/v1/orders/${b10.id}/evidence`, { method: 'POST', headers: H(techToken), body: JSON.stringify({ phase: 'before', object_reference: 'oss://oosta-ev/0001-before.jpg', object_hash: 'sha256:' + 'b'.repeat(64) }) });
-  rec('J4.4', 'J4', r12b.status === 201 ? 'PASS' : 'FAIL', `POST /v1/orders/:id/evidence -> ${r12b.status} ${JSON.stringify(await j(r12b)).slice(0, 100)}`);
+  const rEv0 = await POST(`${base}/v1/orders/${b10.id}/evidence`, techToken, { phase: 'before', object_reference: 'oss://oosta-ev/0001-before.jpg', object_hash: 'sha256:' + 'b'.repeat(64) });
+  rec('D.1', 'J4', rEv0.status === 409 ? 'PASS' : 'FAIL', `evidence on an UNPAID order -> ${rEv0.status} (expect 409 after T-012 gating)`);
+
+  // paid + started, then evidence is allowed and completion requires both phases
+  await pool.query(`UPDATE service_orders SET status='paid' WHERE id=$1`, [b10.id]);
+  const rSt = await POST(`${base}/v1/orders/${b10.id}/start`, techToken);
+  const rEvB = await POST(`${base}/v1/orders/${b10.id}/evidence`, techToken, { phase: 'before', object_reference: 'oss://oosta-ev/0001-before.jpg', object_hash: 'sha256:' + 'b'.repeat(64) });
+  const rEvA = await POST(`${base}/v1/orders/${b10.id}/evidence`, techToken, { phase: 'after', object_reference: 'oss://oosta-ev/0002-after.jpg', object_hash: 'sha256:' + 'c'.repeat(64) });
+  rec('J4.4', 'J4', (rSt.status === 200 && rEvB.status === 201 && rEvA.status === 201) ? 'PASS' : 'FAIL',
+    `start=${rSt.status} evidence before=${rEvB.status} after=${rEvA.status} (expect 200/201/201)`);
+
+  // ---------- J3b server-backed order history (added by T-004) ----------
+  const rL = await fetch(`${base}/v1/orders`, { headers: H(custToken) });
+  const bL = await j(rL);
+  rec('J3.2', 'J3', (rL.status === 200 && Array.isArray(bL.orders) && bL.orders.length >= 1) ? 'PASS' : 'FAIL',
+    `GET /v1/orders -> ${rL.status} orders=${Array.isArray(bL.orders) ? bL.orders.length : 'n/a'}`);
+  const rD = await fetch(`${base}/v1/orders/${b10.id}`, { headers: H(custToken) });
+  const bD = await j(rD);
+  rec('J3.3', 'J3', (rD.status === 200 && bD.order?.quotes?.length >= 1) ? 'PASS' : 'FAIL',
+    `GET /v1/orders/:id -> ${rD.status} status=${bD.order?.status} quotes=${bD.order?.quotes?.length ?? 0} evidence=${bD.order?.evidence?.length ?? 0}`);
+  const otherId = 'bbbbbbbb-0000-4000-8000-000000000002';
+  await pool.query(`INSERT INTO users (id, phone_e164, role) VALUES ($1,'+989000000002','customer') ON CONFLICT DO NOTHING`, [otherId]);
+  const otherToken = jwt.sign({ sub: otherId, role: 'customer' }, ENV_BASE.JWT_SECRET, { algorithm: 'HS256', expiresIn: 3600, issuer: 'oosta-auth-api', audience: 'oosta-android' });
+  const rX = await fetch(`${base}/v1/orders/${b10.id}`, { headers: H(otherToken) });
+  rec('J3.4', 'J3', rX.status === 404 ? 'PASS' : 'FAIL', `IDOR probe: unrelated customer GET /v1/orders/:id -> ${rX.status} (expect 404)`);
 
   // ---------- J5 payment start (Zarinpal is unreachable from this sandbox) ----------
+  // restore the pre-payment state that the lifecycle walk above moved past
+  await pool.query(`UPDATE service_orders SET status='awaiting_payment' WHERE id=$1`, [b10.id]);
+  await pool.query(`UPDATE quotes SET status='accepted' WHERE id=$1`, [b11.id]);
   const r13 = await fetch(`${base}/v1/payments/zarinpal/start`, { method: 'POST', headers: { ...H(custToken), 'idempotency-key': 'audit-idem-key-0001' }, body: JSON.stringify({ quote_id: b11.id }) });
   const b13 = await j(r13);
   rec('J5.1', 'J5', 'PARTIAL', `POST /v1/payments/zarinpal/start -> ${r13.status} ${JSON.stringify(b13).slice(0, 160)}`);
@@ -180,12 +208,14 @@ const POST = (url, tok, body = {}) => fetch(url, { method: 'POST', headers: H(to
   }
   const r14 = await POST(`${base}/v1/admin/escrows/release-due`, opToken);
   const b14 = await j(r14);
-  rec('J6.1', 'J6', r14.status === 200 ? 'PASS' : 'FAIL', `POST /v1/admin/escrows/release-due -> ${r14.status} ${JSON.stringify(b14)}`);
+  rec('J6.1', 'J6', (r14.status === 200 && b14.released === 0) ? 'PASS' : 'FAIL',
+    `release-due on a due hold whose order is NOT completed -> ${r14.status} ${JSON.stringify(b14)} (expect released=0 after the T-001 gate)`);
   const r14b = await POST(`${base}/v1/admin/escrows/release-due`, opToken);
   const b14b = await j(r14b);
-  rec('J6.2', 'J6', (b14b.released === 0) ? 'PASS' : 'FAIL', `second release-due run -> ${r14b.status} ${JSON.stringify(b14b)} (idempotency: expect released=0)`);
+  rec('J6.2', 'J6', (b14b.released === 0) ? 'PASS' : 'FAIL', `second release-due run -> ${r14b.status} ${JSON.stringify(b14b)} (expect released=0)`);
   const led = await pool.query(`SELECT e.event_type, p.account, p.direction, p.amount_tomans FROM ledger_entries e JOIN ledger_postings p ON p.entry_id=e.id ORDER BY e.created_at, p.account`);
-  rec('J6.3', 'J6', led.rows.length ? 'PASS' : 'FAIL', `ledger rows=${led.rows.length} ${JSON.stringify(led.rows)}`);
+  rec('J6.3', 'J6', led.rows.length === 0 ? 'PASS' : 'FAIL',
+    `ledger rows at this point=${led.rows.length} (expect 0: nothing may post until an order completes)`);
   const bal = await pool.query(`SELECT COALESCE(SUM(CASE WHEN direction='debit' THEN amount_tomans ELSE -amount_tomans END),0) AS net FROM ledger_postings`);
   rec('J6.4', 'J6', Number(bal.rows[0].net) === 0 ? 'PASS' : 'FAIL', `ledger balance net=${bal.rows[0].net} (expect 0)`);
 
@@ -203,15 +233,75 @@ const POST = (url, tok, body = {}) => fetch(url, { method: 'POST', headers: H(to
 
   // ---------- security probes ----------
   const s1 = await fetch(`${base}/v1/orders`, { method: 'POST', headers: H(techToken), body: JSON.stringify({ category: 'یخچال', problem_description: 'تست' }) });
-  rec('S.1', 'SEC', 'INFO', `role check: technician creating order -> ${s1.status}`);
+  rec('S.1', 'SEC', s1.status === 403 ? 'PASS' : 'FAIL', `technician creating a customer order -> ${s1.status} (expect 403 after T-009)`);
   const s2 = await POST(`${base}/v1/admin/escrows/release-due`, custToken);
   rec('S.2', 'SEC', s2.status === 403 ? 'PASS' : 'FAIL', `customer hitting admin escrow release -> ${s2.status} (expect 403)`);
   await pool.query(`UPDATE users SET is_active=FALSE WHERE id=$1`, [custId]);
   const s3 = await fetch(`${base}/v1/orders`, { method: 'POST', headers: H(custToken), body: JSON.stringify({ category: 'یخچال', problem_description: 'غیرفعال تست' }) });
-  rec('S.3', 'SEC', 'INFO', `deactivated user still holding a valid JWT -> POST /v1/orders returned ${s3.status} (expect 401 if deactivation were enforced)`);
+  rec('S.3', 'SEC', s3.status === 401 ? 'PASS' : 'FAIL', `deactivated user holding a valid JWT -> POST /v1/orders returned ${s3.status} (expect 401 after T-003)`);
   await pool.query(`UPDATE users SET is_active=TRUE WHERE id=$1`, [custId]);
   const s4 = await fetch(`${base}/v1/orders/${b10.id}/quotes`, { method: 'POST', headers: H(opToken), body: JSON.stringify({ labor_tomans: 1, parts_tomans: 0, warranty_days: 0, line_items: [{}] }) });
   rec('S.4', 'SEC', 'INFO', `operator role posting a quote -> ${s4.status}`);
+
+  // ---------- L: lifecycle, dispute and refund (added by T-001) ----------
+  const fakeIntentId = intentRow.rows[0]?.id;
+  const holdRow = await pool.query(`SELECT id, amount_tomans FROM escrow_holds LIMIT 1`);
+  // reset to a clean post-payment state so the lifecycle can be walked
+  await pool.query(`UPDATE service_orders SET status='paid' WHERE id=$1`, [b10.id]);
+  if (holdRow.rows[0]) await pool.query(`UPDATE escrow_holds SET status='held', release_after=NOW() - INTERVAL '1 day', released_at=NULL WHERE id=$1`, [holdRow.rows[0].id]);
+  const rS = await POST(`${base}/v1/orders/${b10.id}/start`, techToken);
+  rec('L1.1', 'J4', rS.status === 200 ? 'PASS' : 'FAIL', `POST /v1/orders/:id/start (paid -> in_progress) -> ${rS.status} ${JSON.stringify(await j(rS))}`);
+  const rC0 = await POST(`${base}/v1/orders/${b10.id}/complete`, techToken);
+  const bC0 = await j(rC0);
+  rec('L1.2', 'J4', rC0.status === 200 ? 'PASS' : 'FAIL', `POST /v1/orders/:id/complete with before+after evidence -> ${rC0.status} ${JSON.stringify(bC0)}`);
+  // release must now succeed because the order is completed
+  const rR1 = await POST(`${base}/v1/admin/escrows/release-due`, opToken);
+  const bR1 = await j(rR1);
+  rec('L1.3', 'J6', bR1.released === 1 ? 'PASS' : 'FAIL', `release-due on a COMPLETED order -> ${rR1.status} ${JSON.stringify(bR1)} (expect released=1)`);
+  const rR1b = await POST(`${base}/v1/admin/escrows/release-due`, opToken);
+  const bR1b = await j(rR1b);
+  rec('L1.4', 'J6', bR1b.released === 0 ? 'PASS' : 'FAIL', `immediate re-run of release-due -> ${rR1b.status} ${JSON.stringify(bR1b)} (idempotency: expect released=0)`);
+
+  // fresh order+payment to exercise the dispute path
+  const rO2 = await POST(`${base}/v1/orders`, custToken, { category: 'لباسشویی', problem_description: 'دیگ گرم نمی‌شود' });
+  const bO2 = await j(rO2);
+  const rQ2 = await POST(`${base}/v1/orders/${bO2.id}/quotes`, techToken, { labor_tomans: 400000, parts_tomans: 200000, warranty_days: 30, line_items: [{ name: 'المنت', tier: 'original', price_tomans: 200000 }] });
+  const bQ2 = await j(rQ2);
+  await POST(`${base}/v1/quotes/${bQ2.id}/accept`, custToken);
+  const intent2 = 'cccccccc-0000-4000-8000-000000000003';
+  await pool.query(`INSERT INTO payment_intents (id, customer_id, technician_id, provider, amount_tomans, amount_rials, description, idempotency_key, status, quote_id, paid_at)
+                    VALUES ($1,$2,$3,'zarinpal',600000,6000000,'audit',  'audit-idem-0002','paid',$4,NOW())`, [intent2, custId, opId, bQ2.id]);
+  await pool.query(`UPDATE quotes SET status='paid' WHERE id=$1`, [bQ2.id]);
+  await pool.query(`UPDATE service_orders SET status='paid' WHERE id=$1`, [bO2.id]);
+  await pool.query(`INSERT INTO escrow_holds (id, payment_intent_id, customer_id, technician_id, amount_tomans, release_after, status)
+                    VALUES (gen_random_uuid(),$1,$2,$3,90000,NOW() - INTERVAL '1 day','held')`, [intent2, custId, opId]);
+  const rR2 = await POST(`${base}/v1/admin/escrows/release-due`, opToken);
+  const bR2 = await j(rR2);
+  rec('L2.1', 'J6', bR2.released === 0 ? 'PASS' : 'FAIL', `release-due on a PAID-but-not-completed order -> ${rR2.status} ${JSON.stringify(bR2)} (expect released=0)`);
+  const rDs = await POST(`${base}/v1/orders/${bO2.id}/dispute`, custToken, { reason: 'دستگاه پس از تعمیر همچنان کار نمی‌کند' });
+  const bDs = await j(rDs);
+  rec('L2.2', 'J5', rDs.status === 200 && bDs.holds_frozen === 1 ? 'PASS' : 'FAIL', `POST /v1/orders/:id/dispute -> ${rDs.status} ${JSON.stringify(bDs)}`);
+  const hs = await pool.query(`SELECT h.status FROM escrow_holds h JOIN payment_intents p ON p.id=h.payment_intent_id WHERE p.id=$1`, [intent2]);
+  rec('L2.3', 'J5', hs.rows[0]?.status === 'frozen' ? 'PASS' : 'FAIL', `escrow_holds.status after dispute -> ${hs.rows[0]?.status} (expect frozen)`);
+  const df = await pool.query(`SELECT p.account, p.direction, p.amount_tomans FROM ledger_entries e JOIN ledger_postings p ON p.entry_id=e.id WHERE e.event_type='dispute_freeze' ORDER BY p.account`);
+  rec('L2.4', 'J5', df.rows.length === 2 ? 'PASS' : 'FAIL', `dispute_freeze ledger postings=${df.rows.length} ${JSON.stringify(df.rows)}`);
+  const rR3 = await POST(`${base}/v1/admin/escrows/release-due`, opToken);
+  const bR3 = await j(rR3);
+  rec('L2.5', 'J6', bR3.released === 0 ? 'PASS' : 'FAIL', `release-due on a FROZEN hold -> ${rR3.status} ${JSON.stringify(bR3)} (expect released=0)`);
+  const hold2 = await pool.query(`SELECT id FROM escrow_holds WHERE payment_intent_id=$1`, [intent2]);
+  const rRf = await POST(`${base}/v1/admin/escrows/${hold2.rows[0].id}/refund`, opToken, { reason: 'بازپرداخت کامل به مشتری پس از بررسی اختلاف' });
+  rec('L3.1', 'J5', rRf.status === 200 ? 'PASS' : 'FAIL', `POST /v1/admin/escrows/:holdId/refund -> ${rRf.status} ${JSON.stringify(await j(rRf))}`);
+  const rRf2 = await POST(`${base}/v1/admin/escrows/${hold2.rows[0].id}/refund`, opToken, { reason: 'تکرار بازپرداخت برای تست idempotency' });
+  rec('L3.2', 'J5', rRf2.status === 409 ? 'PASS' : 'FAIL', `second refund on the same hold -> ${rRf2.status} (expect 409)`);
+  const bal2 = await pool.query(`SELECT COALESCE(SUM(CASE WHEN direction='debit' THEN amount_tomans ELSE -amount_tomans END),0) AS net FROM ledger_postings`);
+  rec('L3.3', 'J6', Number(bal2.rows[0].net) === 0 ? 'PASS' : 'FAIL', `ledger still balanced after freeze+refund net=${bal2.rows[0].net} (expect 0)`);
+
+  // ---------- R / O / S probes for the new hardening ----------
+  const rBad = await POST(`${base}/v1/admin/kyc/not-a-uuid/decision`, opToken, { status: 'approved', reason: 'probe' });
+  rec('R.1', 'RELY', rBad.status === 400 ? 'PASS' : 'FAIL', `malformed UUID path param -> ${rBad.status} (expect 400, was 500)`);
+  const rM = await fetch(`${base}/metrics`);
+  const mText = await rM.text();
+  rec('O.1', 'OBS', (rM.status === 200 && mText.includes('oosta_http_requests_total') && mText.includes('oosta_escrow_holds_due')) ? 'PASS' : 'FAIL', `GET /metrics -> ${rM.status} lines=${mText.trim().split('\n').length} has_requests_total=${mText.includes('oosta_http_requests_total')}`);
 
   const counts = results.reduce((a, r) => { a[r.status] = (a[r.status] ?? 0) + 1; return a; }, {});
   console.log('\nSUMMARY ' + JSON.stringify(counts));

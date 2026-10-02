@@ -25,6 +25,16 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+    // Declared explicitly rather than left implicit in the secrets plugin, so the single
+    // non-secret value the APK is allowed to know is visible in the build script.
+    // Supply it with -PAUTH_API_BASE_URL=https://your-host or in a root .env file (git-ignored).
+    // OostaApiConfig rejects a blank or placeholder value at runtime by design.
+    buildConfigField(
+      "String",
+      "AUTH_API_BASE_URL",
+      "\"${(project.findProperty("AUTH_API_BASE_URL") as String?) ?: ""}\""
+    )
   }
 
   signingConfigs {

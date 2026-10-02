@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import Fastify from 'fastify';
 import pg from 'pg';
 import { generateDiagnosis, AiUnavailableError } from './ai.js';
-import { authenticatedUser, requireUser } from './auth.js';
+import { authenticatedUser, requireActiveUser, requireUser } from './auth.js';
 import { loadConfig } from './config.js';
 import { publicFeatures } from './feature-flags.js';
 import { sendKavenegarOtp } from './kavenegar.js';
@@ -22,8 +22,32 @@ const DEFAULT_ESCROW_DAYS = 30;
 const MAX_REQUEST_BODY_BYTES = 6 * 1024 * 1024;
 
 const config = loadConfig();
-const pool = new pg.Pool({ connectionString: config.databaseUrl, max: 10 });
-const app = Fastify({ logger: true, bodyLimit: MAX_REQUEST_BODY_BYTES });
+// Bounded on purpose: without these a single hung query pins a request forever and, at
+// max:10, ten of them exhaust the pool and take the whole service down.
+const pool = new pg.Pool({
+  connectionString: config.databaseUrl,
+  max: 10,
+  connectionTimeoutMillis: 5_000,
+  idleTimeoutMillis: 30_000,
+  options: '-c statement_timeout=15000'
+});
+// Render terminates TLS and forwards to this container. Without trustProxy, request.ip is the
+// proxy's address, which would make quote_acceptances.acceptance_ip useless as dispute evidence.
+const app = Fastify({ logger: true, bodyLimit: MAX_REQUEST_BODY_BYTES, trustProxy: 1 });
+
+// --- Minimal in-process metrics. Counters are plain integers exposed at GET /metrics. ---
+const metrics = {
+  requests: new Map(),      // "route|status_class" -> count
+  providerFailures: new Map(), // provider -> count
+  startedAt: Date.now()
+};
+function bumpRequest(route, status) {
+  const key = `${route}|${Math.floor(status / 100)}xx`;
+  metrics.requests.set(key, (metrics.requests.get(key) ?? 0) + 1);
+}
+function bumpProviderFailure(provider) {
+  metrics.providerFailures.set(provider, (metrics.providerFailures.get(provider) ?? 0) + 1);
+}
 
 app.addHook('onRequest', async (request, reply) => {
   const origin = request.headers.origin;
@@ -38,6 +62,10 @@ app.addHook('onRequest', async (request, reply) => {
     reply.header('access-control-allow-headers', 'authorization, content-type, idempotency-key');
     return reply.code(204).send();
   }
+});
+
+app.addHook('onResponse', async (request, reply) => {
+  bumpRequest(request.routeOptions?.url ?? request.url, reply.statusCode);
 });
 
 app.setErrorHandler((error, request, reply) => {
@@ -66,6 +94,17 @@ function requireCode(body) {
     throw error;
   }
   return code;
+}
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Malformed identifiers are a client error, not a server fault: pg would otherwise throw 22P02 and surface a 500. */
+function requireUuid(value, reply) {
+  if (!UUID_PATTERN.test(String(value ?? ''))) {
+    reply.code(400).send({ error: 'invalid_request', message: 'شناسهٔ درخواست معتبر نیست.' });
+    return null;
+  }
+  return String(value);
 }
 
 function requireIdempotencyKey(request) {
@@ -141,6 +180,34 @@ app.get('/health', async () => {
   return { status: 'ok' };
 });
 
+app.get('/metrics', async (request, reply) => {
+  const lines = [
+    '# TYPE oosta_process_uptime_seconds gauge',
+    `oosta_process_uptime_seconds ${Math.round((Date.now() - metrics.startedAt) / 1000)}`,
+    '# TYPE oosta_pool_waiting gauge',
+    `oosta_pool_waiting ${pool.waitingCount}`,
+    '# TYPE oosta_pool_idle gauge',
+    `oosta_pool_idle ${pool.idleCount}`,
+    '# TYPE oosta_pool_total gauge',
+    `oosta_pool_total ${pool.totalCount}`,
+    '# TYPE oosta_http_requests_total counter'
+  ];
+  for (const [key, value] of metrics.requests) {
+    const [route, statusClass] = key.split('|');
+    lines.push(`oosta_http_requests_total{route="${route}",status_class="${statusClass}"} ${value}`);
+  }
+  lines.push('# TYPE oosta_provider_failures_total counter');
+  for (const [provider, value] of metrics.providerFailures) {
+    lines.push(`oosta_provider_failures_total{provider="${provider}"} ${value}`);
+  }
+  const due = await pool.query(
+    `SELECT COUNT(*)::int AS n FROM escrow_holds WHERE status = 'held' AND release_after <= NOW()`
+  ).catch(() => ({ rows: [{ n: -1 }] }));
+  lines.push('# TYPE oosta_escrow_holds_due gauge');
+  lines.push(`oosta_escrow_holds_due ${due.rows[0].n}`);
+  return reply.type('text/plain; version=0.0.4').send(lines.join('\n') + '\n');
+});
+
 app.get('/v1/public/features', async () => ({ features: publicFeatures(config) }));
 
 app.post('/v1/auth/request-otp', async (request, reply) => {
@@ -199,6 +266,7 @@ app.post('/v1/auth/request-otp', async (request, reply) => {
     await pool.query(`UPDATE otp_challenges SET status = 'pending', sent_at = NOW(), provider_message_id = $2 WHERE id = $1`, [challengeId, providerMessageId]);
   } catch (error) {
     await pool.query(`UPDATE otp_challenges SET status = 'failed', failure_reason = $2 WHERE id = $1`, [challengeId, String(error.message).slice(0, 500)]);
+    bumpProviderFailure('kavenegar');
     request.log.error({ err: error, phoneRef: phoneLogReference(phone) }, 'OTP provider delivery failed');
     return reply.code(502).send({ error: 'sms_unavailable', message: 'ارسال پیامک موقتاً ممکن نیست. لطفاً چند دقیقه دیگر دوباره تلاش کنید.' });
   }
@@ -271,8 +339,70 @@ app.get('/v1/me', async (request, reply) => {
   return { user: { id: user.id, phone: user.phone_e164, role: user.role } };
 });
 
+// Server-backed order history. Without these the device passport dies with the install,
+// which contradicts the durability the product promises.
+app.get('/v1/orders', async (request, reply) => {
+  const user = await requireActiveUser(request, reply, config, pool);
+  if (!user) return;
+  const limit = Math.min(Math.max(Number.parseInt(String(request.query?.limit ?? 50), 10) || 50, 1), 100);
+  const offset = Math.max(Number.parseInt(String(request.query?.offset ?? 0), 10) || 0, 0);
+  const scope = ['operator', 'admin'].includes(user.role);
+  const params = scope ? [limit, offset] : [user.sub, limit, offset];
+  const { rows } = await pool.query(
+    `SELECT o.id, o.category, o.problem_description, o.status, o.created_at, o.updated_at,
+            q.id AS quote_id, q.total_tomans, q.status AS quote_status, q.warranty_days
+     FROM service_orders o
+     LEFT JOIN LATERAL (
+       SELECT * FROM quotes WHERE order_id = o.id
+       ORDER BY CASE status WHEN 'accepted' THEN 0 WHEN 'paid' THEN 1 ELSE 2 END, created_at DESC
+       LIMIT 1
+     ) q ON TRUE
+     ${scope ? '' : 'WHERE o.customer_id = $1'}
+     ORDER BY o.created_at DESC
+     LIMIT $${scope ? 1 : 2} OFFSET $${scope ? 2 : 3}`,
+    params
+  );
+  return { orders: rows, limit, offset };
+});
+
+app.get('/v1/orders/:orderId', async (request, reply) => {
+  const user = await requireActiveUser(request, reply, config, pool);
+  if (!user) return;
+  const orderId = requireUuid(request.params.orderId, reply);
+  if (!orderId) return;
+  const { rows } = await pool.query(
+    `SELECT o.*,
+            COALESCE(json_agg(DISTINCT jsonb_build_object(
+              'id', q.id, 'revision', q.revision, 'status', q.status, 'technician_id', q.technician_id,
+              'labor_tomans', q.labor_tomans, 'parts_tomans', q.parts_tomans, 'total_tomans', q.total_tomans,
+              'warranty_days', q.warranty_days, 'line_items', q.line_items, 'created_at', q.created_at
+            )) FILTER (WHERE q.id IS NOT NULL), '[]') AS quotes,
+            COALESCE(json_agg(DISTINCT jsonb_build_object(
+              'id', e.id, 'phase', e.phase, 'object_reference', e.object_reference,
+              'object_hash', e.object_hash, 'created_at', e.created_at
+            )) FILTER (WHERE e.id IS NOT NULL), '[]') AS evidence
+     FROM service_orders o
+     LEFT JOIN quotes q ON q.order_id = o.id
+     LEFT JOIN job_evidence e ON e.order_id = o.id
+     WHERE o.id = $1
+     GROUP BY o.id`, [orderId]);
+  const order = rows[0];
+  if (!order) return reply.code(404).send({ error: 'not_found', message: 'سفارش یافت نشد.' });
+  const privileged = ['operator', 'admin'].includes(user.role);
+  const isOwner = order.customer_id === user.sub;
+  const isTechnician = order.quotes.some((q) => q.technician_id === user.sub);
+  if (!privileged && !isOwner && !isTechnician) {
+    return reply.code(404).send({ error: 'not_found', message: 'سفارش یافت نشد.' });
+  }
+  const holds = await pool.query(
+    `SELECT h.id, h.amount_tomans, h.status, h.release_after, h.released_at
+     FROM escrow_holds h JOIN payment_intents p ON p.id = h.payment_intent_id
+     JOIN quotes q ON q.id = p.quote_id WHERE q.order_id = $1`, [orderId]);
+  return { order: { ...order, escrow_holds: holds.rows } };
+});
+
 app.post('/v1/ai/diagnoses', async (request, reply) => {
-  const user = requireUser(request, reply, config);
+  const user = await requireActiveUser(request, reply, config, pool);
   if (!user || !featureEnabled(reply, config.aiEnabled, 'ai_diagnosis')) return;
   const category = String(request.body?.category ?? '').trim();
   const symptom = String(request.body?.symptom ?? '').trim();
@@ -287,6 +417,7 @@ app.post('/v1/ai/diagnoses', async (request, reply) => {
     }
     return { result: result.text, request_id: result.requestId, preliminary: true };
   } catch (error) {
+    bumpProviderFailure('gemini');
     request.log.warn({ err: error, userId: user.sub }, 'AI diagnosis unavailable');
     const message = error instanceof AiUnavailableError ? 'تشخیص هوشمند موقتاً در دسترس نیست. برای بررسی ایمن با پشتیبانی تماس بگیرید.' : 'ثبت تشخیص موقتاً ممکن نیست.';
     return reply.code(503).send({ error: 'ai_unavailable', message });
@@ -294,7 +425,7 @@ app.post('/v1/ai/diagnoses', async (request, reply) => {
 });
 
 app.post('/v1/technicians/apply', async (request, reply) => {
-  const user = requireUser(request, reply, config, ['customer']);
+  const user = await requireActiveUser(request, reply, config, pool, ['customer']);
   if (!user) return;
   const client = await pool.connect();
   try {
@@ -323,7 +454,7 @@ app.post('/v1/technicians/apply', async (request, reply) => {
 });
 
 app.post('/v1/technicians/kyc', async (request, reply) => {
-  const user = requireUser(request, reply, config, ['technician']);
+  const user = await requireActiveUser(request, reply, config, pool, ['technician']);
   if (!user) return;
   const documentReference = String(request.body?.document_reference ?? '').trim();
   const documentHash = String(request.body?.document_hash ?? '').trim().toLowerCase();
@@ -360,15 +491,17 @@ app.post('/v1/technicians/kyc', async (request, reply) => {
 });
 
 app.post('/v1/admin/kyc/:caseId/decision', async (request, reply) => {
-  const admin = requireUser(request, reply, config, ['operator', 'admin']);
+  const admin = await requireActiveUser(request, reply, config, pool, ['operator', 'admin']);
   if (!admin) return;
+  const caseId = requireUuid(request.params.caseId, reply);
+  if (!caseId) return;
   const status = String(request.body?.status ?? '');
   const reason = String(request.body?.reason ?? '').trim().slice(0, 1_000);
   if (!['approved', 'rejected', 'suspended'].includes(status) || reason.length < 3) return reply.code(400).send({ error: 'invalid_request', message: 'تصمیم بررسی معتبر نیست.' });
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const { rows } = await client.query(`SELECT * FROM kyc_cases WHERE id = $1 FOR UPDATE`, [request.params.caseId]);
+    const { rows } = await client.query(`SELECT * FROM kyc_cases WHERE id = $1 FOR UPDATE`, [caseId]);
     const kycCase = rows[0];
     if (!kycCase) {
       await client.query('ROLLBACK');
@@ -393,7 +526,7 @@ app.post('/v1/admin/kyc/:caseId/decision', async (request, reply) => {
 });
 
 app.post('/v1/orders', async (request, reply) => {
-  const user = requireUser(request, reply, config);
+  const user = await requireActiveUser(request, reply, config, pool, ['customer']);
   if (!user || !featureEnabled(reply, config.newBookingsEnabled, 'new_bookings')) return;
   const category = String(request.body?.category ?? '').trim();
   const problemDescription = String(request.body?.problem_description ?? '').replace(/\s+/g, ' ').trim();
@@ -401,13 +534,19 @@ app.post('/v1/orders', async (request, reply) => {
     return reply.code(400).send({ error: 'invalid_request', message: 'اطلاعات درخواست معتبر نیست.' });
   }
   const orderId = crypto.randomUUID();
-  await pool.query(
-    `INSERT INTO service_orders (id, customer_id, category, problem_description, status)
-     VALUES ($1, $2, $3, $4, 'submitted')`, [orderId, user.sub, category, problemDescription]
-  );
   const client = await pool.connect();
   try {
+    // One transaction: an order and its audit row either both exist or neither does.
+    await client.query('BEGIN');
+    await client.query(
+      `INSERT INTO service_orders (id, customer_id, category, problem_description, status)
+       VALUES ($1, $2, $3, $4, 'submitted')`, [orderId, user.sub, category, problemDescription]
+    );
     await audit(client, { actorUserId: user.sub, action: 'order.submitted', subjectType: 'order', subjectId: orderId });
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
   } finally {
     client.release();
   }
@@ -415,8 +554,10 @@ app.post('/v1/orders', async (request, reply) => {
 });
 
 app.post('/v1/orders/:orderId/quotes', async (request, reply) => {
-  const technician = requireUser(request, reply, config, ['technician']);
+  const technician = await requireActiveUser(request, reply, config, pool, ['technician']);
   if (!technician || !featureEnabled(reply, config.technicianMatchingEnabled, 'technician_matching')) return;
+  const orderId = requireUuid(request.params.orderId, reply);
+  if (!orderId) return;
   const laborTomans = Number(request.body?.labor_tomans);
   const partsTomans = Number(request.body?.parts_tomans);
   const warrantyDays = Number(request.body?.warranty_days);
@@ -430,7 +571,7 @@ app.post('/v1/orders/:orderId/quotes', async (request, reply) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const orderResult = await client.query(`SELECT * FROM service_orders WHERE id = $1 FOR UPDATE`, [request.params.orderId]);
+    const orderResult = await client.query(`SELECT * FROM service_orders WHERE id = $1 FOR UPDATE`, [orderId]);
     const order = orderResult.rows[0];
     if (!order || !['submitted', 'quoted'].includes(order.status)) {
       await client.query('ROLLBACK');
@@ -457,15 +598,17 @@ app.post('/v1/orders/:orderId/quotes', async (request, reply) => {
 });
 
 app.post('/v1/quotes/:quoteId/accept', async (request, reply) => {
-  const customer = requireUser(request, reply, config, ['customer']);
+  const customer = await requireActiveUser(request, reply, config, pool, ['customer']);
   if (!customer || !featureEnabled(reply, config.newBookingsEnabled, 'new_bookings')) return;
+  const quoteId = requireUuid(request.params.quoteId, reply);
+  if (!quoteId) return;
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const result = await client.query(
       `SELECT q.*, o.customer_id, o.status AS order_status FROM quotes q
        JOIN service_orders o ON o.id = q.order_id
-       WHERE q.id = $1 FOR UPDATE`, [request.params.quoteId]
+       WHERE q.id = $1 FOR UPDATE`, [quoteId]
     );
     const quote = result.rows[0];
     if (!quote || quote.customer_id !== customer.sub || quote.status !== 'sent') {
@@ -488,29 +631,241 @@ app.post('/v1/quotes/:quoteId/accept', async (request, reply) => {
 });
 
 app.post('/v1/orders/:orderId/evidence', async (request, reply) => {
-  const technician = requireUser(request, reply, config, ['technician']);
+  const technician = await requireActiveUser(request, reply, config, pool, ['technician']);
   if (!technician) return;
+  const orderId = requireUuid(request.params.orderId, reply);
+  if (!orderId) return;
   const phase = String(request.body?.phase ?? '');
   const objectReference = String(request.body?.object_reference ?? '').trim();
   const objectHash = String(request.body?.object_hash ?? '').trim().toLowerCase();
   if (!['before', 'after'].includes(phase) || objectReference.length < 8 || objectReference.length > 500 || !/^sha256:[a-f0-9]{64}$/.test(objectHash)) {
     return reply.code(400).send({ error: 'invalid_request', message: 'مدرک کار معتبر نیست.' });
   }
-  const { rows } = await pool.query(
-    `SELECT q.id FROM quotes q WHERE q.order_id = $1 AND q.technician_id = $2 AND q.status IN ('accepted', 'paid') LIMIT 1`,
-    [request.params.orderId, technician.sub]
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const orderResult = await client.query(`SELECT status FROM service_orders WHERE id = $1 FOR UPDATE`, [orderId]);
+    const order = orderResult.rows[0];
+    // Evidence is proof that work happened. It cannot be attached to an order that has not been
+    // paid for, and it cannot be attached after the order has been cancelled or disputed.
+    if (!order || !['paid', 'in_progress'].includes(order.status)) {
+      await client.query('ROLLBACK');
+      return reply.code(409).send({ error: 'invalid_order_state', message: 'امکان ثبت مدرک در این وضعیت سفارش وجود ندارد.' });
+    }
+    const { rows } = await client.query(
+      `SELECT q.id FROM quotes q WHERE q.order_id = $1 AND q.technician_id = $2 AND q.status IN ('accepted', 'paid') LIMIT 1`,
+      [orderId, technician.sub]
+    );
+    if (!rows[0]) {
+      await client.query('ROLLBACK');
+      return reply.code(403).send({ error: 'forbidden', message: 'این سفارش به شما واگذار نشده است.' });
+    }
+    // Approval is re-checked at write time: a technician suspended after acceptance must not
+    // keep adding to the record.
+    await requireApprovedTechnician(client, technician.sub);
+    const evidenceId = crypto.randomUUID();
+    await client.query(
+      `INSERT INTO job_evidence (id, order_id, technician_id, phase, object_reference, object_hash)
+       VALUES ($1, $2, $3, $4, $5, $6)`, [evidenceId, orderId, technician.sub, phase, objectReference, objectHash.slice('sha256:'.length)]
+    );
+    await audit(client, { actorUserId: technician.sub, action: `evidence.${phase}`, subjectType: 'order', subjectId: orderId });
+    await client.query('COMMIT');
+    return reply.code(201).send({ id: evidenceId, phase });
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+});
+
+// ---- Order lifecycle. Without these transitions escrow released to technicians for work
+// that may never have happened, and no dispute could ever be recorded. ----
+
+/** Loads the order and the caller's accepted/paid quote for it, under a row lock. */
+async function lockOrderForTechnician(client, orderId, technicianId) {
+  const orderResult = await client.query(`SELECT * FROM service_orders WHERE id = $1 FOR UPDATE`, [orderId]);
+  const order = orderResult.rows[0];
+  if (!order) return { error: { code: 404, body: { error: 'not_found', message: 'سفارش یافت نشد.' } } };
+  const quoteResult = await client.query(
+    `SELECT id FROM quotes WHERE order_id = $1 AND technician_id = $2 AND status IN ('accepted', 'paid') LIMIT 1`,
+    [orderId, technicianId]
   );
-  if (!rows[0]) return reply.code(403).send({ error: 'forbidden', message: 'این سفارش به شما واگذار نشده است.' });
-  const evidenceId = crypto.randomUUID();
-  await pool.query(
-    `INSERT INTO job_evidence (id, order_id, technician_id, phase, object_reference, object_hash)
-     VALUES ($1, $2, $3, $4, $5, $6)`, [evidenceId, request.params.orderId, technician.sub, phase, objectReference, objectHash.slice('sha256:'.length)]
-  );
-  return reply.code(201).send({ id: evidenceId, phase });
+  if (!quoteResult.rows[0]) return { error: { code: 403, body: { error: 'forbidden', message: 'این سفارش به شما واگذار نشده است.' } } };
+  return { order, quoteId: quoteResult.rows[0].id };
+}
+
+app.post('/v1/orders/:orderId/start', async (request, reply) => {
+  const technician = await requireActiveUser(request, reply, config, pool, ['technician']);
+  if (!technician) return;
+  const orderId = requireUuid(request.params.orderId, reply);
+  if (!orderId) return;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const locked = await lockOrderForTechnician(client, orderId, technician.sub);
+    if (locked.error) { await client.query('ROLLBACK'); return reply.code(locked.error.code).send(locked.error.body); }
+    if (locked.order.status !== 'paid') {
+      await client.query('ROLLBACK');
+      return reply.code(409).send({ error: 'invalid_order_state', message: 'فقط سفارش پرداخت‌شده قابل شروع است.' });
+    }
+    await client.query(`UPDATE service_orders SET status = 'in_progress', updated_at = NOW() WHERE id = $1`, [orderId]);
+    await audit(client, { actorUserId: technician.sub, action: 'order.started', subjectType: 'order', subjectId: orderId });
+    await client.query('COMMIT');
+    return { id: orderId, status: 'in_progress' };
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+});
+
+app.post('/v1/orders/:orderId/complete', async (request, reply) => {
+  const technician = await requireActiveUser(request, reply, config, pool, ['technician']);
+  if (!technician) return;
+  const orderId = requireUuid(request.params.orderId, reply);
+  if (!orderId) return;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const locked = await lockOrderForTechnician(client, orderId, technician.sub);
+    if (locked.error) { await client.query('ROLLBACK'); return reply.code(locked.error.code).send(locked.error.body); }
+    if (locked.order.status !== 'in_progress') {
+      await client.query('ROLLBACK');
+      return reply.code(409).send({ error: 'invalid_order_state', message: 'فقط سفارش در حال انجام قابل تکمیل است.' });
+    }
+    // Completion is what unlocks escrow release, so it requires both halves of the visual record.
+    const evidence = await client.query(
+      `SELECT COUNT(DISTINCT phase)::int AS n FROM job_evidence WHERE order_id = $1 AND technician_id = $2`,
+      [orderId, technician.sub]
+    );
+    if (evidence.rows[0].n < 2) {
+      await client.query('ROLLBACK');
+      return reply.code(409).send({ error: 'evidence_required', message: 'ثبت مدرک قبل و بعد از کار پیش از تکمیل الزامی است.' });
+    }
+    await client.query(`UPDATE service_orders SET status = 'completed', updated_at = NOW() WHERE id = $1`, [orderId]);
+    await audit(client, { actorUserId: technician.sub, action: 'order.completed', subjectType: 'order', subjectId: orderId });
+    await client.query('COMMIT');
+    return { id: orderId, status: 'completed' };
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+});
+
+app.post('/v1/orders/:orderId/dispute', async (request, reply) => {
+  const actor = await requireActiveUser(request, reply, config, pool);
+  if (!actor) return;
+  const orderId = requireUuid(request.params.orderId, reply);
+  if (!orderId) return;
+  const reason = String(request.body?.reason ?? '').replace(/\s+/g, ' ').trim();
+  if (reason.length < 5 || reason.length > 2000) {
+    return reply.code(400).send({ error: 'invalid_request', message: 'شرح اختلاف معتبر نیست.' });
+  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const orderResult = await client.query(`SELECT * FROM service_orders WHERE id = $1 FOR UPDATE`, [orderId]);
+    const order = orderResult.rows[0];
+    if (!order) { await client.query('ROLLBACK'); return reply.code(404).send({ error: 'not_found', message: 'سفارش یافت نشد.' }); }
+    const privileged = ['operator', 'admin'].includes(actor.role);
+    if (!privileged && order.customer_id !== actor.sub) {
+      await client.query('ROLLBACK');
+      return reply.code(404).send({ error: 'not_found', message: 'سفارش یافت نشد.' });
+    }
+    if (!['paid', 'in_progress', 'completed'].includes(order.status)) {
+      await client.query('ROLLBACK');
+      return reply.code(409).send({ error: 'invalid_order_state', message: 'این سفارش قابل ثبت اختلاف نیست.' });
+    }
+    await client.query(`UPDATE service_orders SET status = 'disputed', updated_at = NOW() WHERE id = $1`, [orderId]);
+    const hold = await client.query(
+      `SELECT h.* FROM escrow_holds h JOIN payment_intents p ON p.id = h.payment_intent_id
+       JOIN quotes q ON q.id = p.quote_id WHERE q.order_id = $1 AND h.status = 'held' FOR UPDATE OF h`, [orderId]);
+    let frozen = 0;
+    for (const h of hold.rows) {
+      // A dispute claws the technician's 85% back into escrow liability. It is a real, balanced
+      // movement: the money is no longer payable until a human resolves the case.
+      const technicianShare = Number(h.amount_tomans);
+      const capture = await client.query(
+        `SELECT p.amount_tomans FROM payment_intents p WHERE p.id = $1`, [h.payment_intent_id]);
+      const total = Number(capture.rows[0]?.amount_tomans ?? 0);
+      const payable = total - technicianShare;
+      if (payable > 0) {
+        await postLedgerEntry(client, {
+          idempotencyKey: `dispute-freeze:${h.id}`,
+          eventType: 'dispute_freeze',
+          paymentIntentId: h.payment_intent_id,
+          orderReference: orderId,
+          metadata: { escrowHoldId: h.id, reason: reason.slice(0, 500) },
+          postings: [
+            { account: 'technician_payable', direction: 'debit', amountTomans: payable },
+            { account: 'escrow_liability', direction: 'credit', amountTomans: payable }
+          ]
+        });
+      }
+      await client.query(`UPDATE escrow_holds SET status = 'frozen' WHERE id = $1`, [h.id]);
+      frozen += 1;
+    }
+    await audit(client, { actorUserId: actor.sub, action: 'order.disputed', subjectType: 'order', subjectId: orderId, metadata: { reason: reason.slice(0, 500), holdsFrozen: frozen } });
+    await client.query('COMMIT');
+    return { id: orderId, status: 'disputed', holds_frozen: frozen };
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+});
+
+app.post('/v1/admin/escrows/:holdId/refund', async (request, reply) => {
+  const operator = await requireActiveUser(request, reply, config, pool, ['operator', 'admin']);
+  if (!operator) return;
+  const holdId = requireUuid(request.params.holdId, reply);
+  if (!holdId) return;
+  const reason = String(request.body?.reason ?? '').replace(/\s+/g, ' ').trim();
+  if (reason.length < 5 || reason.length > 2000) {
+    return reply.code(400).send({ error: 'invalid_request', message: 'دلیل بازپرداخت معتبر نیست.' });
+  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows } = await client.query(`SELECT * FROM escrow_holds WHERE id = $1 FOR UPDATE`, [holdId]);
+    const hold = rows[0];
+    if (!hold) { await client.query('ROLLBACK'); return reply.code(404).send({ error: 'not_found', message: 'نگه‌داشت وجه یافت نشد.' }); }
+    if (hold.status === 'released' || hold.status === 'refunded') {
+      await client.query('ROLLBACK');
+      return reply.code(409).send({ error: 'invalid_hold_state', message: 'این نگه‌داشت قبلاً تسویه یا بازپرداخت شده است.' });
+    }
+    const amount = Number(hold.amount_tomans);
+    const entry = await postLedgerEntry(client, {
+      idempotencyKey: `escrow-refund:${hold.id}`,
+      eventType: 'refund',
+      paymentIntentId: hold.payment_intent_id,
+      metadata: { escrowHoldId: hold.id, reason: reason.slice(0, 500) },
+      postings: [
+        { account: 'escrow_liability', direction: 'debit', amountTomans: amount },
+        { account: 'customer_refund_payable', direction: 'credit', amountTomans: amount }
+      ]
+    });
+    if (!entry.duplicate) {
+      await client.query(`UPDATE escrow_holds SET status = 'refunded' WHERE id = $1`, [hold.id]);
+      await audit(client, { actorUserId: operator.sub, action: 'escrow.refunded', subjectType: 'escrow_hold', subjectId: hold.id, metadata: { reason: reason.slice(0, 500) } });
+    }
+    await client.query('COMMIT');
+    return { id: hold.id, status: 'refunded', duplicate: entry.duplicate };
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 });
 
 app.post('/v1/payments/zarinpal/start', async (request, reply) => {
-  const user = requireUser(request, reply, config, ['customer']);
+  const user = await requireActiveUser(request, reply, config, pool, ['customer']);
   if (!user || !featureEnabled(reply, config.paymentsEnabled, 'payments')) return;
   const idempotencyKey = requireIdempotencyKey(request);
   const quoteId = String(request.body?.quote_id ?? '').trim();
@@ -579,6 +934,7 @@ app.post('/v1/payments/zarinpal/start', async (request, reply) => {
     return reply.code(201).send({ id: intent.id, status: 'pending', checkout_url: payment.paymentUrl });
   } catch (error) {
     await pool.query(`UPDATE payment_intents SET status = 'failed' WHERE id = $1`, [intent.id]);
+    bumpProviderFailure('zarinpal');
     request.log.error({ err: error, paymentIntentId: intent.id }, 'Unable to create Zarinpal payment');
     return reply.code(502).send({ error: 'payment_unavailable', message: 'ایجاد پرداخت موقتاً ممکن نیست.' });
   }
@@ -638,20 +994,27 @@ app.get('/v1/payments/zarinpal/callback', async (request, reply) => {
 });
 
 app.post('/v1/admin/escrows/release-due', async (request, reply) => {
-  const operator = requireUser(request, reply, config, ['operator', 'admin']);
+  const operator = await requireActiveUser(request, reply, config, pool, ['operator', 'admin']);
   if (!operator || !featureEnabled(reply, config.escrowReleaseEnabled, 'escrow_release')) return;
   const client = await pool.connect();
   let released = 0;
   try {
     await client.query('BEGIN');
+    // Escrow is earned by finishing the job, not by the passage of time. A hold on an order that
+    // is not 'completed' - disputed, cancelled, or still in progress - must never auto-release.
     const { rows } = await client.query(
-      `SELECT h.* FROM escrow_holds h
+      `SELECT h.*, o.status AS order_status FROM escrow_holds h
+       JOIN payment_intents p ON p.id = h.payment_intent_id
+       JOIN quotes q ON q.id = p.quote_id
+       JOIN service_orders o ON o.id = q.order_id
        WHERE h.status = 'held' AND h.release_after <= NOW()
        ORDER BY h.release_after ASC FOR UPDATE SKIP LOCKED LIMIT 100`
     );
     for (const hold of rows) {
       // A hold without a technician assignment remains held for manual reconciliation.
       if (!hold.technician_id) continue;
+      // Nor may a hold on an unfinished or contested order.
+      if (hold.order_status !== 'completed') continue;
       const entry = await postLedgerEntry(client, {
         idempotencyKey: `escrow-release:${hold.id}`,
         eventType: 'escrow_release',

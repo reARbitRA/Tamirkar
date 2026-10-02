@@ -57,11 +57,13 @@ export async function generateDiagnosis({ config, category, symptom, images = []
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: image } });
   });
 
+  // The key travels in a header, never in the query string: query strings are routinely
+  // captured by egress proxies, load balancers and CDNs.
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent?key=${encodeURIComponent(config.geminiApiKey)}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent`,
     {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': config.geminiApiKey },
       body: JSON.stringify({
         contents: [{ parts }],
         generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }

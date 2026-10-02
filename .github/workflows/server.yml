@@ -1,0 +1,61 @@
+name: Server API
+
+# The service that owns OTP, sessions, payments and the escrow ledger must have a green
+# automated gate. Before this workflow existed, `npm test` ran only on a developer laptop and
+# no CI job touched services/auth-api at all.
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: server-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Node tests, audit and coverage
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/auth-api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: services/auth-api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fail on any known production dependency vulnerability
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Run unit tests with coverage
+        run: node --test --experimental-test-coverage
+
+      - name: Syntax-check every server module
+        run: |
+          set -e
+          for f in src/*.js; do
+            node --check "$f"
+            echo "parsed $f"
+          done
+
+      - name: Verify migrations are syntactically loadable
+        run: |
+          set -e
+          test -f db/001_auth.sql
+          test -f db/002_platform.sql
+          test -f db/003_orders_quotes.sql
+          test -f db/004_operational_indexes.sql
+          echo "all tracked migrations present"

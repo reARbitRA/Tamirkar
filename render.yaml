@@ -51,3 +51,34 @@ services:
         sync: false
       - key: PAYMENT_CALLBACK_BASE_URL
         sync: false
+
+  # Escrow release runs as a scheduled one-shot. It is idempotent, so a missed or duplicated
+  # run is safe; what is not safe is never running it, because holds would accumulate forever.
+  - type: cron
+    name: oosta-escrow-release
+    runtime: docker
+    rootDir: services/auth-api
+    plan: free
+    schedule: "17 3 * * *"
+    autoDeployTrigger: "off"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OTP_PEPPER
+        generateValue: true
+      - key: KAVENEGAR_API_KEY
+        sync: false
+      - key: KAVENEGAR_TEMPLATE
+        sync: false
+      - key: OTP_DEV_LOG_CODE
+        value: "false"
+      - key: FEATURE_ESCROW_RELEASE
+        value: "false"
+      - key: PLATFORM_API_BASE_URL
+        sync: false
+      - key: ESCROW_WORKER_TOKEN
+        sync: false
