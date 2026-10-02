@@ -66,13 +66,31 @@
 ═══════════════════════════════════════════════
 ```
 
-**Measurement provenance.** Every number in this section was measured at commit `4f1f312`. Commits
-after it changed only audit artifacts, documentation and the harness — `git diff 4f1f312..HEAD` over
-`services/auth-api/src`, `services/auth-api/db` and `services/auth-api/test` is empty, so nothing the
-score reads has moved. The battery was re-run at HEAD regardless: 37/37 tests with 0 skipped, line
-coverage 78.34%, harness 46 PASS / 1 PARTIAL / 1 INFO, smoke 31 routes with 0 server errors.
-Re-run `npm test`, `npm run test:coverage`, `npm run harness` and `npm run harness:smoke` if any of
-those four paths change.
+**Measurement provenance.** The adjudication numbers in this section were produced at `4f1f312`. The
+test suite has since grown — `test/capture.test.js` and `test/zarinpal-stub.mjs` were added at
+`89330a1`, executing the Zarinpal capture path against a stubbed provider — so the coverage figures
+below are stale and the current measurements are given here instead, taken at `cd78129`:
+
+| Measure | at `4f1f312` | now (`cd78129`) |
+|---|---|---|
+| tests | 37 pass / 0 skipped | **40 pass / 0 skipped** |
+| line coverage (all files) | 78.34% | **89.39%** |
+| `src/server.js` line | 59.06% | **81.65%** |
+| functions | 79.03% | 82.62% |
+| branches | 78.21% | 73.31% (see note) |
+| harness | 46 PASS / 1 PARTIAL / 1 INFO | unchanged |
+| smoke | 31 routes / 0 server errors | unchanged |
+
+Branch coverage fell while every other measure rose. That was checked rather than accepted: raw V8
+branch ranges for `src/server.js` went **total 209 → 364, covered 73 → 80**. Strictly more branches
+are covered; executing the capture path for the first time exposes more branch points than it covers.
+`R_point` is unchanged at **86.624** because D2 was already at its cap (the test-evidence formula
+saturates at 70% line coverage and we were at 78.34%).
+
+Nothing under `services/auth-api/src` or `services/auth-api/db` has changed since `4f1f312` —
+`git diff 4f1f312..HEAD` over those two paths is empty — so the findings and dimension scores still
+describe the shipped code. Re-run `npm test`, `npm run test:coverage`, `npm run harness` and
+`npm run harness:smoke` if they change.
 
 **Rubric gap, disclosed rather than papered over.** The specified verdict table has no row for
 `P_GO ≥ 0.85` with `P0 = 0` but `P1 > 2` or journeys not all `VERIFIED_WORKING`. Read literally,
