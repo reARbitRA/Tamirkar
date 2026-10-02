@@ -71,6 +71,21 @@ if _os.environ.get("AUDIT_TESTS"):
     MEASURED["tests_total"], MEASURED["tests_passed"], MEASURED["tests_failed"] = _t[0], _t[1], _t[2]
 if _os.environ.get("AUDIT_COV"):
     MEASURED["line_coverage_pct"] = float(_os.environ["AUDIT_COV"])
+# The three defaults above are the BASELINE measurements and have no other override, so a re-run
+# scored against a remediated tree still wrote baseline branch/function/server.js coverage into the
+# scorecard. That is how audit/02_scorecard_after2.json came to claim branch 79.29 / funcs 64.86 /
+# server.js 18.44 while the suite measured 78.21 / 79.03 / 59.06. Read them from the environment so
+# every number in the measured block describes the tree actually being scored.
+if _os.environ.get("AUDIT_BRANCH_COV"):
+    MEASURED["branch_coverage_pct"] = float(_os.environ["AUDIT_BRANCH_COV"])
+if _os.environ.get("AUDIT_FUNC_COV"):
+    MEASURED["func_coverage_pct"] = float(_os.environ["AUDIT_FUNC_COV"])
+if _os.environ.get("AUDIT_SERVER_COV"):
+    MEASURED["server_js_line_coverage_pct"] = float(_os.environ["AUDIT_SERVER_COV"])
+if _os.environ.get("AUDIT_NPM_AUDIT"):
+    MEASURED["npm_audit_total"] = int(_os.environ["AUDIT_NPM_AUDIT"])
+if _os.environ.get("AUDIT_SOURCE"):
+    MEASURED["source"] = _os.environ["AUDIT_SOURCE"]
 findings = {f["id"]: f for f in json.load(open(_FINDINGS_FILE))["findings"]}
 
 def dominant_grade(ids):

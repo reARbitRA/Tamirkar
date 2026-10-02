@@ -340,13 +340,13 @@
     "tests_passed": 37,
     "tests_failed": 0,
     "line_coverage_pct": 78.34,
-    "branch_coverage_pct": 79.29,
-    "func_coverage_pct": 64.86,
-    "server_js_line_coverage_pct": 18.44,
+    "branch_coverage_pct": 78.21,
+    "func_coverage_pct": 79.03,
+    "server_js_line_coverage_pct": 59.06,
     "npm_audit_total": 0,
     "installed_packages": 79,
     "copyleft_packages": 0,
-    "source": "node --test --experimental-test-coverage (exit 0); npm audit --json (total 0)"
+    "source": "node --test --experimental-test-coverage (exit 0) at commit be58bce against PostgreSQL 18.4; npm audit --omit=dev --json (total 0). server_js_line_coverage_pct read from the per-file coverage row for src/server.js, not the all-files row."
   },
   "R_point": 86.624,
   "R_mean": 83.404,
