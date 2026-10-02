@@ -39,6 +39,14 @@ Account erasure under the privacy policy. Any authenticated role may erase their
 
 Refused with `409 erasure_blocked` — and the counts that blocked it — while the user has any escrow hold in `held`, `pending` or `frozen` state, or any order not in `completed`, `cancelled` or `refunded` state where they are either the customer or the quoting technician. Returns `200` with `{"erased": true, "retained_for": ["financial_records", "audit_log"]}`, or `404` if the account is missing or inactive.
 
+## Identifier ownership
+
+Server-assigned identifiers are UUIDs and the client must never mint one. `POST /v1/devices` ignores
+any client-supplied id and returns the row created by the database default
+(`customer_devices.id UUID PRIMARY KEY DEFAULT gen_random_uuid()`), and every `:id` path segment is
+validated against a strict UUID pattern before it reaches SQL. A locally generated id of another
+shape is a client bug, not a server contract.
+
 ## Public capability flags
 
 ### `GET /v1/public/features`

@@ -1,29 +1,36 @@
-==============================================================================
-PHASE 3 SCORING ENGINE  (seed=424242, N=10000)
-==============================================================================
-dim    w   penalty   pre-cap      s_d  grade     min     max  caps
-D1    18     75.21     24.79    24.79      A   21.79   27.79  journey cap 100*4/7=57.14
-D2    14     39.98     60.02    60.02      B   52.02   68.03  test-evidence cap 100*(0.5*1.00+0.5*min(52.35/70,1))=87.39
-D3    14     52.66     47.34    47.34      A   44.34   50.34  -
-D4     8     72.24     27.76    27.76      B   19.76   35.76  -
-D5     8     61.80     38.20    30.00      B   22.00   38.00  execution-failed cap 30 (all 10 workflow runs in history failed)
-D6     8     42.39     57.61    57.61      B   49.61   65.61  -
-D7     7     22.80     77.20    77.20      B   69.20   85.20  -
-D8     6     10.26     89.74    89.74      B   81.74   97.74  -
-D9     6     44.17     55.83    55.83      A   52.83   58.83  -
-D10    5     10.05     89.95    89.95      B   81.95   97.95  -
-D11    3     35.76     64.24    64.24      B   56.24   72.24  -
-D12    3     21.33     78.67    78.67      B   70.67   86.67  -
-------------------------------------------------------------------------------
-R_point          = 51.645 / 100   (Grade D)
-R_mean (MC)      = 51.657
-R_stdev          = 0.801
-CI95             = [50.075, 53.194]
-P_GO_raw         = 0.000000   (0.00%)
-P_GO_final       = 0.000000   (0.00%)
-counts           = P0:2 P1:9 P2:19 P3:7
-BROKEN journeys  = ['J3']
-HARD GATES:
-  - P0_count=2 >= 1 -> P_GO capped at 0.05, verdict forced NO-GO
-  - P1_count=9 >= 5 -> P_GO capped at 0.35
-  - BROKEN journeys ['J3'] -> P_GO capped at 0.10
+ARBITER-MVP v2.1 — Monte Carlo uncertainty (score-uncertainty likelihood of reaching the
+readiness threshold; NOT a probability of a successful production launch).
+HEAD                 : 7c8b749f4ca2f69c01de5e3d86d419b713d85344
+implementation       : numpy 2.4.6 random.default_rng(424242)
+N / seed / sigma     : 10000 / 424242 / 3.0
+
+R_point              : 79.0730
+R_mean               : 78.7599
+CI95                 : [72.7600, 84.8252]
+P(R >= 75)           : 0.8892   -> p_go_raw
+P(R >= 85)           : 0.0216
+
+per-dimension inputs (score, dominant_grade, half width, min, mode, max):
+  D1   w=18  s=42.8571  grade=A  hw=3   band=[39.8571, 42.8571, 45.8571]
+  D2   w=14  s=95.6800  grade=B  hw=7   band=[88.6800, 95.6800, 100.0000]
+  D3   w=14  s=88.6000  grade=A  hw=3   band=[85.6000, 88.6000, 91.6000]
+  D4   w=8   s=77.6800  grade=A  hw=3   band=[74.6800, 77.6800, 80.6800]
+  D5   w=8   s=58.0000  grade=A  hw=3   band=[55.0000, 58.0000, 61.0000]
+  D6   w=8   s=85.1500  grade=B  hw=7   band=[78.1500, 85.1500, 92.1500]
+  D7   w=7   s=90.5500  grade=B  hw=7   band=[83.5500, 90.5500, 97.5500]
+  D8   w=6   s=97.8400  grade=B  hw=7   band=[90.8400, 97.8400, 100.0000]
+  D9   w=6   s=94.8700  grade=B  hw=7   band=[87.8700, 94.8700, 100.0000]
+  D10  w=5   s=92.8000  grade=A  hw=3   band=[89.8000, 92.8000, 95.8000]
+  D11  w=3   s=98.9200  grade=B  hw=7   band=[91.9200, 98.9200, 100.0000]
+  D12  w=3   s=79.4800  grade=B  hw=7   band=[72.4800, 79.4800, 86.4800]
+
+hard gates:
+  tripped: P1_count=6 >= 5 -> P_GO capped at 0.35
+
+P_GO (effective)     : 0.3500
+verdict              : NO-GO — REMEDIABLE
+unmet conditions     : ['P_GO 0.3500 < 0.60', 'P1=6 > 2', "4 journey/journeys PARTIAL: ['J2', 'J3', 'J5', 'J7']"]
+audit confidence     : 95.10%
+
+arithmetic determinism: the formulas above are deterministic; LLM judgement is not, so two
+runs on an identical commit may differ in the finding set but never in the formulas applied.

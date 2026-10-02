@@ -1,539 +1,555 @@
 {
-  "commit": "3bd962b3d490f936f81fe333a945e35427ffc7e0",
+  "head": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
+  "generated_by": "audit/harness/arbiter_engine.py data + phase 6",
+  "executive_summary": "The repository is a hardened, previously-audited codebase whose server half is in good shape: 37 of 37 Node tests pass against a real PostgreSQL 18.4 with zero skips and 78.34% measured line coverage, npm audit reports zero vulnerabilities at every severity, no secret is present in tracked files, and the full money path — completion gate, dispute freeze, idempotent refund, balanced ledger — is executed green. R_point is 79.07 (grade B) with a 95% band of [72.76, 84.83]. The blockers are not code quality; they are unverified promises: no CI job runs the server suite, every Android CI run in history has failed, the declared escrow cron can never start, no backup has ever been restored, and the Android client never calls 13 of the 18 authenticated routes. Six P1 findings cap P_GO at 0.35 and the verdict is NO-GO — REMEDIABLE. Seven tasks below remove four P1s and four P2s; the three remaining P1s (client wiring, Android CI, backup drill) and the legal sign-off need work this session cannot execute.",
+  "critical_path_dag": "\nT-001 (D7, fixes F-RELY-001) ─┐\n                             ├─► T-003 (D5, local CI gate) ─► T-004 (D5, install .github workflow)\nT-002 (D4, fixes F-DATA-002) ┘                                     ▲\n                                                                   │ external permission boundary\nT-005 (D6, fixes F-OPS-001)  ─────────────────────────────► independent\nT-006 (D12, fixes F-LEGAL-002) ───────────────────────────► independent\nT-007 (D1, documents F-EXEC-001/F-API-001) ───────────────► independent\n\nlongest path (5 nodes, 6.25 h): T-001 -> T-002 -> T-003 -> T-004\n\nT-008 (D4, human: restore drill)      ──────────────────────► independent, P1\nT-009 (D5, human: Android CI green)   ──────────────────────► independent, P1\nT-010 (D12, human: counsel)           ──────────────────────► independent, P1\nT-007 ─► T-011 (D1, human: client wiring, 24 h)             ─► longest independent branch\n",
+  "milestones": [
+    {
+      "id": "M0",
+      "name": "UNBLOCK",
+      "exit": "P0_count == 0",
+      "status": "ALREADY MET at HEAD 7c8b749 (0 P0 findings)"
+    },
+    {
+      "id": "M1",
+      "name": "DE-RISK",
+      "exit": "P1 <= 2 and all primary journeys VERIFIED_WORKING",
+      "status": "PARTIAL — T-001..T-007 remove F-OPS-001 and F-EXEC-004 (if the workflow push lands). P1 stays at 4: F-EXEC-001 (client wiring), F-EXEC-005 (Android CI), F-DATA-001 (restore drill), F-LEGAL-001 (counsel). All four need a human or a longer session."
+    },
+    {
+      "id": "M2",
+      "name": "HARDEN",
+      "exit": "R_point >= 75",
+      "status": "ALREADY MET: R_point 79.07 before remediation"
+    },
+    {
+      "id": "M3",
+      "name": "LAUNCH",
+      "exit": "P_GO >= 0.85 with all GO conditions satisfied",
+      "status": "NOT REACHABLE this session — requires P1 <= 2, no PARTIAL journeys, and external legal sign-off"
+    },
+    {
+      "id": "M4",
+      "name": "BACKLOG",
+      "exit": "n/a",
+      "status": "DEFERRED — F-SEC-002, F-OPS-002, F-OPS-003, F-RELY-002/003/004, F-API-002, F-QUAL-001/003, F-DOC-001, F-EXEC-002, F-QUAL-002"
+    }
+  ],
   "tasks": [
     {
       "task_id": "T-001",
-      "title": "Add order lifecycle, dispute freeze and refund; gate escrow release on completion",
+      "title": "Stop counting failed OTP sends against the per-window send budget",
       "source_findings": [
-        "F-DATA-001"
+        "F-RELY-001"
       ],
-      "lane": "DATA",
-      "priority": "P0",
+      "lane": "RELY",
+      "dimension": "D7",
+      "priority": "P2",
       "depends_on": [],
       "files_to_touch": [
         "services/auth-api/src/server.js",
-        "audit/harness/e2e.mjs"
+        "services/auth-api/test/integration.test.js"
       ],
-      "change_spec": "Add POST /v1/orders/:orderId/start (paid->in_progress, assigned technician only), POST /v1/orders/:orderId/complete (in_progress->completed, requires both before+after evidence), POST /v1/orders/:orderId/dispute (customer/operator -> order disputed, escrow_holds.status=frozen, ledger dispute_freeze event), POST /v1/admin/escrows/:holdId/refund (operator -> hold refunded, ledger refund event crediting customer_refund_payable). Change release-due to join service_orders and require status='completed'.",
+      "change_spec": "In POST /v1/auth/request-otp, the window query at server.js:277-283 selects every otp_challenges row created inside OTP_SEND_WINDOW_MINUTES with no status filter, so a row is counted even when the Kavenegar call at server.js:316-325 failed and wrote status='failed'. Add `AND status <> 'failed'` to that query so a provider outage cannot consume the budget of a user who never received a code. Do NOT change OTP_MAX_SENDS_PER_WINDOW, the 60-second resend cooldown, the advisory lock, the expiry, or the row write on failure — the failed row must still be recorded for diagnostics. Do not touch the verify-otp route.",
       "acceptance_criteria": [
-        "GIVEN a paid order with no evidence WHEN the technician calls complete THEN 409",
-        "GIVEN a paid order WHEN the customer disputes THEN order.status=disputed AND escrow_holds.status=frozen AND a balanced dispute_freeze ledger entry exists",
-        "GIVEN a frozen hold past release_after WHEN release-due runs THEN released=0",
-        "GIVEN a completed order past release_after WHEN release-due runs THEN released=1"
+        "GIVEN three otp_challenges rows for one phone with status='failed' created seconds ago WHEN POST /v1/auth/request-otp is called for that phone THEN the response is NOT 429",
+        "GIVEN three otp_challenges rows with status='pending' created seconds ago WHEN POST /v1/auth/request-otp is called THEN the response is 429 with error 'too_many_requests'",
+        "Command `cd services/auth-api && AUDIT_DATABASE_URL=... npm test` exits 0 with 0 skipped",
+        "Existing behaviour outside scope remains unchanged: 37 pre-existing tests still pass"
       ],
-      "verification_command": "node audit/harness/e2e.mjs | grep -E 'J6|L1|L2|L3'",
-      "rollback": "git revert the commit",
-      "effort_hours": 10.0,
+      "verification_command": "cd services/auth-api && AUDIT_DATABASE_URL=postgres://oosta@127.0.0.1:55432/postgres node --test --experimental-test-coverage 2>&1 | tail -20",
+      "rollback": "git revert <commit> — the change is one SQL predicate and two new test cases, with no schema or data migration.",
+      "effort_hours": 1.0,
       "score_delta_estimate": {
-        "dimension": "D4",
-        "points": 22.0
-      },
-      "risk_of_regression": "medium",
-      "requires_human": false
-    },
-    {
-      "task_id": "T-002",
-      "title": "Replace the stale AiProviderRouterTest with tests against the real router contract",
-      "source_findings": [
-        "F-EXEC-001"
-      ],
-      "lane": "EXEC",
-      "priority": "P0",
-      "depends_on": [],
-      "files_to_touch": [
-        "app/src/test/java/com/example/AiProviderRouterTest.kt"
-      ],
-      "change_spec": "Delete references to the nonexistent AiTask enum and candidates() method. Assert the actual contract: the request targets {base}/v1/ai/diagnoses, carries the bearer token from AuthSessionStore, sends category/symptom/images.take(2), and maps non-2xx to AiGatewayException.",
-      "acceptance_criteria": [
-        "grep -c 'AiTask' app/src/test/java/com/example/AiProviderRouterTest.kt returns 0",
-        "grep -c 'candidates(' app/src/test/java/com/example/AiProviderRouterTest.kt returns 0",
-        "Every symbol the test imports resolves in app/src/main"
-      ],
-      "verification_command": "for s in AiTask 'candidates('; do echo \"$s -> $(grep -c \"$s\" app/src/test/java/com/example/AiProviderRouterTest.kt)\"; done",
-      "rollback": "git revert",
-      "effort_hours": 3.0,
-      "score_delta_estimate": {
-        "dimension": "D2",
-        "points": 25.0
+        "dimension": "D7",
+        "points": "+4.3"
       },
       "risk_of_regression": "low",
       "requires_human": false,
-      "human_reason": null,
-      "note": "FULL Gradle compile cannot be executed in this sandbox (no JDK). Verification is symbol-level only and is recorded as such."
+      "human_reason": "",
+      "test_strategy": "integration"
+    },
+    {
+      "task_id": "T-002",
+      "title": "Add an OTP-challenge retention job so expired login rows stop accumulating",
+      "source_findings": [
+        "F-DATA-002"
+      ],
+      "lane": "DATA",
+      "dimension": "D4",
+      "priority": "P2",
+      "depends_on": [],
+      "files_to_touch": [
+        "services/auth-api/src/retention.js",
+        "services/auth-api/test/retention.test.js",
+        "services/auth-api/package.json",
+        "docs/DEPLOYMENT.md",
+        "services/auth-api/.env.example"
+      ],
+      "change_spec": "Add src/retention.js exporting purgeExpiredOtpChallenges(client,{olderThanDays}) which deletes otp_challenges rows whose created_at is older than the window and whose status is not 'pending', plus a CLI entry point (`node src/retention.js run`) that reads OTP_RETENTION_DAYS (default 7) and reports the number of rows removed. Scope note recorded during execution: escrow_holds rows are deliberately NOT purged because they are accounting records; the original finding text implied both tables and is narrowed here. Add the npm script `retention`. Document the window in docs/DEPLOYMENT.md and the variable in services/auth-api/.env.example. Do not delete rows with status='pending' or 'sending' — a live login may still be in flight — and do not touch the account-erasure path.",
+      "acceptance_criteria": [
+        "GIVEN an otp_challenges row with created_at 30 days ago and status='verified' WHEN the purge runs THEN the row is gone and the return value counts it",
+        "GIVEN an otp_challenges row with created_at 30 days ago and status='pending' WHEN the purge runs THEN the row is still present",
+        "Command `node src/retention.js run` against the disposable database exits 0 and prints a count",
+        "Command `npm test` in services/auth-api exits 0 with 0 skipped"
+      ],
+      "verification_command": "cd services/auth-api && AUDIT_DATABASE_URL=postgres://oosta@127.0.0.1:55432/postgres npm test 2>&1 | tail -8",
+      "rollback": "Delete src/retention.js, its test and the npm script. No schema change, so no data rollback is required.",
+      "effort_hours": 2.5,
+      "score_delta_estimate": {
+        "dimension": "D4",
+        "points": "+4.3"
+      },
+      "risk_of_regression": "low",
+      "requires_human": false,
+      "human_reason": "",
+      "test_strategy": "integration"
     },
     {
       "task_id": "T-003",
-      "title": "Enforce users.is_active on every authenticated route",
+      "title": "Provide an executable local gate that reproduces the proposed server CI job",
       "source_findings": [
-        "F-SEC-001"
-      ],
-      "lane": "SEC",
-      "priority": "P1",
-      "depends_on": [],
-      "files_to_touch": [
-        "services/auth-api/src/auth.js",
-        "services/auth-api/src/server.js",
-        "services/auth-api/test/server-http.test.js"
-      ],
-      "change_spec": "Make requireUser accept the pool, load the user row and reject with 401 account_inactive when is_active is false. Pass the pool at every call site.",
-      "acceptance_criteria": [
-        "GIVEN a user with is_active=false and a valid JWT WHEN they POST /v1/orders THEN 401",
-        "Command node audit/harness/e2e.mjs shows S.3 -> 401"
-      ],
-      "verification_command": "node audit/harness/e2e.mjs | grep 'S.3'",
-      "rollback": "git revert",
-      "effort_hours": 2.0,
-      "score_delta_estimate": {
-        "dimension": "D3",
-        "points": 12.0
-      },
-      "risk_of_regression": "medium",
-      "requires_human": false
-    },
-    {
-      "task_id": "T-004",
-      "title": "Add GET /v1/orders and GET /v1/orders/:orderId so the passport history is server-backed",
-      "source_findings": [
-        "F-EXEC-008"
-      ],
-      "lane": "EXEC",
-      "priority": "P1",
-      "depends_on": [],
-      "files_to_touch": [
-        "services/auth-api/src/server.js",
-        "audit/harness/e2e.mjs"
-      ],
-      "change_spec": "Add two authenticated GET routes. List returns the caller's own orders newest-first with a limit/offset window. Detail returns the order with its quotes, acceptance, evidence and escrow hold, and returns 404 unless the caller is the owning customer, the quoting technician, or an operator/admin.",
-      "acceptance_criteria": [
-        "GIVEN a customer with one order WHEN they GET /v1/orders THEN 200 with that order",
-        "GIVEN customer B WHEN they GET /v1/orders/:id of customer A's order THEN 404",
-        "Harness J3.1 flips from FAIL to PASS"
-      ],
-      "verification_command": "node audit/harness/e2e.mjs | grep 'J3'",
-      "rollback": "git revert",
-      "effort_hours": 6.0,
-      "score_delta_estimate": {
-        "dimension": "D1",
-        "points": 18.0
-      },
-      "risk_of_regression": "low",
-      "requires_human": false
-    },
-    {
-      "task_id": "T-005",
-      "title": "Add a server CI workflow and give the Android workflow pull_request triggers",
-      "source_findings": [
-        "F-EXEC-002",
-        "F-EXEC-003",
-        "F-EXEC-004"
-      ],
-      "lane": "EXEC",
-      "priority": "P1",
-      "depends_on": [],
-      "files_to_touch": [
-        ".github/workflows/server.yml",
-        ".github/workflows/build.yml"
-      ],
-      "change_spec": "New server.yml: on push to main + pull_request, setup-node 22 with npm cache, npm ci, npm audit --omit=dev --audit-level=high, npm test, all with working-directory services/auth-api. Add a pull_request trigger to build.yml.",
-      "acceptance_criteria": [
-        "gh run list shows a green run for the server workflow on this branch",
-        "The workflow contains no gradle step and build.yml gains pull_request"
-      ],
-      "verification_command": "gh run list --repo reARbitRA/Tamirkar --workflow server.yml --limit 3",
-      "rollback": "git revert",
-      "effort_hours": 3.0,
-      "score_delta_estimate": {
-        "dimension": "D5",
-        "points": 45.0
-      },
-      "risk_of_regression": "low",
-      "requires_human": false
-    },
-    {
-      "task_id": "T-006",
-      "title": "Declare AUTH_API_BASE_URL explicitly and document the Android .env step",
-      "source_findings": [
+        "F-EXEC-004",
         "F-EXEC-006"
       ],
       "lane": "EXEC",
+      "dimension": "D5",
       "priority": "P1",
-      "depends_on": [],
+      "depends_on": [
+        "T-001",
+        "T-002"
+      ],
       "files_to_touch": [
-        "app/build.gradle.kts",
-        "README.md",
-        ".env.example"
+        "scripts/ci-server-check.sh",
+        "docs/TESTING.md"
       ],
-      "change_spec": "Add buildConfigField for AUTH_API_BASE_URL sourced from a Gradle property with an empty default, so the wiring is visible in build.gradle.kts rather than implicit in the secrets plugin. Document the root .env step in the README Android section.",
+      "change_spec": "Add scripts/ci-server-check.sh: requires AUDIT_DATABASE_URL and a working node; runs `npm ci`, `npm audit --omit=dev --audit-level=high`, `node --check` over src/*.js, asserts every db/NNN_*.sql has a matching db/down/NNN_*.down.sql, performs a full migration round trip (up -> down 99 with CONFIRM_DESTRUCTIVE_ROLLBACK=yes -> up), runs `node --test --experimental-test-coverage`, and fails the build if the summary contains `# skipped` with a non-zero count. This is the executable half of F-EXEC-004 that does not depend on the workflows permission. It must not weaken, skip or delete any existing test. Document it in docs/TESTING.md.",
       "acceptance_criteria": [
-        "grep -c buildConfigField app/build.gradle.kts >= 1",
-        "README Android section names AUTH_API_BASE_URL and the root .env file"
+        "Command `AUDIT_DATABASE_URL=... bash scripts/ci-server-check.sh` exits 0",
+        "The script fails (exit non-zero) when AUDIT_DATABASE_URL is unset",
+        "The script fails when the runner reports skipped tests",
+        "Existing behaviour outside scope remains unchanged"
       ],
-      "verification_command": "grep -n 'AUTH_API_BASE_URL' app/build.gradle.kts README.md",
-      "rollback": "git revert",
+      "verification_command": "AUDIT_DATABASE_URL=postgres://oosta@127.0.0.1:55432/postgres bash scripts/ci-server-check.sh; echo EXIT=$?",
+      "rollback": "Delete scripts/ci-server-check.sh and the docs/TESTING.md paragraph.",
       "effort_hours": 2.0,
       "score_delta_estimate": {
-        "dimension": "D11",
-        "points": 15.0
+        "dimension": "D5",
+        "points": "+0"
       },
       "risk_of_regression": "low",
-      "requires_human": false
+      "requires_human": false,
+      "human_reason": "",
+      "test_strategy": "integration"
     },
     {
-      "task_id": "T-007",
-      "title": "Add a documented, executable backup/restore procedure",
+      "task_id": "T-004",
+      "title": "Install the server CI workflow into .github/workflows",
       "source_findings": [
-        "F-DATA-005"
+        "F-EXEC-004"
       ],
-      "lane": "DATA",
-      "priority": "P1",
-      "depends_on": [],
-      "files_to_touch": [
-        "scripts/backup-database.sh",
-        "scripts/restore-database.sh",
-        "docs/DEPLOYMENT.md"
-      ],
-      "change_spec": "pg_dump -Fc to a timestamped file with a retention sweep; restore via pg_restore into a target URL with an explicit confirmation flag and a refusal to run against a non-empty database unless --force. Document RPO/RTO and the drill.",
-      "acceptance_criteria": [
-        "Both scripts pass bash -n",
-        "restore-database.sh refuses to run without --force against a populated database",
-        "docs/DEPLOYMENT.md states RPO and RTO"
-      ],
-      "verification_command": "bash -n scripts/backup-database.sh && bash -n scripts/restore-database.sh && echo SYNTAX_OK",
-      "rollback": "git revert",
-      "effort_hours": 6.0,
-      "score_delta_estimate": {
-        "dimension": "D4",
-        "points": 10.0
-      },
-      "risk_of_regression": "low",
-      "requires_human": false
-    },
-    {
-      "task_id": "T-008",
-      "title": "Schedule the escrow worker and document its two env vars",
-      "source_findings": [
-        "F-OPS-002",
-        "F-QUAL-002"
-      ],
-      "lane": "OPS",
+      "lane": "EXEC",
+      "dimension": "D5",
       "priority": "P1",
       "depends_on": [
-        "T-001"
+        "T-003"
       ],
       "files_to_touch": [
-        "render.yaml",
-        "services/auth-api/.env.example",
-        "docs/ENVIRONMENT.md"
+        ".github/workflows/server.yml"
       ],
-      "change_spec": "Add a Render cron service running node src/escrow-worker.js daily, plus PLATFORM_API_BASE_URL and ESCROW_WORKER_TOKEN to .env.example and render.yaml.",
+      "change_spec": "Copy ci/proposed/server.yml to .github/workflows/server.yml unchanged and commit. This is the repository's own documented highest-yield action. If GitHub rejects the push because the installation token lacks the `workflows` permission, that is an external permission boundary: record the exact error, do not retry with a workaround, and leave ci/proposed/server.yml as the shippable artifact for a maintainer.",
       "acceptance_criteria": [
-        "grep -c cron render.yaml >= 1",
-        "Both variables appear in services/auth-api/.env.example"
+        "Either .github/workflows/server.yml exists on the branch and a run appears in `gh run list`, OR the push fails with the documented workflows-permission error and the exact stderr is recorded",
+        "ci/proposed/README.md is updated with the observed outcome"
       ],
-      "verification_command": "grep -n 'ESCROW_WORKER_TOKEN\\|PLATFORM_API_BASE_URL\\|cron' render.yaml services/auth-api/.env.example",
-      "rollback": "git revert",
-      "effort_hours": 3.0,
+      "verification_command": "git ls-tree --name-only HEAD .github/workflows/ && gh run list --limit 3",
+      "rollback": "git revert <commit>; if the file was rejected at push time nothing was ever created.",
+      "effort_hours": 0.5,
       "score_delta_estimate": {
-        "dimension": "D6",
-        "points": 20.0
+        "dimension": "D5",
+        "points": "+6.0"
       },
       "risk_of_regression": "low",
-      "requires_human": false
+      "requires_human": false,
+      "human_reason": "Only if the push is rejected: a maintainer with the GitHub `workflows` permission must run the one-line cp+commit shown in ci/proposed/README.md.",
+      "test_strategy": "manual-flagged"
     },
     {
-      "task_id": "T-009",
-      "title": "Close four server security gaps: role, dev-log, key transport, proxy IP",
-      "source_findings": [
-        "F-SEC-002",
-        "F-SEC-003",
-        "F-SEC-006",
-        "F-SEC-008"
-      ],
-      "lane": "SEC",
-      "priority": "P2",
-      "depends_on": [],
-      "files_to_touch": [
-        "services/auth-api/src/server.js",
-        "services/auth-api/src/config.js",
-        "services/auth-api/src/ai.js"
-      ],
-      "change_spec": "POST /v1/orders restricted to role customer; loadConfig throws when OTP_DEV_LOG_CODE is true and NODE_ENV is production or staging; Gemini key moves from the query string to the x-goog-api-key header; Fastify trustProxy enabled with a documented hop count so acceptance_ip records the client.",
-      "acceptance_criteria": [
-        "Harness S.1 -> 403",
-        "A new unit test asserts loadConfig throws on dev-log in production",
-        "grep -c 'x-goog-api-key' services/auth-api/src/ai.js >= 1 and the key no longer appears in the URL"
-      ],
-      "verification_command": "npm test --prefix services/auth-api && node audit/harness/e2e.mjs | grep 'S.1'",
-      "rollback": "git revert",
-      "effort_hours": 3.0,
-      "score_delta_estimate": {
-        "dimension": "D3",
-        "points": 18.0
-      },
-      "risk_of_regression": "medium",
-      "requires_human": false
-    },
-    {
-      "task_id": "T-010",
-      "title": "Harden the pool and validate UUID path params",
-      "source_findings": [
-        "F-RELY-002",
-        "F-RELY-003"
-      ],
-      "lane": "RELY",
-      "priority": "P2",
-      "depends_on": [],
-      "files_to_touch": [
-        "services/auth-api/src/server.js"
-      ],
-      "change_spec": "Add connectionTimeoutMillis, idleTimeoutMillis and statement_timeout to the pool; add a requireUuid() helper and apply it to :caseId, :orderId and :quoteId.",
-      "acceptance_criteria": [
-        "POST /v1/admin/kyc/not-a-uuid/decision returns 400, not 500"
-      ],
-      "verification_command": "node audit/harness/e2e.mjs | grep 'R.1'",
-      "rollback": "git revert",
-      "effort_hours": 2.0,
-      "score_delta_estimate": {
-        "dimension": "D7",
-        "points": 12.0
-      },
-      "risk_of_regression": "low",
-      "requires_human": false
-    },
-    {
-      "task_id": "T-011",
-      "title": "Expose /metrics with request, provider and escrow signals",
-      "source_findings": [
-        "F-OBS-001"
-      ],
-      "lane": "OBS",
-      "priority": "P2",
-      "depends_on": [],
-      "files_to_touch": [
-        "services/auth-api/src/server.js"
-      ],
-      "change_spec": "Add an in-process counter set and a GET /metrics text/plain endpoint: requests_total by route and status class, provider_failures_total by provider, escrow_holds_due gauge, and pool saturation. Counters increment in the onResponse hook and in each provider catch block.",
-      "acceptance_criteria": [
-        "GET /metrics returns 200 text/plain with requests_total present"
-      ],
-      "verification_command": "node audit/harness/e2e.mjs | grep 'O.1'",
-      "rollback": "git revert",
-      "effort_hours": 6.0,
-      "score_delta_estimate": {
-        "dimension": "D7",
-        "points": 20.0
-      },
-      "risk_of_regression": "low",
-      "requires_human": false
-    },
-    {
-      "task_id": "T-012",
-      "title": "Make writes transactional, gate evidence on order state, index the audit log",
-      "source_findings": [
-        "F-DATA-002",
-        "F-DATA-003",
-        "F-DATA-006"
-      ],
-      "lane": "DATA",
-      "priority": "P2",
-      "depends_on": [
-        "T-001"
-      ],
-      "files_to_touch": [
-        "services/auth-api/src/server.js",
-        "services/auth-api/db/004_observability_indexes.sql"
-      ],
-      "change_spec": "Order insert and its audit row share one transaction; evidence requires order.status IN (paid,in_progress) plus requireApprovedTechnician; new migration adds indexes on operational_audit_log and escrow_holds lookup paths.",
-      "acceptance_criteria": [
-        "Evidence on a submitted order returns 409",
-        "npm run migrate applies 004 cleanly"
-      ],
-      "verification_command": "node audit/harness/e2e.mjs | grep -E 'MIG|D.1'",
-      "rollback": "git revert",
-      "effort_hours": 4.0,
-      "score_delta_estimate": {
-        "dimension": "D4",
-        "points": 10.0
-      },
-      "risk_of_regression": "medium",
-      "requires_human": false
-    },
-    {
-      "task_id": "T-013",
-      "title": "Correct the documentation set to match the shipped code",
-      "source_findings": [
-        "F-QUAL-001",
-        "F-QUAL-003",
-        "F-QUAL-004"
-      ],
-      "lane": "QUAL",
-      "priority": "P2",
-      "depends_on": [
-        "T-009"
-      ],
-      "files_to_touch": [
-        "docs/ENVIRONMENT.md",
-        "docs/GO_NO_GO.md",
-        "RISK_REGISTER.md"
-      ],
-      "change_spec": "Rewrite ENVIRONMENT.md from the real loadConfig surface plus the worker vars; rewrite GO_NO_GO.md against the current tree naming which of its six original objections are closed; refresh the RISK_REGISTER control column.",
-      "acceptance_criteria": [
-        "Every variable named in docs/ENVIRONMENT.md appears in services/auth-api/src or app/",
-        "docs/GO_NO_GO.md no longer asserts that OTP is fake or that provider keys are in the APK"
-      ],
-      "verification_command": "python3 audit/check_env_docs.py",
-      "rollback": "git revert",
-      "effort_hours": 4.0,
-      "score_delta_estimate": {
-        "dimension": "D11",
-        "points": 25.0
-      },
-      "risk_of_regression": "low",
-      "requires_human": false
-    },
-    {
-      "task_id": "T-014",
-      "title": "Harden the Dockerfile: pin, NODE_ENV, healthcheck",
+      "task_id": "T-005",
+      "title": "Make the declared escrow cron actually run the escrow worker",
       "source_findings": [
         "F-OPS-001"
       ],
       "lane": "OPS",
-      "priority": "P2",
-      "depends_on": [],
-      "files_to_touch": [
-        "services/auth-api/Dockerfile"
-      ],
-      "change_spec": "Pin node:22-alpine by digest, add ENV NODE_ENV=production and a HEALTHCHECK against /health using wget from busybox.",
-      "acceptance_criteria": [
-        "grep -c HEALTHCHECK services/auth-api/Dockerfile >= 1",
-        "FROM line contains a sha256 digest"
-      ],
-      "verification_command": "grep -nE 'FROM|HEALTHCHECK|NODE_ENV' services/auth-api/Dockerfile",
-      "rollback": "git revert",
-      "effort_hours": 1.5,
-      "score_delta_estimate": {
-        "dimension": "D6",
-        "points": 10.0
-      },
-      "risk_of_regression": "low",
-      "requires_human": false
-    },
-    {
-      "task_id": "T-015",
-      "title": "Consolidate the three duplicate CI definitions",
-      "source_findings": [
-        "F-QUAL-005"
-      ],
-      "lane": "QUAL",
-      "priority": "P2",
-      "depends_on": [
-        "T-005"
-      ],
-      "files_to_touch": [
-        "ci/android-apk.yml",
-        "github/workflows/build.yml"
-      ],
-      "change_spec": "Remove the stale ci/ and github/ copies so .github/workflows is the single source of truth. Leaves the ZWNJ-named workflow in place but documents it as a manual escape hatch; deleting a workflow the maintainer may still use is a product decision.",
-      "acceptance_criteria": [
-        "git ls-files shows no ci/ or github/ workflow duplicates"
-      ],
-      "verification_command": "git ls-files | grep -E '^(ci|github)/' || echo NO_DUPLICATES",
-      "rollback": "git revert",
-      "effort_hours": 2.0,
-      "score_delta_estimate": {
-        "dimension": "D10",
-        "points": 8.0
-      },
-      "risk_of_regression": "low",
-      "requires_human": true,
-      "human_reason": "Deleting files the maintainer added deliberately is a judgement call; flagged for confirmation rather than done unilaterally."
-    },
-    {
-      "task_id": "T-016",
-      "title": "Counsel review and dated publication of the legal set",
-      "source_findings": [
-        "F-LEGAL-001",
-        "F-LEGAL-002"
-      ],
-      "lane": "LEGAL",
+      "dimension": "D6",
       "priority": "P1",
       "depends_on": [],
       "files_to_touch": [
-        "docs/legal/*.md"
+        "render.yaml",
+        "docs/DEPLOYMENT.md",
+        "services/auth-api/test/render-blueprint.test.js"
       ],
-      "change_spec": "Lawyer approves and dates terms, privacy, refund/cancellation and warranty; legal entity and contact details filled in; APPROVALS.md signed.",
+      "change_spec": "The cron service oosta-escrow-release currently inherits the auth-api image CMD `sh -c \"npm run migrate && npm start\"`, which boots a web server instead of the worker, and its environment pins FEATURE_ESCROW_RELEASE=\"false\", which makes the target route answer 503. Give the cron a `dockerCommand` that runs `node src/escrow-worker.js`, and give the cron only the variables the worker reads (PLATFORM_API_BASE_URL, ESCROW_WORKER_TOKEN, NODE_ENV). Remove FEATURE_ESCROW_RELEASE from the cron block and change it on the web service to an operator-set `sync: false` value with a comment that escrow release stays fail-closed until approved. FEATURE_ESCROW_RELEASE must NOT default to true anywhere. Add a test that parses the YAML and asserts the cron's command invokes escrow-worker.js and that no cron variable sets FEATURE_ESCROW_RELEASE true.",
       "acceptance_criteria": [
-        "APPROVALS.md has a name and date against the counsel row"
+        "GIVEN render.yaml WHEN parsed as YAML THEN the cron job's command contains src/escrow-worker.js",
+        "GIVEN render.yaml WHEN parsed as YAML THEN neither service sets FEATURE_ESCROW_RELEASE to \"true\"",
+        "Command `cd services/auth-api && node --test test/render-blueprint.test.js` exits 0",
+        "Command `npm test` in services/auth-api exits 0 with 0 skipped"
       ],
-      "verification_command": "grep -c '\\[x\\]' docs/legal/APPROVALS.md",
-      "rollback": "n/a",
-      "effort_hours": 0.0,
+      "verification_command": "cd services/auth-api && node --test test/render-blueprint.test.js; echo EXIT=$?",
+      "rollback": "git revert <commit>; render.yaml only takes effect on the next Blueprint sync, so a revert before the next sync changes nothing in the running environment.",
+      "effort_hours": 1.5,
+      "score_delta_estimate": {
+        "dimension": "D6",
+        "points": "+7.5"
+      },
+      "risk_of_regression": "medium",
+      "requires_human": "The escape hatch in Render's cron schema (`dockerCommand`) is applied as declared configuration; enabling FEATURE_ESCROW_RELEASE remains an operator decision and is deliberately left fail-closed.",
+      "test_strategy": "unit"
+    },
+    {
+      "task_id": "T-006",
+      "title": "Exclude the Room database and preferences from pre-API-31 cloud backup",
+      "source_findings": [
+        "F-LEGAL-002"
+      ],
+      "lane": "LEGAL",
+      "dimension": "D12",
+      "priority": "P2",
+      "depends_on": [],
+      "files_to_touch": [
+        "app/src/main/res/xml/backup_rules.xml"
+      ],
+      "change_spec": "backup_rules.xml feeds fullBackupContent, which Android uses on API 24-30; minSdk is 24. Its <full-backup-content> element is empty, so the Room database (users, devices, orders and the phone number in UserEntity) is uploaded to the user's Google Drive on those devices. Add <exclude domain=\"database\" path=\".\"/> and <exclude domain=\"sharedpref\" path=\".\"/> inside <full-backup-content>, matching what data_extraction_rules.xml already does for API 31+. Do not change android:allowBackup and do not touch data_extraction_rules.xml.",
+      "acceptance_criteria": [
+        "GIVEN backup_rules.xml WHEN parsed as XML THEN full-backup-content contains an exclude for the database domain and one for the sharedpref domain",
+        "The file still parses as well-formed XML",
+        "Existing behaviour outside scope remains unchanged"
+      ],
+      "verification_command": "python3 tools/verify_backup_rules.py",
+      "rollback": "git revert <commit>.",
+      "effort_hours": 0.5,
       "score_delta_estimate": {
         "dimension": "D12",
-        "points": 30.0
+        "points": "+4.5"
+      },
+      "risk_of_regression": "low",
+      "requires_human": false,
+      "human_reason": "",
+      "test_strategy": "unit"
+    },
+    {
+      "task_id": "T-007",
+      "title": "Record the client-side journey gap as a single tracked specification instead of leaving it implicit",
+      "source_findings": [
+        "F-EXEC-001",
+        "F-API-001"
+      ],
+      "lane": "EXEC",
+      "dimension": "D1",
+      "priority": "P1",
+      "depends_on": [],
+      "files_to_touch": [
+        "docs/GO_60_ROADMAP.md",
+        "docs/API.md"
+      ],
+      "change_spec": "Add a table to docs/GO_60_ROADMAP.md listing, for each of the 18 authenticated server routes, whether app/src/main contains a call site, with the file:line of each existing call site. Add a note to docs/API.md that POST /v1/devices assigns the id and that clients must not mint one. This does not close F-EXEC-001 — no client is written — it converts an implicit gap into an auditable one with a machine-checkable census. Do not claim any capability is implemented.",
+      "acceptance_criteria": [
+        "GIVEN the roadmap document WHEN read THEN it lists all 18 authenticated routes with wired/not-wired",
+        "Command `bash scripts/ci-server-check.sh` exits 0 (documentation change must not break the gate)",
+        "No source file under app/src/main is modified"
+      ],
+      "verification_command": "grep -c 'v1/' docs/GO_60_ROADMAP.md",
+      "rollback": "git revert <commit>.",
+      "effort_hours": 0.75,
+      "score_delta_estimate": {
+        "dimension": "D1",
+        "points": "+0"
+      },
+      "risk_of_regression": "low",
+      "requires_human": false,
+      "human_reason": "",
+      "test_strategy": "documentation"
+    },
+    {
+      "task_id": "T-008",
+      "title": "Execute a real backup and restore drill and record the measured RPO/RTO",
+      "source_findings": [
+        "F-DATA-001"
+      ],
+      "lane": "DATA",
+      "dimension": "D4",
+      "priority": "P1",
+      "depends_on": [],
+      "files_to_touch": [
+        "docs/DEPLOYMENT.md",
+        "docs/GO_NO_GO.md",
+        "scripts/backup-database.sh"
+      ],
+      "change_spec": "On a host with postgresql-client: populate a staging database, run scripts/backup-database.sh, restore the produced .dump with scripts/restore-database.sh into an isolated instance, verify row counts for ledger_entries, ledger_postings and escrow_holds, and record the elapsed time and the newest recoverable transaction in docs/DEPLOYMENT.md. Do NOT substitute a COPY-based dump — the production mechanism is pg_dump --format=custom and testing a different mechanism proves nothing.",
+      "acceptance_criteria": [
+        "A dump file exists and `pg_restore --list` reads it",
+        "The restored database has identical row counts for ledger_entries, ledger_postings, escrow_holds, users",
+        "docs/DEPLOYMENT.md records RPO and RTO as measured numbers with the date and the host"
+      ],
+      "verification_command": "psql \"$RESTORED_URL\" -c 'SELECT count(*) FROM ledger_postings' && diff <(psql \"$SOURCE_URL\" -Atc 'SELECT count(*) FROM ledger_postings') <(psql \"$RESTORED_URL\" -Atc 'SELECT count(*) FROM ledger_postings')",
+      "rollback": "Drop the isolated restore instance; nothing in the source database is mutated.",
+      "effort_hours": 4.0,
+      "score_delta_estimate": {
+        "dimension": "D4",
+        "points": "+18.0"
       },
       "risk_of_regression": "low",
       "requires_human": true,
-      "human_reason": "Requires a licensed lawyer and a registered legal entity. No agent can produce this."
+      "human_reason": "pg_dump and pg_restore cannot be installed in this sandbox: no apt mirror is reachable and the only npm PostgreSQL distribution ships initdb/pg_ctl/postgres. A human with a postgresql-client host must run it.",
+      "test_strategy": "manual-flagged"
     },
     {
-      "task_id": "T-017",
-      "title": "Rate-limit the AI diagnosis endpoint",
+      "task_id": "T-009",
+      "title": "Get one green Android CI run and add a pull_request trigger",
       "source_findings": [
-        "F-SEC-004"
+        "F-EXEC-005",
+        "F-DOC-001"
       ],
-      "lane": "SEC",
-      "priority": "P2",
-      "depends_on": [
-        "T-009"
-      ],
+      "lane": "EXEC",
+      "dimension": "D5",
+      "priority": "P1",
+      "depends_on": [],
       "files_to_touch": [
-        "services/auth-api/src/server.js"
+        ".github/workflows/build.yml",
+        ".github/workflows/android-apk.yml",
+        "README.md"
       ],
-      "change_spec": "Per-user sliding window (10 per hour) plus a global in-flight cap around the provider call; 429 with a Persian retry_after message.",
+      "change_spec": "Change both trigger blocks from the abandoned arena/* branches to `branches: [main, master]` plus `pull_request:` plus `workflow_dispatch:`, then fix the failing `Set up Android SDK` / test / assemble steps until `gh run list` shows a success. Drop `permissions: contents: write` and the force-push in android-apk.yml. Then correct the README sentence that says the Android tests are executed in CI.",
       "acceptance_criteria": [
-        "The 11th diagnosis call in an hour returns 429"
+        "`gh run list --limit 1 --json conclusion` returns \"success\"",
+        "A pull request against main shows at least one check",
+        "No job in .github/workflows/ passes `-x test` or `-x lint`"
       ],
-      "verification_command": "node audit/harness/e2e.mjs | grep 'S.5'",
-      "rollback": "git revert",
-      "effort_hours": 3.0,
+      "verification_command": "gh run list --limit 3 --json conclusion,headBranch,workflowName",
+      "rollback": "git revert the workflow commits; a rejected push leaves the files unchanged.",
+      "effort_hours": 6.0,
       "score_delta_estimate": {
-        "dimension": "D8",
-        "points": 10.0
+        "dimension": "D5",
+        "points": "+18.0"
       },
       "risk_of_regression": "medium",
-      "requires_human": false
+      "requires_human": true,
+      "human_reason": "Both workflow files live under .github/workflows, which the installation token cannot write, and the failing step needs an iterative debugging loop against GitHub's runners.",
+      "test_strategy": "manual-flagged"
     },
     {
-      "task_id": "T-018",
-      "title": "Split server.js into route modules",
+      "task_id": "T-010",
+      "title": "Obtain and record the six launch approvals",
       "source_findings": [
-        "F-QUAL-006"
+        "F-LEGAL-001"
       ],
-      "lane": "QUAL",
-      "priority": "P3",
+      "lane": "LEGAL",
+      "dimension": "D12",
+      "priority": "P1",
+      "depends_on": [],
+      "files_to_touch": [
+        "docs/legal/APPROVALS.md",
+        "docs/legal/TERMS_FA.md",
+        "docs/legal/PRIVACY_FA.md",
+        "docs/legal/REFUND_CANCELLATION_FA.md",
+        "docs/legal/WARRANTY_FA.md"
+      ],
+      "change_spec": "Route the four Persian texts to licensed Iranian counsel and to the finance, payment-gateway, operations, security and product owners named in APPROVALS.md. Record each sign-off with a name, a date and a document version. Flag, but do not adjudicate, the private-law and PSP/escrow licensing questions.",
+      "acceptance_criteria": [
+        "APPROVALS.md has six checked boxes each with a name, a date and a version",
+        "Every legal text carries a version header and an effective date"
+      ],
+      "verification_command": "grep -c '^- \\[x\\]' docs/legal/APPROVALS.md",
+      "rollback": "Not applicable — this is a records change, not a code change.",
+      "effort_hours": 40.0,
+      "score_delta_estimate": {
+        "dimension": "D12",
+        "points": "+16.2"
+      },
+      "risk_of_regression": "low",
+      "requires_human": true,
+      "human_reason": "Legal adjudication of Iranian private law and payment/escrow licensing is outside any agent's competence and outside this repository.",
+      "test_strategy": "manual-flagged"
+    },
+    {
+      "task_id": "T-011",
+      "title": "Wire the Android client to the server for devices, quotes, payments and the order lifecycle",
+      "source_findings": [
+        "F-EXEC-001",
+        "F-API-001",
+        "F-EXEC-002"
+      ],
+      "lane": "EXEC",
+      "dimension": "D1",
+      "priority": "P1",
       "depends_on": [
-        "T-001",
-        "T-004",
-        "T-009"
+        "T-007"
       ],
       "files_to_touch": [
-        "services/auth-api/src/server.js",
-        "services/auth-api/src/routes/"
+        "app/src/main/java/com/example/data/remote/PlatformApi.kt",
+        "app/src/main/java/com/example/data/repository/TamirkarRepository.kt",
+        "app/src/main/java/com/example/data/remote/AuthSessionStore.kt",
+        "app/src/main/java/com/example/ui/viewmodel/TamirkarViewModel.kt",
+        "app/src/test/java/com/example/PlatformApiContractTest.kt"
       ],
-      "change_spec": "Extract auth, ai, technicians, orders, payments and admin route groups behind one app factory.",
+      "change_spec": "Add authenticated clients for POST /v1/devices, GET /v1/devices, POST /v1/quotes/:id/accept, POST /v1/technicians/apply, POST /v1/technicians/kyc, POST /v1/orders/:id/quotes|evidence|start|complete|dispute and POST /v1/payments/zarinpal/start, each with a header for Authorization and, where the server requires it, Idempotency-Key. Store the server-returned device UUID as the Room primary key; never synthesise one. Add MockWebServer contract tests asserting path, method, auth header and the exact JSON field names the server returns. Do not weaken the memory-only token store without also adding an encrypted persistence path and its test.",
       "acceptance_criteria": [
-        "No source file in services/auth-api/src exceeds 400 lines"
+        "Every one of the 18 authenticated routes has a client call site or a recorded decision not to wire it",
+        "`./gradlew testDebugUnitTest` exits 0 with the contract tests included",
+        "GIVEN a device created through the app WHEN it is re-listed after a simulated reinstall THEN the record comes from the server, not Room"
       ],
-      "verification_command": "git ls-files 'services/auth-api/src/*.js' 'services/auth-api/src/**/*.js' | xargs wc -l | sort -rn | head -3",
-      "rollback": "git revert",
-      "effort_hours": 8.0,
+      "verification_command": "cd . && ./gradlew testDebugUnitTest --no-daemon",
+      "rollback": "git revert the client commits; no server change is required, because every route already exists and is feature-gated off by default.",
+      "effort_hours": 24.0,
       "score_delta_estimate": {
-        "dimension": "D10",
-        "points": 5.0
+        "dimension": "D1",
+        "points": "+18.0"
       },
-      "risk_of_regression": "high",
-      "requires_human": false
+      "risk_of_regression": "medium",
+      "requires_human": true,
+      "human_reason": "Requires a JDK, an Android SDK and a decision on encrypted session persistence; the Gradle toolchain is not installable in this environment, so no acceptance criterion could be executed.",
+      "test_strategy": "e2e"
     }
-  ]
+  ],
+  "projected": {
+    "before": {
+      "R_point": 79.073,
+      "P_GO_effective": 0.35,
+      "P1": 6,
+      "P2": 11,
+      "verdict": "NO-GO — REMEDIABLE"
+    },
+    "after_if_all_tasks_land": {
+      "recompute": "see 07_final_report.md §3 and §4; the figure is recomputed by audit/harness/arbiter_engine.py, not guessed"
+    }
+  },
+  "test_strategy": "Test-first for every code task: a failing test that encodes the acceptance criteria is added before the implementation, then run against the same PostgreSQL 18.4 instance the Phase 2 baseline used. Regression guard: the 37-test baseline must stay at pass 37 / fail 0 / skip 0. Documentation-only tasks (T-007) use verification-first, with the reason logged: there is no executable behaviour to assert.",
+  "human_required": [
+    {
+      "task_id": "T-004",
+      "reason": "GitHub App installation tokens cannot write to .github/workflows without the `workflows` permission",
+      "what_a_human_must_provide": "run `cp ci/proposed/server.yml .github/workflows/server.yml && git commit && git push`",
+      "blocks_go": true
+    },
+    {
+      "task_id": "F-DATA-001",
+      "reason": "pg_dump/pg_restore are not installable in this sandbox (no apt mirror, no registry)",
+      "what_a_human_must_provide": "run scripts/backup-database.sh then restore-database.sh into an isolated instance and record the measured RPO/RTO",
+      "blocks_go": true
+    },
+    {
+      "task_id": "F-LEGAL-001",
+      "reason": "Iranian private-law and PSP/escrow licensing questions cannot be adjudicated by an agent",
+      "what_a_human_must_provide": "licensed Iranian counsel plus the six sign-offs in docs/legal/APPROVALS.md",
+      "blocks_go": true
+    },
+    {
+      "task_id": "F-EXEC-005",
+      "reason": "the Android job fails at SDK setup and no JDK or Android SDK is installable here",
+      "what_a_human_must_provide": "fix the failing step in .github/workflows/build.yml, add a pull_request trigger, and get one green run",
+      "blocks_go": true
+    }
+  ],
+  "risk_register_top10": [
+    {
+      "rank": 1,
+      "risk": "Escrow holds never release because the declared cron cannot start the worker",
+      "finding": "F-OPS-001",
+      "severity": "P1",
+      "mitigation": "T-005"
+    },
+    {
+      "rank": 2,
+      "risk": "A money-path regression ships undetected because no CI job runs the suite",
+      "finding": "F-EXEC-004",
+      "severity": "P1",
+      "mitigation": "T-003 + T-004"
+    },
+    {
+      "rank": 3,
+      "risk": "Total loss of the payment and ledger record with no proven recovery path",
+      "finding": "F-DATA-001",
+      "severity": "P1",
+      "mitigation": "human restore drill"
+    },
+    {
+      "rank": 4,
+      "risk": "Four core journeys have no Android client, so the shipped app cannot complete them",
+      "finding": "F-EXEC-001",
+      "severity": "P1",
+      "mitigation": "T-007 (documents) then a client-wiring task (not executed)"
+    },
+    {
+      "rank": 5,
+      "risk": "Public paid launch without legal review",
+      "finding": "F-LEGAL-001",
+      "severity": "P1",
+      "mitigation": "human counsel"
+    },
+    {
+      "rank": 6,
+      "risk": "No green Android build has ever been produced, so the Kotlin is unverified",
+      "finding": "F-EXEC-005",
+      "severity": "P1",
+      "mitigation": "human CI fix"
+    },
+    {
+      "rank": 7,
+      "risk": "An SMS-provider outage locks out every user for the rest of the window",
+      "finding": "F-RELY-001",
+      "severity": "P2",
+      "mitigation": "T-001"
+    },
+    {
+      "rank": 8,
+      "risk": "Personal data leaves the operator's control on API 24-30 devices via Google Drive backup",
+      "finding": "F-LEGAL-002",
+      "severity": "P2",
+      "mitigation": "T-006"
+    },
+    {
+      "rank": 9,
+      "risk": "Expired login rows accumulate forever with no legal basis and no purge",
+      "finding": "F-DATA-002",
+      "severity": "P2",
+      "mitigation": "T-002"
+    },
+    {
+      "rank": 10,
+      "risk": "Provider outages, pool pressure and escrow backlog are invisible until a human curls /metrics",
+      "finding": "F-OBS-001",
+      "severity": "P2",
+      "mitigation": "not scheduled this session — recorded in M4"
+    }
+  ],
+  "definition_of_done": [
+    "`python3 audit/mc_sim.py --verify` exits 0",
+    "`cd services/auth-api && AUDIT_DATABASE_URL=... npm test` exits 0 with `# skipped 0` and `# fail 0`",
+    "`AUDIT_DATABASE_URL=... bash scripts/ci-server-check.sh` exits 0",
+    "`cd services/auth-api && node --test test/render-blueprint.test.js` exits 0",
+    "`python3 tools/verify_backup_rules.py` exits 0",
+    "Every task in this blueprint has a line in audit/06_execution_log.md with its command, exit code and diff stat",
+    "No test was skipped, deleted, weakened or marked .only to reach a green result"
+  ],
+  "launch_runbook": "1) A maintainer installs .github/workflows/server.yml and fixes build.yml so one Android run is green. 2) Run the backup/restore drill and record RPO/RTO. 3) Counsel signs the four persian texts. 4) Turn on a single flag at a time in the order login -> triage -> bookings -> matching -> payments -> escrow release, watching GET /metrics after each. 5) Before enabling FEATURE_ESCROW_RELEASE, apply T-005 and confirm one hold releases end-to-end. 6) Rollback lever for every step is the corresponding FEATURE_* variable set back to false; for the schema, CONFIRM_DESTRUCTIVE_ROLLBACK=yes plus `node src/migrate.js down N` — every down script drops tables, so take a restore point first. 7) On-call triggers: any 5xx burst on /v1/auth/*, oosta_provider_failures_total increasing for more than 5 minutes, or oosta_escrow_holds_due growing for two consecutive days.",
+  "orphan_check": {
+    "P1_findings": [
+      "F-DATA-001",
+      "F-EXEC-001",
+      "F-EXEC-004",
+      "F-EXEC-005",
+      "F-LEGAL-001",
+      "F-OPS-001"
+    ],
+    "P1_with_a_tracing_task": [
+      "F-EXEC-001",
+      "F-EXEC-004",
+      "F-EXEC-005",
+      "F-DATA-001",
+      "F-OPS-001",
+      "F-LEGAL-001"
+    ],
+    "orphans": []
+  }
 }

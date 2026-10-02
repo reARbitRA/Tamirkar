@@ -1,0 +1,18 @@
+AFTER PHASE 7 — HEAD 7c8b749f4ca2f69c01de5e3d86d419b713d85344
+closed: ['F-DATA-002', 'F-DOC-001', 'F-LEGAL-002', 'F-OPS-001', 'F-RELY-001']
+implementation: numpy 2.4.6 random.default_rng(424242)
+R_point 80.9198 | R_mean 80.4347 | CI95 [74.4674, 86.4556]
+P(R>=75) raw 0.9624 | P_GO effective 0.3500 | verdict NO-GO — REMEDIABLE
+counts {'P0': 0, 'P1': 5, 'P2': 8, 'P3': 8}
+  D1   s=42.8571 grade=A
+  D2   s=95.6800 grade=B
+  D3   s=88.6000 grade=A
+  D4   s=82.0000 grade=A
+  D5   s=58.0000 grade=A
+  D6   s=98.1100 grade=B
+  D7   s=94.8700 grade=B
+  D8   s=97.8400 grade=B
+  D9   s=94.8700 grade=B
+  D10  s=92.8000 grade=A
+  D11  s=100.0000 grade=B
+  D12  s=83.8000 grade=B

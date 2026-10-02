@@ -1,0 +1,130 @@
+{
+  "head": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
+  "spotcheck": [
+    {
+      "token": "[E:services/auth-api/Dockerfile:19-27]",
+      "finding": "F-OPS-003",
+      "pass": true,
+      "check": "content+anchor",
+      "anchor_regex": "USER node|EXPOSE|read-only|cap",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "USER node"
+      ],
+      "reason": "services/auth-api/Dockerfile:19-27 in bounds (27 lines); required anchor /USER node|EXPOSE|read-only|cap/ matched"
+    },
+    {
+      "token": "[E:services/auth-api/db/005_devices.sql:9-10]",
+      "finding": "F-API-001",
+      "pass": true,
+      "check": "content+anchor",
+      "anchor_regex": "UUID|requireUuid|dev_",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "UUID",
+        "gen_random_uuid()"
+      ],
+      "reason": "services/auth-api/db/005_devices.sql:9-10 in bounds (38 lines); required anchor /UUID|requireUuid|dev_/ matched"
+    },
+    {
+      "token": "[E:services/auth-api/db/004_operational_indexes.sql:22-26]",
+      "finding": "F-DATA-002",
+      "pass": true,
+      "check": "content+anchor",
+      "anchor_regex": "otp_challenges|escrow_holds|retention",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "escrow_holds",
+        "otp_challenges"
+      ],
+      "reason": "services/auth-api/db/004_operational_indexes.sql:22-26 in bounds (26 lines); required anchor /otp_challenges|escrow_holds|retention/ matched"
+    },
+    {
+      "token": "[E:docs/GO_60_ROADMAP.md:47-90]",
+      "finding": "F-EXEC-001",
+      "pass": true,
+      "check": "content+anchor",
+      "anchor_regex": "/v1/",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "AiProviderRouter",
+        "AiProviderRouter.kt",
+        "AuthApi",
+        "AuthApi.kt"
+      ],
+      "reason": "docs/GO_60_ROADMAP.md:47-90 in bounds (219 lines); required anchor //v1// matched"
+    },
+    {
+      "token": "[E:app/src/main/java/com/example/data/remote/AuthApi.kt:40-61]",
+      "finding": "F-EXEC-001",
+      "pass": true,
+      "check": "content+anchor",
+      "anchor_regex": "/v1/",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "AuthApi"
+      ],
+      "reason": "app/src/main/java/com/example/data/remote/AuthApi.kt:40-61 in bounds (79 lines); required anchor //v1// matched"
+    },
+    {
+      "token": "[E:app/src/main/res/xml/data_extraction_rules.xml:1-12]",
+      "finding": "F-LEGAL-002",
+      "pass": true,
+      "check": "content+anchor",
+      "anchor_regex": "sharedpref|database|backup|Eclude|exclude",
+      "anchor_matched": true,
+      "auto_anchors_matched": [],
+      "reason": "app/src/main/res/xml/data_extraction_rules.xml:1-12 in bounds (12 lines); required anchor /sharedpref|database|backup|Eclude|exclude/ matched"
+    },
+    {
+      "token": "[E:app/src/main/java/com/example/data/remote/AiProviderRouter.kt:24-43]",
+      "finding": "F-EXEC-001",
+      "pass": true,
+      "check": "content+anchor",
+      "anchor_regex": "/v1/",
+      "anchor_matched": true,
+      "auto_anchors_matched": [],
+      "reason": "app/src/main/java/com/example/data/remote/AiProviderRouter.kt:24-43 in bounds (46 lines); required anchor //v1// matched"
+    },
+    {
+      "token": "[E:services/auth-api/src/config.js:78-81]",
+      "finding": "F-SEC-002",
+      "pass": true,
+      "check": "content+anchor",
+      "anchor_regex": "bucket|limit|window",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "AI_RATE_LIMIT_PER_MINUTE"
+      ],
+      "reason": "services/auth-api/src/config.js:78-81 in bounds (86 lines); required anchor /bucket|limit|window/ matched"
+    },
+    {
+      "token": "[E:services/auth-api/src/config.js:78-81]",
+      "finding": "F-SEC-002",
+      "pass": true,
+      "check": "content+anchor",
+      "anchor_regex": "bucket|limit|window",
+      "anchor_matched": true,
+      "auto_anchors_matched": [
+        "AI_RATE_LIMIT_PER_MINUTE"
+      ],
+      "reason": "services/auth-api/src/config.js:78-81 in bounds (86 lines); required anchor /bucket|limit|window/ matched"
+    },
+    {
+      "token": "[E:docs/legal/APPROVALS.md:1-9]",
+      "finding": "F-LEGAL-001",
+      "pass": true,
+      "check": "content+anchor",
+      "anchor_regex": "\\[ \\]|APPROVALS|\\u062a\\u0623\\u06cc\\u06cc\\u062f",
+      "anchor_matched": true,
+      "auto_anchors_matched": [],
+      "reason": "docs/legal/APPROVALS.md:1-9 in bounds (10 lines); required anchor /\\[ \\]|APPROVALS|\\u062a\\u0623\\u06cc\\u06cc\\u062f/ matched"
+    }
+  ],
+  "failures": [],
+  "recomputed": {
+    "R_point": 79.072978,
+    "P_GO_effective": 0.35,
+    "MC_mean": 78.7599
+  }
+}

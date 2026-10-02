@@ -272,10 +272,15 @@ app.post('/v1/auth/request-otp', async (request, reply) => {
     await client.query('BEGIN');
     // Transaction-scoped advisory locking makes concurrent sends for one number deterministic.
     await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [phone]);
+    // A challenge the provider refused to deliver is not a code this user received, so it must not
+    // consume their send budget. Counting `failed` rows meant three Kavenegar 5xx responses answered
+    // 429 to someone who never got an SMS, for the rest of the window — the outage and the lockout
+    // compounded. The row is still written on failure for diagnostics; it just stops counting.
     const { rows: recent } = await client.query(
       `SELECT id, status, sent_at, created_at
        FROM otp_challenges
-       WHERE phone_e164 = $1 AND created_at > NOW() - ($2 * INTERVAL '1 minute')
+       WHERE phone_e164 = $1 AND status <> 'failed'
+         AND created_at > NOW() - ($2 * INTERVAL '1 minute')
        ORDER BY created_at DESC`,
       [phone, OTP_SEND_WINDOW_MINUTES]
     );

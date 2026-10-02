@@ -1,0 +1,385 @@
+{
+  "head": "7c8b749f4ca2f69c01de5e3d86d419b713d85344",
+  "short_sha": "7c8b749",
+  "state": "after phase 7 remediation",
+  "closed_ids": [
+    "F-DATA-002",
+    "F-DOC-001",
+    "F-LEGAL-002",
+    "F-OPS-001",
+    "F-RELY-001"
+  ],
+  "dimensions": [
+    {
+      "id": "D1",
+      "name": "Core functional completeness vs mvp_definition",
+      "weight": 18,
+      "penalty": 22.32,
+      "score": 42.8571,
+      "dominant_grade": "A",
+      "half_width": 3,
+      "min": 39.8571,
+      "mode": 42.8571,
+      "max": 45.8571,
+      "caps_applied": [
+        {
+          "cap": "d1_journey",
+          "reason": "3/7 journeys VERIFIED_WORKING",
+          "before": 77.68,
+          "after": 42.8571
+        }
+      ],
+      "penalty_terms": [
+        {
+          "id": "F-EXEC-001",
+          "severity": "P1",
+          "confidence": 1.0,
+          "evidence_grade": "A",
+          "term": 18.0
+        },
+        {
+          "id": "F-EXEC-002",
+          "severity": "P2",
+          "confidence": 0.8,
+          "evidence_grade": "B",
+          "term": 4.32
+        }
+      ]
+    },
+    {
+      "id": "D2",
+      "name": "Correctness & test evidence (executed)",
+      "weight": 14,
+      "penalty": 4.32,
+      "score": 95.68,
+      "dominant_grade": "B",
+      "half_width": 7,
+      "min": 88.68,
+      "mode": 95.68,
+      "max": 100.0,
+      "caps_applied": [],
+      "penalty_terms": [
+        {
+          "id": "F-QUAL-002",
+          "severity": "P2",
+          "confidence": 0.8,
+          "evidence_grade": "B",
+          "term": 4.32
+        }
+      ]
+    },
+    {
+      "id": "D3",
+      "name": "Security & secrets hygiene",
+      "weight": 14,
+      "penalty": 11.4,
+      "score": 88.6,
+      "dominant_grade": "A",
+      "half_width": 3,
+      "min": 85.6,
+      "mode": 88.6,
+      "max": 91.6,
+      "caps_applied": [],
+      "penalty_terms": [
+        {
+          "id": "F-SEC-001",
+          "severity": "P2",
+          "confidence": 1.0,
+          "evidence_grade": "A",
+          "term": 6.0
+        },
+        {
+          "id": "F-SEC-002",
+          "severity": "P3",
+          "confidence": 0.8,
+          "evidence_grade": "B",
+          "term": 1.08
+        },
+        {
+          "id": "F-SEC-003",
+          "severity": "P2",
+          "confidence": 0.8,
+          "evidence_grade": "B",
+          "term": 4.32
+        }
+      ]
+    },
+    {
+      "id": "D4",
+      "name": "Data integrity, migrations & persistence",
+      "weight": 8,
+      "penalty": 18.0,
+      "score": 82.0,
+      "dominant_grade": "A",
+      "half_width": 3,
+      "min": 79.0,
+      "mode": 82.0,
+      "max": 85.0,
+      "caps_applied": [],
+      "penalty_terms": [
+        {
+          "id": "F-DATA-001",
+          "severity": "P1",
+          "confidence": 1.0,
+          "evidence_grade": "A",
+          "term": 18.0
+        }
+      ]
+    },
+    {
+      "id": "D5",
+      "name": "Build, CI & reproducibility",
+      "weight": 8,
+      "penalty": 42.0,
+      "score": 58.0,
+      "dominant_grade": "A",
+      "half_width": 3,
+      "min": 55.0,
+      "mode": 58.0,
+      "max": 61.0,
+      "caps_applied": [],
+      "penalty_terms": [
+        {
+          "id": "F-EXEC-004",
+          "severity": "P1",
+          "confidence": 1.0,
+          "evidence_grade": "A",
+          "term": 18.0
+        },
+        {
+          "id": "F-EXEC-005",
+          "severity": "P1",
+          "confidence": 1.0,
+          "evidence_grade": "A",
+          "term": 18.0
+        },
+        {
+          "id": "F-EXEC-006",
+          "severity": "P2",
+          "confidence": 1.0,
+          "evidence_grade": "A",
+          "term": 6.0
+        }
+      ]
+    },
+    {
+      "id": "D6",
+      "name": "Deploy & runtime readiness",
+      "weight": 8,
+      "penalty": 1.89,
+      "score": 98.11,
+      "dominant_grade": "B",
+      "half_width": 7,
+      "min": 91.11,
+      "mode": 98.11,
+      "max": 100.0,
+      "caps_applied": [],
+      "penalty_terms": [
+        {
+          "id": "F-OPS-002",
+          "severity": "P3",
+          "confidence": 0.8,
+          "evidence_grade": "B",
+          "term": 1.08
+        },
+        {
+          "id": "F-OPS-003",
+          "severity": "P3",
+          "confidence": 0.6,
+          "evidence_grade": "B",
+          "term": 0.81
+        }
+      ]
+    },
+    {
+      "id": "D7",
+      "name": "Error handling, logging & observability",
+      "weight": 7,
+      "penalty": 5.13,
+      "score": 94.87,
+      "dominant_grade": "B",
+      "half_width": 7,
+      "min": 87.87,
+      "mode": 94.87,
+      "max": 100.0,
+      "caps_applied": [],
+      "penalty_terms": [
+        {
+          "id": "F-OBS-001",
+          "severity": "P2",
+          "confidence": 0.8,
+          "evidence_grade": "B",
+          "term": 4.32
+        },
+        {
+          "id": "F-RELY-002",
+          "severity": "P3",
+          "confidence": 0.6,
+          "evidence_grade": "B",
+          "term": 0.81
+        }
+      ]
+    },
+    {
+      "id": "D8",
+      "name": "Performance & scalability at MVP load",
+      "weight": 6,
+      "penalty": 2.16,
+      "score": 97.84,
+      "dominant_grade": "B",
+      "half_width": 7,
+      "min": 90.84,
+      "mode": 97.84,
+      "max": 100.0,
+      "caps_applied": [],
+      "penalty_terms": [
+        {
+          "id": "F-RELY-003",
+          "severity": "P3",
+          "confidence": 0.8,
+          "evidence_grade": "B",
+          "term": 1.08
+        },
+        {
+          "id": "F-RELY-004",
+          "severity": "P3",
+          "confidence": 0.8,
+          "evidence_grade": "B",
+          "term": 1.08
+        }
+      ]
+    },
+    {
+      "id": "D9",
+      "name": "API/contract stability & integration correctness",
+      "weight": 6,
+      "penalty": 5.13,
+      "score": 94.87,
+      "dominant_grade": "B",
+      "half_width": 7,
+      "min": 87.87,
+      "mode": 94.87,
+      "max": 100.0,
+      "caps_applied": [],
+      "penalty_terms": [
+        {
+          "id": "F-API-001",
+          "severity": "P2",
+          "confidence": 0.8,
+          "evidence_grade": "B",
+          "term": 4.32
+        },
+        {
+          "id": "F-API-002",
+          "severity": "P3",
+          "confidence": 0.6,
+          "evidence_grade": "B",
+          "term": 0.81
+        }
+      ]
+    },
+    {
+      "id": "D10",
+      "name": "Code quality, architecture & maintainability",
+      "weight": 5,
+      "penalty": 7.2,
+      "score": 92.8,
+      "dominant_grade": "A",
+      "half_width": 3,
+      "min": 89.8,
+      "mode": 92.8,
+      "max": 95.8,
+      "caps_applied": [],
+      "penalty_terms": [
+        {
+          "id": "F-QUAL-001",
+          "severity": "P2",
+          "confidence": 1.0,
+          "evidence_grade": "A",
+          "term": 6.0
+        },
+        {
+          "id": "F-QUAL-003",
+          "severity": "P3",
+          "confidence": 0.8,
+          "evidence_grade": "A",
+          "term": 1.2
+        }
+      ]
+    },
+    {
+      "id": "D11",
+      "name": "Documentation & onboarding",
+      "weight": 3,
+      "penalty": 0.0,
+      "score": 100.0,
+      "dominant_grade": "B",
+      "half_width": 5,
+      "min": 95.0,
+      "mode": 100.0,
+      "max": 100.0,
+      "caps_applied": [],
+      "penalty_terms": []
+    },
+    {
+      "id": "D12",
+      "name": "Legal, licensing, privacy & compliance",
+      "weight": 3,
+      "penalty": 16.2,
+      "score": 83.8,
+      "dominant_grade": "B",
+      "half_width": 7,
+      "min": 76.8,
+      "mode": 83.8,
+      "max": 90.8,
+      "caps_applied": [],
+      "penalty_terms": [
+        {
+          "id": "F-LEGAL-001",
+          "severity": "P1",
+          "confidence": 1.0,
+          "evidence_grade": "B",
+          "term": 16.2
+        }
+      ]
+    }
+  ],
+  "R_point": 80.9198,
+  "letter_grade": "B+",
+  "monte_carlo": {
+    "implementation": "numpy 2.4.6 random.default_rng(424242)",
+    "mean": 80.4347,
+    "ci95": [
+      74.4674,
+      86.4556
+    ],
+    "p_ge_75": 0.9624,
+    "p_ge_85": 0.0706,
+    "point": 80.9198,
+    "n": 10000,
+    "seed": 424242,
+    "sigma": 3.0
+  },
+  "hard_gates": {
+    "tripped": [
+      "P1_count=5 >= 5 -> P_GO capped at 0.35"
+    ],
+    "P_GO_effective": 0.35,
+    "counts": {
+      "P0": 0,
+      "P1": 5,
+      "P2": 8,
+      "P3": 8
+    }
+  },
+  "journey_verdicts": {
+    "J1": "VERIFIED_WORKING",
+    "J2": "PARTIAL",
+    "J3": "PARTIAL",
+    "J4": "VERIFIED_WORKING",
+    "J5": "PARTIAL",
+    "J6": "VERIFIED_WORKING",
+    "J7": "PARTIAL"
+  },
+  "audit_confidence_pct": 95.1
+}
