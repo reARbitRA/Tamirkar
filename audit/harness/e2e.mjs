@@ -23,9 +23,12 @@ const ENV_BASE = {
   FEATURE_PAYMENTS: process.env.AUDIT_PAYMENTS ?? 'true',
   FEATURE_TECHNICIAN_MATCHING: process.env.AUDIT_MATCHING ?? 'true',
   FEATURE_ESCROW_RELEASE: process.env.AUDIT_ESCROW ?? 'true',
-  ZARINPAL_MERCHANT_ID: 'audit-merchant-id',
-  ZARINPAL_SANDBOX: 'true',
-  PAYMENT_CALLBACK_BASE_URL: 'https://api.oosta.test'
+  // Set AUDIT_ZARINPAL_MERCHANT_ID to a real sandbox merchant id to turn J5 from PARTIAL into a
+  // genuine end-to-end payment walk. Without it the placeholder id fails at the provider and the
+  // harness records the degraded-but-correct 502 path instead of pretending it passed.
+  ZARINPAL_MERCHANT_ID: process.env.AUDIT_ZARINPAL_MERCHANT_ID || 'audit-merchant-id',
+  ZARINPAL_SANDBOX: process.env.AUDIT_ZARINPAL_SANDBOX ?? 'true',
+  PAYMENT_CALLBACK_BASE_URL: process.env.AUDIT_CALLBACK_BASE_URL || 'https://api.oosta.test'
 };
 
 const results = [];
@@ -205,7 +208,16 @@ const POST = (url, tok, body = {}) => fetch(url, { method: 'POST', headers: H(to
   await pool.query(`UPDATE quotes SET status='accepted' WHERE id=$1`, [b11.id]);
   const r13 = await fetch(`${base}/v1/payments/zarinpal/start`, { method: 'POST', headers: { ...H(custToken), 'idempotency-key': 'audit-idem-key-0001' }, body: JSON.stringify({ quote_id: b11.id }) });
   const b13 = await j(r13);
-  rec('J5.1', 'J5', 'PARTIAL', `POST /v1/payments/zarinpal/start -> ${r13.status} ${JSON.stringify(b13).slice(0, 160)}`);
+  // A 200 with a payment_url is a real Zarinpal authority: J5 is then genuinely verified end to
+  // end. A 502 means the provider was unreachable (placeholder merchant id or no egress), which is
+  // recorded as PARTIAL rather than PASS — the intent row below still proves our side is correct.
+  // The route returns 201 + checkout_url when Zarinpal issued a real authority (server.js:
+  // `reply.code(201).send({ id, status: 'pending', checkout_url: payment.paymentUrl })`), and
+  // 200 + checkout_url when it replays an existing pending intent. Anything else means the
+  // provider was unreachable, which is recorded as PARTIAL rather than faked as PASS.
+  const paymentCreated = (r13.status === 201 || r13.status === 200) && typeof b13?.checkout_url === 'string';
+  rec('J5.1', 'J5', paymentCreated ? 'PASS' : 'PARTIAL',
+    `POST /v1/payments/zarinpal/start -> ${r13.status} ${paymentCreated ? `authority_issued checkout_url=${b13.checkout_url}` : JSON.stringify(b13).slice(0, 160)}`);
   const intentRow = await pool.query(`SELECT id, status, amount_tomans, amount_rials, quote_id FROM payment_intents`);
   rec('J5.2', 'J5', intentRow.rows.length ? 'PASS' : 'FAIL', `payment_intents rows=${intentRow.rows.length} ${JSON.stringify(intentRow.rows[0] ?? null)}`);
 
