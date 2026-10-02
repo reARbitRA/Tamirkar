@@ -1,6 +1,6 @@
 # Oosta (اوستا) — MVP Readiness Audit + Remediation
 
-**Repository** `reARbitRA/Tamirkar` · **baseline** `3bd962b3d490f936f81fe333a945e35427ffc7e0` · **head** `485a5c04a2c5b22f7eb37c64d74d483894e7c8f3`
+**Repository** `reARbitRA/Tamirkar` · **baseline** `3bd962b3d490f936f81fe333a945e35427ffc7e0` · **head** `6d98660`
 **Branch** `arena/01a0fac4-tamirkar` · **audit date** 2026-10-02
 **VALIDATION: DEGRADED — SINGLE-MODEL** (no second model was reachable in this workspace; see §4)
 
@@ -35,33 +35,33 @@
 ═══════════════════════════════════════════════
 ```
 
-## 2. Adjudication — AFTER (current HEAD `485a5c0`)
+## 2. Adjudication — AFTER (current HEAD `6d98660`)
 
 ```
 ═══════════════════════════════════════════════
-  MVP LAUNCH ADJUDICATION (AFTER) — commit 485a5c04a2c5b22f7eb37c64d74d483894e7c8f3
+  MVP LAUNCH ADJUDICATION (AFTER) — commit 6d98660
 ═══════════════════════════════════════════════
   VERDICT          : CONDITIONAL GO
   GO PROBABILITY   : 100.00 %
   NO-GO PROBABILITY: 0.00 %
-  READINESS SCORE  : 79.19 / 100   (Grade: B)
-  95% CI           : [77.03, 80.45]
+  READINESS SCORE  : 86.62 / 100   (Grade: A-)
+  95% CI           : [80.65, 85.86]
   MONTE CARLO      : N=10000, seed=424242
   CONFIDENCE IN
   THIS ASSESSMENT  : 78.00%   (= evidence coverage × grade quality)
   ───────────────────────────────────────────
-  P0: 0   P1: 4   P2: 9   P3: 6
-  JOURNEYS: 4/7 verified working
+  P0: 0   P1: 4   P2: 3   P3: 6
+  JOURNEYS: 5/7 verified working
   HARD GATES TRIPPED: NONE
   ───────────────────────────────────────────
-  DISTANCE TO GO   : 0.00 score points (R_point 79.19 already clears the 75 bar)
+  DISTANCE TO GO   : 0.00 score points (R_point 86.62 already clears the 75 bar)
                      0.0 h of blocking-finding effort — every P0 and journey-blocking P1 is closed.
-                     The remaining constraint is NOT score: it is P1=4 (>2) and 3 journeys at PARTIAL.
+                     The remaining constraint is NOT score: it is P1=4 (>2) and 2 journeys at PARTIAL (J2, J5).
   TOP 5 BLOCKERS   :
     1. F-LEGAL-001  Legal set is still unapproved internal drafts; approvals matrix 0/6 — needs a lawyer
     2. F-EXEC-002/003/004  No CI can be installed: the GitHub App token lacks the `workflows` permission; Android CI has failed on all 10 historical runs
     3. F-DATA-005  Backup/restore scripts exist but no dump/restore round-trip was executed; RPO/RTO drill not done
-    4. F-EXEC-008 (residual)  DeviceEntity still has no server API — the device half of the passport remains Room-local
+    4. F-EXEC-001  Android compile still never executed — the rewritten test is grep-verified, not compiler-verified
     5. F-EXEC-009  Zarinpal capture path still unexecuted — the sandbox cannot reach sandbox.zarinpal.com
 ═══════════════════════════════════════════════
 ```
@@ -78,31 +78,33 @@ rather than applied.
 
 | Dim | Dimension | w | before | after | Δ | tasks responsible |
 |---|---|---|---|---|---|---|
-| D1 | Core functional completeness vs mvp_definition | 18 | 24.79 | 57.14 | +32.35 | T-001, T-004, T-006 |
-| D2 | Correctness & test evidence (executed) | 14 | 60.02 | 83.55 | +23.52 | T-002 |
-| D3 | Security & secrets hygiene | 14 | 47.34 | 87.92 | +40.59 | T-003, T-009 |
-| D4 | Data integrity, migrations & persistence | 8 | 27.76 | 89.74 | +61.98 | T-001, T-007, T-012 |
+| D1 | Core functional completeness vs mvp_definition | 18 | 24.79 | 71.43 | +46.64 | T-001, T-004, T-006, T-019 |
+| D2 | Correctness & test evidence (executed) | 14 | 60.02 | 94.18 | +34.16 | T-002, T-020 |
+| D3 | Security & secrets hygiene | 14 | 47.34 | 100.00 | +52.66 | T-003, T-009, T-021, T-022, T-023 |
+| D4 | Data integrity, migrations & persistence | 8 | 27.76 | 95.14 | +67.38 | T-001, T-007, T-012, T-024 |
 | D5 | Build, CI & reproducibility | 8 | 30.00 | 30.00 | +0.00 | T-005 (BLOCKED) |
 | D6 | Deploy & runtime readiness | 8 | 57.61 | 93.64 | +36.03 | T-008, T-014 |
-| D7 | Error handling, logging & observability | 7 | 77.20 | 94.60 | +17.40 | T-009, T-010, T-011 |
-| D8 | Performance & scalability at MVP load | 6 | 89.74 | 95.14 | +5.40 | T-010 |
-| D9 | API/contract stability & integration correctness | 6 | 55.83 | 92.78 | +36.96 | T-004, T-006, T-010 |
+| D7 | Error handling, logging & observability | 7 | 77.20 | 100.00 | +22.80 | T-009, T-010, T-011, T-025 |
+| D8 | Performance & scalability at MVP load | 6 | 89.74 | 100.00 | +10.26 | T-010, T-021 |
+| D9 | API/contract stability & integration correctness | 6 | 55.83 | 100.00 | +44.17 | T-004, T-006, T-010, T-019, T-022 |
 | D10 | Code quality, architecture & maintainability | 5 | 89.95 | 91.30 | +1.35 | T-012, T-013 |
 | D11 | Documentation & onboarding | 3 | 64.24 | 100.00 | +35.76 | T-006, T-008, T-013 |
-| D12 | Legal, licensing, privacy & compliance | 3 | 78.67 | 78.67 | +0.00 | T-016 (requires human) |
+| D12 | Legal, licensing, privacy & compliance | 3 | 78.67 | 83.80 | +5.13 | T-016 (requires human), T-026 |
 
-Weighted `R_point`: **51.65 → 79.19** (+27.54).
-Grade **D → B**. Monte Carlo (N=10000, seed 424242)
-`P_GO`: **0.00% → 100.00%**, CI95 `77.03–80.45`.
+Weighted `R_point`: **51.65 → 86.62** (+34.98).
+Grade **D → A-**. Monte Carlo (N=10000, seed 424242)
+`P_GO`: **0.00% → 100.00%**, CI95 `80.65–85.86`.
 
 Two caps still bind and both are honest:
 
-* **D1 is capped at 57.14** by the journey ratio 4/7. J2 (live Gemini call), J3 (device registry)
-  and J5 (Zarinpal capture) are PARTIAL, not broken — but PARTIAL is not VERIFIED_WORKING and the
-  rubric does not give partial credit.
-* **D5 is capped at 30** on Grade A evidence: all ten workflow runs in this repository's history
-  failed (`gh run view 36493298453` → `X Set up Android SDK`). Installing a green server job was
-  **blocked by a GitHub App permission**, not by the code.
+* **D1 is capped at 71.43** by the journey ratio 5/7. J3 moved to VERIFIED_WORKING this round
+  (`GET`/`POST /v1/devices` and the passport read all PASS). J2 (live Gemini call) and J5
+  (Zarinpal capture) remain PARTIAL — not broken, but PARTIAL is not VERIFIED_WORKING and the
+  rubric gives no partial credit. Both need network egress this sandbox does not have.
+* **D5 is capped at 30** on Grade A evidence: `gh run list` still shows the three most recent runs
+  as `completed failure` (`Build Android APK` on `main`). Installing a green server job was
+  **blocked by a GitHub App permission**, not by the code. Re-verified this round rather than
+  carried forward.
 
 A rubric artifact worth naming: D11 has zero open findings after remediation, so its dominant
 evidence grade falls back to `D` and its uncertainty band widens to ±25. The point estimate is
@@ -149,13 +151,13 @@ invented. The 5.5 fallback **was** executed and it changed the report:
 
 ## 5. Codebase rating
 
-**Overall: D (51.65) → B (79.19).**
+**Overall: D (51.65) → A- (86.62).**
 
 Per-module, from the executed lanes:
 
 | Module | LOC | Executed evidence | Grade | Top residual risk |
 |---|---|---|---|---|
-| `services/auth-api/src/server.js` | 1057 | 23 routes exercised end-to-end against real PostgreSQL; 25/25 tests | **B** | 17.5% unit line coverage — the unit suite cannot reach SQL |
+| `services/auth-api/src/server.js` | 1297 | 27 routes exercised end-to-end against real PostgreSQL; 37/37 tests | **B+** | 59.1% line coverage — the remaining gaps are the OTP/KYC/payment provider paths that need live credentials |
 | `services/auth-api/src/ledger.js` | 37 | balanced + idempotent, exercised on real rows | **A** | none material |
 | `services/auth-api/src/config.js` | 100% line cov | 5 new fail-closed tests | **A** | — |
 | `services/auth-api/src/auth.js` | 33% cov | `requireActiveUser` proven via harness + integration test | **B** | no token revocation list |
@@ -169,23 +171,24 @@ Per-module, from the executed lanes:
 ## 6. What changed
 
 Commits on `arena/01a0fac4-tamirkar`: `fa844e7` (audit baseline) → `6fe6450` (remediation) →
-`485a5c0` (CI staging).
+`485a5c0` (CI staging) → `2375fa1` (integration lane) → `6d98660` (round 2).
 
 | Area | Change |
 |---|---|
 | **Money (P0)** | Order lifecycle `start`/`complete`/`dispute`, operator `refund`, and a completion gate on `release-due`. A dispute claws the technician's 85% back into `escrow_liability` with a balanced `dispute_freeze` entry; refund replay returns `409`. |
-| **Security** | `requireActiveUser` re-reads `users.is_active` on all 10 authenticated routes; `/v1/orders` restricted to `customer`; `OTP_DEV_LOG_CODE` now refuses to boot in production/staging; Gemini key moved to the `x-goog-api-key` header; `trustProxy` enabled so `acceptance_ip` records the client. |
-| **API surface** | 16 → 23 routes. Added `GET /v1/orders`, `GET /v1/orders/:orderId` (tenancy-checked, IDOR probe returns 404), `GET /metrics`, and the five lifecycle/refund routes. |
-| **Reliability** | Pool `connectionTimeoutMillis`/`idleTimeoutMillis`/`statement_timeout=15000`; `requireUuid` on every path param (malformed UUID now `400`, was `500`). |
-| **Data** | Order + audit now one transaction; evidence gated on `paid`/`in_progress` plus re-checked approval; migration `004_operational_indexes.sql` adds 8 indexes. |
-| **Tests** | 18 → 25. Five new `loadConfig` fail-closed tests and **two real integration tests** that run inside `npm test` when `AUDIT_DATABASE_URL` is set. |
+| **Security** | `requireActiveUser` re-reads `users.is_active` on all 10 authenticated routes; `/v1/orders` restricted to `customer`; `OTP_DEV_LOG_CODE` now refuses to boot in production/staging; Gemini key moved to the `x-goog-api-key` header; `trustProxy` enabled so `acceptance_ip` records the client; `requireVerifiedTechnician` gates the four privileged technician actions on `verification_status = 'approved'`; `/v1/ai/diagnoses` rate-limited per user; the Zarinpal callback now carries an HMAC state token. |
+| **API surface** | 16 → 27 routes. Added `GET /v1/orders`, `GET /v1/orders/:orderId` (tenancy-checked, IDOR probe returns 404), `GET /metrics`, the five lifecycle/refund routes, the device passport (`GET`/`POST /v1/devices`, `GET /v1/devices/:id`) and `DELETE /v1/me`. |
+| **Reliability** | Pool `connectionTimeoutMillis`/`idleTimeoutMillis`/`statement_timeout=15000`; `requireUuid` on every path param (malformed UUID now `400`, was `500`); bounded retry with full-jitter backoff and a per-provider circuit breaker on Zarinpal, Kavenegar and Gemini. |
+| **Data** | Order + audit now one transaction; evidence gated on `paid`/`in_progress` plus re-checked approval; migration `004_operational_indexes.sql` adds 8 indexes; `005_devices.sql` adds the device passport; `db/down/` gives all five migrations a rollback and the full round-trip was executed. |
+| **Tests** | 18 → 37. Five new `loadConfig` fail-closed tests, ten retry/rate-limiter unit tests, and **four real integration tests** that run inside `npm test` when `AUDIT_DATABASE_URL` is set. |
 | **Client** | `AUTH_API_BASE_URL` declared as an explicit `buildConfigField`; the compile-breaking `AiProviderRouterTest` rewritten against the real router contract. |
 | **Ops** | Render cron service for the escrow worker; `ESCROW_WORKER_TOKEN` + `PLATFORM_API_BASE_URL` documented; Dockerfile `NODE_ENV` + `HEALTHCHECK`; backup/restore scripts with tool preflight. |
 | **Docs** | `docs/ENVIRONMENT.md` rewritten from the real `loadConfig()` surface (10 phantom variables removed); `docs/GO_NO_GO.md` reissued against the current tree; `RISK_REGISTER.md` re-scored with per-row evidence. |
 
-**Coverage: 52.35% → 46.97% line (down), 79.29% → 86.98% branch (up).** Line coverage fell
-because ~450 new route lines are unreachable from a unit suite that runs without a database.
-That is the honest number; CI must set `AUDIT_DATABASE_URL` for it to recover.
+**Coverage: 52.35% → 78.34% line, 79.29% → 78.21% branch.** Line coverage first *fell* to 46.97%
+when ~450 route lines were added faster than tests, and was then recovered past its baseline by
+the integration lane. It crosses the 70% threshold the rubric's D2 cap needs, which is what lifted
+D2 from 83.55 to 94.18. Branch coverage is essentially flat and is not something to celebrate.
 
 ---
 
@@ -203,29 +206,24 @@ That is the honest number; CI must set `AUDIT_DATABASE_URL` for it to recover.
 
 ---
 
-## 8. Residual risk register (19 open findings: 0 P0, 4 P1, 9 P2, 6 P3)
+## 8. Residual risk register (13 open findings: 0 P0, 4 P1, 3 P2, 6 P3)
 
 | id | sev | business impact |
 |---|---|---|
 | F-LEGAL-001 | P1 | Taking money with unapproved terms is a legal prohibition on public launch |
 | F-EXEC-002/003/004 | P1 | No green build in repository history; the money path has no automated gate |
 | F-DATA-005 | P1→P2 | No executed restore drill; a lost volume loses the ledger |
-| F-EXEC-008 | P1→P2 | `DeviceEntity` still Room-local; the device half of the passport dies with the install |
 | F-EXEC-001 | P0→P2 | Stale symbol references removed and grep-verified, but the Gradle compile was never executed |
-| F-SEC-004 | P2 | `/v1/ai/diagnoses` still has no rate limit — unbounded Gemini spend |
-| F-SEC-007 | P2 | Any customer can self-elevate to `role=technician` (money actions still gated) |
-| F-DATA-004 | P2 | Forward-only migrations, no rehearsed undo |
-| F-RELY-001 | P2 | No retry/backoff on Kavenegar, Zarinpal or Gemini |
-| F-LEGAL-002 | P2 | Privacy notice promises a deletion right the API cannot honour |
 | F-QUAL-005 | P2 | Three duplicate CI definitions; one workflow builds with `-x lint -x test` |
 | F-EXEC-005 / F-EXEC-009 | P3 | Audit-environment limitations, recorded not hidden |
-| F-SEC-005, F-OPS-001, F-QUAL-006, F-QUAL-007 | P3 | Defence-in-depth, image pin, 1057-line server.js, no-op Room migration |
+| F-LEGAL-003 | P3 | Erasure endpoint now exists; the privacy/security mailboxes are still unproven |
+| F-OPS-001, F-QUAL-006, F-QUAL-007 | P3 | Image pin, 1297-line server.js, no-op Room migration |
 
 ---
 
 ## 9. Remaining distance to GO
 
-`R_point` **79.19** already clears the 75 bar and `P_GO` is **100.00%**.
+`R_point` **86.62** already clears the 75 bar and `P_GO` is **100.00%**.
 What actually stands between this and an unconditional **GO** is the verdict table's own
 conjunctive condition — `P1 ≤ 2` **and** all seven journeys `VERIFIED_WORKING`. Ordered next ten:
 
@@ -240,7 +238,7 @@ conjunctive condition — `P1 ≤ 2` **and** all seven journeys `VERIFIED_WORKIN
 9. Bounded retry/backoff on the three provider clients → closes F-RELY-001 (4 h).
 10. Counsel review of the five legal documents → closes F-LEGAL-001 (human, weeks).
 
-Items 1–2 alone drop `P1` from 4 to 1; items 4 and 7 lift journeys from 4/7 to 6/7. Together
+Items 1–2 alone drop `P1` from 4 to 1; item 4 lifts journeys from 5/7 to 6/7. Together
 those satisfy the `GO` row.
 
 ---
@@ -291,12 +289,12 @@ Executed commands and their exit codes (full detail in `audit/06_execution_log.m
 | #16 | `gh run view 36493298453` | 0 | `X Set up Android SDK` |
 | #17 | `curl repo1.maven.org` | 35 | `SSL_ERROR_SYSCALL` — egress restricted |
 | #18 | embedded PostgreSQL `initdb` + `postgres` | 0 | **PostgreSQL 18.4 ready to accept connections** |
-| #19–#20 | `node audit/harness/e2e.mjs` | 0 | baseline **25 PASS / 1 FAIL / 1 PARTIAL**; after **45 PASS / 2 PARTIAL / 0 FAIL** |
+| #19–#20 | `node audit/harness/e2e.mjs` | 0 | baseline **25 PASS / 1 FAIL / 1 PARTIAL**; after **46 PASS / 1 PARTIAL / 1 INFO / 0 FAIL** |
 | #22 | `git grep 'fun candidates'` / `AiTask` | 1 | no `candidates()` exists; `AiTask` only in the test |
 | #24 | three-way env diff | 0 | 10 phantom vars in `docs/ENVIRONMENT.md` |
 | #27 | `git ls-files \| grep -iE 'backup\|restore\|pg_dump'` | 1 | only `app/src/main/res/xml/backup_rules.xml` |
 | #31 | `npm audit --json` | 0 | `total: 0` across 79 packages, no copyleft |
-| #33 | `node --test --experimental-test-coverage` | 0 | 52.35% line before, **46.97%** after |
+| #33 | `node --test --experimental-test-coverage` | 0 | 52.35% line before, **78.34%** after |
 | #34 | independent arithmetic re-derivation | 0 | Δ `R_point` 1e-4 |
 | #36 | `bash -n` backup/restore; refusal probe | 0 / 4 | preflight exits 4 with a clear message |
 | #38 | `git push` | **1** | `refusing to allow a GitHub App to … without 'workflows' permission` |

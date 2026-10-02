@@ -42,3 +42,56 @@ CI must set it (or run the equivalent service container) for the number to recov
 * Zarinpal sandbox payment — `sandbox.zarinpal.com` unreachable (sandbox egress is limited to
   the npm registry and the GitHub API).
 * Docker image build — `docker` not installed.
+
+---
+
+# Round 2 — commit `6d98660`
+
+Second remediation pass, executed after the user asked to close as much of the remaining gap as
+this sandbox allows. Seven findings closed, all verified by running them.
+
+| task | finding | what was done | verification command | result |
+|---|---|---|---|---|
+| T-019 | F-EXEC-008 | `db/005_devices.sql` + `GET`/`POST /v1/devices`, `GET /v1/devices/:deviceId` with service history; `service_orders.device_id` | `node audit/harness/e2e.mjs` | J3.1–J3.4 **all PASS**; J3 → `VERIFIED_WORKING` |
+| T-020 | F-EXEC-008 | Integration lane for the passport: create, health-ordered list, per-device read, IDOR 404, three validation 400s | `AUDIT_DATABASE_URL=… npm test` | pass |
+| T-021 | F-SEC-004 | `src/ratelimit.js`; per-user fixed window on `/v1/ai/diagnoses` with `X-RateLimit-*` and `Retry-After` | same | 3rd call in window → **429**; a second caller is not affected |
+| T-022 | F-SEC-007 | `requireVerifiedTechnician()` on quotes / evidence / start / complete | same | **403** while `verification_status='unsubmitted'`, **201** after approval |
+| T-023 | F-SEC-005 | HMAC `state` token minted per payment intent and verified on the public callback | same | forged/absent state → **400** |
+| T-024 | F-DATA-004 | `db/down/*.sql` for all five migrations; `migrate.js up/down/status`; rollback refuses without `CONFIRM_DESTRUCTIVE_ROLLBACK=yes` | `node src/migrate.js down 5` then `up` | up → **0 tables left** → up → **14 tables**; refusal exits **4** |
+| T-025 | F-RELY-001 | `src/retry.js` — full-jitter backoff + per-provider circuit breaker, wired into Zarinpal, Kavenegar and Gemini | `node --test test/retry.test.js` | 10/10 pass; a 4xx is **never** re-sent |
+| T-026 | F-LEGAL-002 | `DELETE /v1/me` — 409 while an escrow hold or unfinished order exists, otherwise the phone number becomes `erased:<hmac>` | `AUDIT_DATABASE_URL=… npm test` | **200** clean, **409** blocked, **404** on replay |
+
+**Deliberately not done, and why it matters:**
+
+* **F-DATA-005 was not closed with a `COPY`-based backup.** `pg_dump` is absent here, and
+  `COPY TO STDOUT` over the wire protocol would have produced a "passing" drill for a mechanism
+  that production never runs (`scripts/backup-database.sh` uses `pg_dump --format=custom`).
+  Verifying the wrong mechanism would have been worse than leaving the finding open. It stays
+  open as `requires_human`.
+* **`server.js` was not split** (F-QUAL-006). ~8 h of churn for +0.07 weighted points against a
+  money path that currently has 37 passing tests — a bad trade under a "no regressions"
+  constraint. Recorded as an accepted residual.
+
+**Two of my own errors found and fixed while doing this:**
+
+1. `AUDIT_CI=blocked` was passed to the scoring engine, which *lifts* the D5 execution-failed cap.
+   `gh run list` still shows `completed failure` for the three most recent runs, so the cap applies.
+   Re-scored without it: R_point **87.592 → 86.624**. The lower number is the correct one.
+2. Three column/table names were invented rather than read: `service_orders.technician_id` (the
+   technician is reached through `quotes`), `sessions` (no such table — access tokens are stateless
+   JWTs), `otp_codes` (it is `otp_challenges`), and `users.updated_at` (does not exist). Each
+   surfaced as a 500 in the integration lane and was fixed against the real schema.
+
+**Round 2 measured results**
+
+| metric | before round 2 | after | command |
+|---|---|---|---|
+| tests | 25 | **37** (33 pass / 4 skipped without `AUDIT_DATABASE_URL`) | `npm test` |
+| line coverage | 46.97% | **78.34%** | `node --test --experimental-test-coverage` |
+| harness | 45 PASS / 2 PARTIAL | **46 PASS / 1 PARTIAL / 1 INFO / 0 FAIL** | `node audit/harness/e2e.mjs` |
+| open findings | 19 | **13** | `audit/01_findings_after2.json` |
+| R_point | 79.185 | **86.624** (B → A-) | `python3 audit/mc_sim.py` |
+| journeys VERIFIED | 4/7 | **5/7** | `audit/02_scorecard_after2.json` |
+
+Line coverage crossing 70% is what lifted the D2 test-evidence cap, and that alone is worth more
+than any single finding closed this round.

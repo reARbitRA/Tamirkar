@@ -12,7 +12,7 @@
   <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.2.10-0A0908?style=flat-square&labelColor=0A0908&color=C87533" />
   <img alt="Compose" src="https://img.shields.io/badge/Jetpack%20Compose-Material%203-0A0908?style=flat-square&labelColor=0A0908&color=D60019" />
   <img alt="API" src="https://img.shields.io/badge/auth--api-Fastify%20%2B%20PostgreSQL-0A0908?style=flat-square&labelColor=0A0908&color=D60019" />
-  <img alt="Tests" src="https://img.shields.io/badge/auth--api%20tests-18%2F18-0A0908?style=flat-square&labelColor=0A0908&color=34D399" />
+  <img alt="Tests" src="https://img.shields.io/badge/auth--api%20tests-37%2F37-0A0908?style=flat-square&labelColor=0A0908&color=34D399" />
   <img alt="Licence" src="https://img.shields.io/badge/licence-MIT-0A0908?style=flat-square&labelColor=0A0908&color=34D399" />
 </p>
 
@@ -179,7 +179,7 @@ Rate limits are concrete: a 60-second resend cooldown, at most three sends per 1
   <img src="assets/readme/backend-boundary.svg" width="100%" alt="Backend boundary: secrets stay server-side, the APK holds only a public base URL" />
 </p>
 
-`services/auth-api` is the single server boundary: Fastify on Node 20+, PostgreSQL 16, four tracked migrations (`001_auth.sql`, `002_platform.sql`, `003_orders_quotes.sql`, `004_operational_indexes.sql`) and twenty-three routes covering health, metrics, public feature state, OTP, identity, triage, technician application and KYC, admin KYC decisions, order listing and detail, order lifecycle (`start`, `complete`, `dispute`), orders, quotes, quote acceptance, evidence, Zarinpal start and callback, escrow release and escrow refund.
+`services/auth-api` is the single server boundary: Fastify on Node 20+, PostgreSQL 16, five tracked migrations (`001_auth.sql` … `005_devices.sql`, each with a matching `db/down/` rollback) and twenty-seven routes covering health, metrics, public feature state, OTP, identity, triage, technician application and KYC, admin KYC decisions, order listing and detail, order lifecycle (`start`, `complete`, `dispute`), the device passport (`GET`/`POST /v1/devices`, `GET /v1/devices/:id`), account erasure (`DELETE /v1/me`), quotes, quote acceptance, evidence, Zarinpal start and callback, escrow release and escrow refund.
 
 The Android application is given exactly one non-secret value, `AUTH_API_BASE_URL`. `KAVENEGAR_API_KEY`, `OTP_PEPPER`, `JWT_SECRET`, `DATABASE_URL`, `GEMINI_API_KEY` and `ZARINPAL_MERCHANT_ID` stay in the service environment, and `config.js` refuses to boot on placeholder values or on payments without an HTTPS callback. Full contract: [`docs/API.md`](docs/API.md); schema: [`docs/DATABASE.md`](docs/DATABASE.md).
 
@@ -221,7 +221,7 @@ Disclosure policy: [`SECURITY.md`](SECURITY.md). Risk ledger: [`RISK_REGISTER.md
   <img src="assets/readme/verification-console.svg" width="100%" alt="Verification console: executed commands, exit codes and blocked Android tasks" />
 </p>
 
-**Server — executed in this checkout.** `npm ci` then `npm test` runs the Node test runner across nine suites: **23 tests, 23 passed, 0 failed**. They cover Iranian phone normalisation, OTP hashing and constant-time comparison, session claims and rejection of invalid roles, feature-flag exposure, fail-closed configuration (including the refusal to log OTP codes in production), balanced and idempotent ledger postings, Zarinpal request/verify semantics, AI redaction, and HTTP-level behaviour of the server routes. `npm audit --omit=dev` reports **0 vulnerabilities**, and [`node --test --experimental-test-coverage`](services/auth-api) reports the measured line coverage. `.github/workflows/server.yml` runs all of it on every push to `main` and on every pull request.
+**Server — executed in this checkout.** `npm ci` then `npm test` runs the Node test runner across eleven suites: **37 tests, 37 passed, 0 failed** with `AUDIT_DATABASE_URL` set (33 passed, 4 skipped without it). They cover Iranian phone normalisation, OTP hashing and constant-time comparison, session claims and rejection of invalid roles, feature-flag exposure, fail-closed configuration (including the refusal to log OTP codes in production), balanced and idempotent ledger postings, Zarinpal request/verify semantics, AI redaction, retry/backoff classification and circuit-breaker state, rate-limiter windows, and HTTP-level behaviour of the server routes. Two suites are integration lanes that boot the real server against a disposable PostgreSQL: one walks the money path (completion gate, dispute freeze, refund replay, ledger balance), the other the device passport, the KYC gate, account erasure and the AI rate limit. `npm audit --omit=dev` reports **0 vulnerabilities**, and [`node --test --experimental-test-coverage`](services/auth-api) reports the measured line coverage. `.github/workflows/server.yml` runs all of it on every push to `main` and on every pull request.
 
 **Android — defined in the repository, executed in CI.** `app/src/test` holds `AiProviderRouterTest`, `ExampleRobolectricTest`, `ExampleUnitTest` and `GreetingScreenshotTest` (Robolectric 4.16 on SDK 35 with a Compose render assertion), plus an instrumented `ExampleInstrumentedTest`. A Gradle test listener converts failures into GitHub Actions annotations.
 
