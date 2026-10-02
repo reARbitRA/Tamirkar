@@ -50,8 +50,26 @@
 
 4. **پرداخت زرین‌پال** — `sandbox.zarinpal.com` از این sandbox قابل دسترسی نیست، پس گرفتن
    پرداخت و تقسیم ۸۵/۱۵ اجرا نشده. harness اکنون آماده است:
-   `AUDIT_ZARINPAL_MERCHANT_ID=<sandbox-id> node audit/harness/e2e.mjs`
-   → J5 به `VERIFIED_WORKING` می‌رسد (**+۲.۷۹ امتیاز**).
+
+   ```bash
+   # ۱. اثبات پرداخت واقعی (J5.1 از PARTIAL به PASS می‌رود)
+   AUDIT_ZARINPAL_MERCHANT_ID=<sandbox-id> node audit/harness/e2e.mjs
+
+   # ۲. ثبت نتیجه در scorecard — بدون این مرحله harness ثابت می‌کند ولی rubric
+   #    هنوز PARTIAL امتیاز می‌دهد
+   AUDIT_FINDINGS=audit/01_findings_after2.json AUDIT_J3=VERIFIED \
+   AUDIT_TESTS=37,37,0 AUDIT_COV=78.34 AUDIT_BRANCH_COV=78.21 \
+   AUDIT_FUNC_COV=79.03 AUDIT_SERVER_COV=59.06 AUDIT_NPM_AUDIT=0 \
+   AUDIT_J5=VERIFIED AUDIT_J5_NOTE="harness J5.1 PASS با merchant id <id>" \
+   AUDIT_OUT=audit/02_scorecard_after3.json python3 audit/mc_sim.py
+   ```
+
+   اثر اندازه‌گیری‌شده (نه تخمینی): `86.624 → 89.195` یعنی **+۲.۵۷ امتیاز** به‌تنهایی،
+   و **+۲.۷۹** اگر CI از قبل نصب شده باشد. `AUDIT_J5_NOTE` الزامی است — بدون آن اسکریپت
+   خطا می‌دهد، چون ثبت یک verdict بدون ذکر شواهدش قابل حسابرسی نیست.
+
+   همین الگو برای Gemini هم کار می‌کند: `AUDIT_J2=VERIFIED AUDIT_J2_NOTE="..."`.
+   هر دو با هم `90.719` (**Grade A**) می‌دهند.
 
 5. **کامپایل اندروید** — JDK و Android SDK در این محیط نصب نیست، پس هیچ ادعایی دربارهٔ کد
    Kotlin اجرا نشده. تست مخربِ قبلی بازنویسی و با `grep` تأیید شد، نه با کامپایلر.
