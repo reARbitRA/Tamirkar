@@ -34,9 +34,11 @@ here, to `services/auth-api/.env.example` and to `render.yaml`.
 | `FEATURE_ESCROW_RELEASE` | no (default false) | Gates `POST /v1/admin/escrows/release-due`. |
 | `GEMINI_API_KEY` | no | Server-only inference key. Sent in the `x-goog-api-key` header, never in a URL. |
 | `GEMINI_MODEL` | no (default `gemini-2.5-flash`) | Model id. |
+| `AI_RATE_LIMIT_PER_MINUTE` | no (default 10) | Per-user ceiling on `POST /v1/ai/diagnoses`, which is a billable provider call. State is in-process, so on a multi-instance deployment the effective ceiling is limit × instances; a global ceiling needs Redis. Exceeding it returns `429` with `Retry-After`. |
 | `ZARINPAL_MERCHANT_ID` | no | Required when `FEATURE_PAYMENTS=true`. |
 | `ZARINPAL_SANDBOX` | no (default false) | `true` routes to the Zarinpal sandbox. |
 | `PAYMENT_CALLBACK_BASE_URL` | no | Must be `https://` when payments are enabled. |
+| `PROVIDER_RETRY_ATTEMPTS` | no (default 3) | Retry budget for outbound Zarinpal, Kavenegar and Gemini calls. Only 429/5xx/network errors are retried, with full-jitter exponential backoff and a per-provider circuit breaker; a 4xx is a definite answer and is never re-sent, because re-sending to a payment gateway is how double charges happen. |
 | `NODE_ENV` | no | `production`/`staging` enable the `OTP_DEV_LOG_CODE` boot refusal. |
 
 ## Escrow release worker — read by `src/escrow-worker.js`
@@ -55,6 +57,7 @@ whose status is `completed`; disputed, cancelled and in-progress holds stay held
 | --- | --- |
 | `POSTGRES_PASSWORD` | Consumed by `docker-compose.auth.yml` shell substitution only; the Node service never reads it. |
 | `DATABASE_URL` | Used by `src/migrate.js` and `scripts/backup-database.sh`. |
+| `CONFIRM_DESTRUCTIVE_ROLLBACK` | Read only by `src/migrate.js down`. Every `db/down/*.sql` drops tables, so a rollback exits `4` and does nothing unless this is exactly `yes`. Never set it in a service environment — it is for an operator at a terminal who has already taken a restore point. |
 
 ## Variables that were documented here previously and do not exist
 
