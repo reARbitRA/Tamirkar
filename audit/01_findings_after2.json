@@ -150,22 +150,22 @@
     },
     {
       "id": "F-QUAL-005",
-      "title": "Duplicate orphan CI files and a zero-width-named workflow that builds with tests disabled",
+      "title": "RESIDUAL: a zero-width-named workflow still builds the APK with lint and tests disabled",
       "lane": "QUAL",
       "severity": "P2",
       "confidence": 1.0,
       "evidence_grade": "A",
       "evidence": [
-        "[E:cmd#11 git ls-files lists ci/android-apk.yml and github/workflows/build.yml (github/, not .github/)]",
-        "[E:cmd#27 diff shows both differ from their .github/workflows counterparts - stale copies, not includes]",
-        "[E:.github/workflows/ apkbuild.yml filename begins with U+200C ZERO WIDTH NON-JOINER]",
-        "[E:.github/workflows/ apkbuild.yml:L20-L26 step Force Build APK (Ignore AI Errors) runs gradlew assembleDebug -x lint -x test]"
+        "[E:cmd git ls-files .github/workflows -> 'android-apk.yml', 'build.yml', '\\u200capkbuild.yml' (the third filename begins with U+200C ZERO WIDTH NON-JOINER)]",
+        "[E:.github/workflows/‌apkbuild.yml:L26 run: ./gradlew assembleDebug -x lint -x test --no-daemon]",
+        "[E:.github/workflows/android-apk.yml:L47 ./gradlew test --stacktrace and :L69 assembleDebug WITHOUT -x test - the correct workflow already exists]",
+        "[E:cmd git cat-file -e HEAD:ci/android-apk.yml and HEAD:github/workflows/build.yml both fail - the two stale duplicates were deleted in 3983342]"
       ],
-      "impact": "Three near-identical workflow definitions with no single source of truth, plus a workflow whose explicit purpose is to ship an APK with lint and tests skipped. That is the mechanism by which F-EXEC-001 stayed invisible.",
+      "impact": "Three workflows build the same APK. Two of them (android-apk.yml, build.yml) run the tests; the third skips lint and tests outright with -x lint -x test, so it goes green on an APK whose tests fail. Because its filename starts with a zero-width non-joiner it is near-impossible to select, edit or delete by typing its name, which is why it survived. Deleting the two duplicate orphan files - the other half of this finding - was completed in 3983342.",
       "exploit_or_repro": "Executed diffs and filename byte inspection.",
       "blast_radius": "all-users",
-      "remediation": "Delete the ci/ and github/ duplicates, consolidate to one workflow per target, and retire the test-skipping workflow once F-EXEC-001 is fixed.",
-      "effort_hours": 2.0,
+      "remediation": "Delete .github/workflows/‌apkbuild.yml and keep android-apk.yml, which already runs ./gradlew test before assembleDebug. Requires the `workflows` permission, so this stays requires_human. The duplicate ci/ and github/ orphans named in the original finding are already gone.",
+      "effort_hours": 0.5,
       "mvp_blocking": false,
       "blocks_journey": []
     },
@@ -194,15 +194,15 @@
     },
     {
       "id": "F-QUAL-006",
-      "title": "server.js is a 694-line god file holding all 16 routes, validation and money logic",
+      "title": "server.js is a 1297-line god file holding all 27 routes, validation and money logic",
       "lane": "QUAL",
       "severity": "P3",
       "confidence": 1.0,
       "evidence_grade": "B",
       "evidence": [
-        "[E:cmd#8 wc -l -> 694 services/auth-api/src/server.js; next largest source file is 490]"
+        "[E:cmd wc -l services/auth-api/src/*.js -> server.js 1297, migrate.js 114, retry.js 90; 27 registered routes]"
       ],
-      "impact": "Every change to auth, AI, KYC, orders, payments and escrow touches one file, raising merge-conflict and regression risk exactly where the money lives.",
+      "impact": "Every change to auth, AI, KYC, orders, devices, payments and escrow touches one file, raising merge-conflict and regression risk exactly where the money lives. The file has grown from 694 to 1297 lines and 16 to 27 routes during this remediation, so the concentration has roughly doubled rather than been reduced.",
       "exploit_or_repro": "NONE_FOUND",
       "blast_radius": "single-user",
       "remediation": "Extract route groups into modules sharing one app factory; keep the ledger and state machine in domain modules.",
@@ -212,19 +212,22 @@
     },
     {
       "id": "F-QUAL-007",
-      "title": "Room MIGRATION_1_2 is a no-op that exists only to absorb a version bump",
+      "title": "RESIDUAL: Room schema export is disabled, so MIGRATION_1_2 can never be validated against a real schema",
       "lane": "QUAL",
       "severity": "P3",
       "confidence": 1.0,
       "evidence_grade": "B",
       "evidence": [
-        "[E:app/src/main/java/com/example/data/local/TamirkarDatabase.kt:L66-L72 override fun migrate(db) = Unit]"
+        "[E:app/src/main/java/com/example/data/local/TamirkarDatabase.kt:L39 exportSchema = false]",
+        "[E:app/src/main/java/com/example/data/local/TamirkarDatabase.kt:L70 override fun migrate(db) = Unit]",
+        "[E:cmd ls app/schemas -> no such file or directory; no schema JSON is checked in]",
+        "[E:app/src/main/java/com/example/data/local/TamirkarDatabase.kt:L64-L68 KDoc above MIGRATION_1_2 documents why the bump happened - present since baseline 3bd962b, not added by this audit]"
       ],
-      "impact": "Harmless today and correctly non-destructive, but it teaches the pattern of bumping schema versions without migration content.",
+      "impact": "With exportSchema = false Room writes no schema JSON, so nothing in the repository records what version 1 or version 2 actually looked like. MIGRATION_1_2 asserts the two are identical and does nothing - which is correct today, but a future entity change that bumps version 3 would silently inherit that same empty migration and ship a database that Room cannot open, with no diff available to catch it. The rationale for the existing no-op IS documented (KDoc at L64-L68, present since baseline); what is missing is the machine-checkable artifact that would make the claim verifiable.",
       "exploit_or_repro": "Static read.",
       "blast_radius": "single-user",
-      "remediation": "Either revert version to 1 or document why the bump happened; enable exportSchema and check schemas in.",
-      "effort_hours": 1.0,
+      "remediation": "Set exportSchema = true, add room.schemaLocation to the kapt/ksp arguments in app/build.gradle.kts, and check the generated app/schemas/ JSON into the repository. Then a MigrationTestHelper can assert MIGRATION_1_2 against the real v1 schema. Cannot be done or verified in this sandbox: no JDK or Android SDK, so the build cannot be run.",
+      "effort_hours": 1.5,
       "mvp_blocking": false,
       "blocks_journey": [
         "J3"
@@ -252,21 +255,24 @@
     },
     {
       "id": "F-EXEC-009",
-      "title": "Zarinpal sandbox unreachable from the audit sandbox - payment capture and the 85/15 split are UNTESTABLE",
+      "title": "RESIDUAL: real Zarinpal round-trip unexecuted - the capture logic itself is now integration-tested offline",
       "lane": "EXEC",
       "severity": "P3",
       "confidence": 1.0,
       "evidence_grade": "A",
       "evidence": [
-        "[E:cmd#20 harness J5.1 -> POST /v1/payments/zarinpal/start returned 502 payment_unavailable]",
-        "[E:cmd#20 harness J5.2 -> payment_intents row created then marked status=failed with amount_tomans 800000 / amount_rials 8000000]",
-        "[E:cmd#17 curl repo1.maven.org -> SSL_ERROR_SYSCALL; sandbox egress is restricted to the npm registry and the GitHub API]"
+        "[E:cmd harness J5.1 -> POST /v1/payments/zarinpal/start returned 502 payment_unavailable; sandbox.zarinpal.com is unreachable from the audit sandbox]",
+        "[E:test test/capture.test.js with test/zarinpal-stub.mjs preloaded via node --import -> callback with a validly signed state captured escrow_liability 120000 / technician_payable 680000 / gateway_clearing 800000, ledger net 0]",
+        "[E:test same lane -> one escrow_holds row for 120000 not due immediately; intent, quote and order all advanced to paid; provider_ref_id stored]",
+        "[E:test same lane -> replayed redirect produced no second payment_capture entry and no second hold (idempotent)]",
+        "[E:test same lane -> forged state rejected 400; ZARINPAL_STUB_VERIFY_CODE=-1 returned 502 with zero ledger entries and zero holds]",
+        "[E:test negative control: changing the split to 0.20 made the assertion fail with escrow_liability 160000, so the test can detect a wrong split]"
       ],
-      "impact": "The most money-critical path (callback -> verify -> ledger split -> escrow hold) has no executed evidence in this audit. The failure path IS proven correct: intent created, provider failure recorded, user gets a Persian 502.",
+      "impact": "What remains unproven is only the live round-trip against Zarinpal's own sandbox: that a real merchant id is accepted, that their verify endpoint agrees with our stored amount, and that their redirect carries our signed state back intact. The capture logic itself - the 85/15 split, the escrow hold, the balanced payment_capture ledger event, replay idempotency and the refusal to capture on a rejected verification - is now executed by test/capture.test.js against a real PostgreSQL. This finding previously asserted the whole path had no executed evidence; that is no longer true and the claim is narrowed accordingly.",
       "exploit_or_repro": "N/A - audit limitation.",
       "blast_radius": "single-user",
-      "remediation": "Run the capture path in CI against the Zarinpal sandbox with a real merchant id, or add a provider-port seam so the callback logic can be integration-tested offline.",
-      "effort_hours": 4.0,
+      "remediation": "Run audit/harness/e2e.mjs with AUDIT_ZARINPAL_MERCHANT_ID set to a real sandbox merchant id, then record the result with AUDIT_J5=VERIFIED AUDIT_J5_NOTE=\"...\" python3 audit/mc_sim.py. The offline seam suggested here has been built; only the live provider call is outstanding.",
+      "effort_hours": 1.0,
       "mvp_blocking": false,
       "blocks_journey": [
         "J5"
