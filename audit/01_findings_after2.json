@@ -14,7 +14,7 @@
         "[E:cmd#22 git grep -n 'fun candidates' -- '*.kt' -> no output, exit 1]",
         "[E:cmd#22 git grep -n AiTask -- '*.kt' -> only AiProviderRouterTest.kt lines 4,12,19,26]",
         "[E:app/src/main/java/com/example/data/remote/AiProviderRouter.kt:L16-L44 single diagnose() method, no candidates(), no AiTask enum]",
-        "[E:.github/workflows/ZWNJ-apkbuild.yml:L20-L26 step 'Force Build APK (Ignore AI Errors)' runs gradlew assembleDebug -x lint -x test]"
+        "[E:cmd#1 .github/workflows/ contains a file whose name begins with U+200C ZERO WIDTH NON-JOINER (ls -1b shows \\342\\200\\214apkbuild.yml); its build step runs `gradlew assembleDebug -x lint -x test`]"
       ],
       "impact": "The stale AiTask/candidates() references are gone (grep returns 0 for both) and the replacement test only touches symbols that exist in app/src/main. The Gradle compile itself was NOT executed - no JDK or Android SDK in this sandbox - so the compile-clean claim is unproven. || original impact: The declared test task cannot compile, so README's gradlew testDebugUnitTest, the build.yml 'Run unit tests' step and therefore every Android release proof fail. A bypass workflow that skips tests exists, which is how APKs are still produced.",
       "exploit_or_repro": "gradlew testDebugUnitTest (NOT executed here: no JDK/Android SDK) -> unresolved reference AiTask. Static proof is complete: AiTask is imported from com.example.data.remote, the app's own namespace, and no declaration exists in the module.",
@@ -171,21 +171,24 @@
     },
     {
       "id": "F-OPS-001",
-      "title": "RESIDUAL Dockerfile uses a floating base tag, has no HEALTHCHECK and does not set NODE_EN",
+      "title": "RESIDUAL Dockerfile base image is a floating tag, not pinned by digest",
       "lane": "OPS",
       "severity": "P3",
       "confidence": 1.0,
       "evidence_grade": "A",
       "evidence": [
-        "[E:services/auth-api/Dockerfile:L1 FROM node:22-alpine with no digest pin]",
-        "[E:services/auth-api/Dockerfile:L1-L10 (10 lines total) no HEALTHCHECK instruction and no ENV NODE_ENV]",
-        "[E:services/auth-api/Dockerfile:L9 USER node - non-root, correct]"
+        "[E:services/auth-api/Dockerfile:L7 FROM node:22-alpine - floating tag, no @sha256: digest]",
+        "[E:services/auth-api/Dockerfile:L1-L6 the reason is recorded in-file rather than silently skipped]",
+        "[E:services/auth-api/Dockerfile:L9 ENV NODE_ENV=production - PRESENT]",
+        "[E:services/auth-api/Dockerfile:L23-L24 HEALTHCHECK against /health - PRESENT]",
+        "[E:services/auth-api/Dockerfile:L26 USER node - non-root]",
+        "[E:cmd#1 hub.docker.com and registry-1.docker.io both SSL_ERROR_SYSCALL from this sandbox]"
       ],
-      "impact": "ENV NODE_ENV=production and a HEALTHCHECK against /health added. The base image is still a floating tag: pinning it needs a registry lookup and hub.docker.com / registry-1.docker.io both fail TLS here. Left as a documented open item rather than inventing a digest. || original impact: Rebuilds are not reproducible: the same commit can produce different images. Without HEALTHCHECK an orchestrator can route traffic to a container whose migrations failed.",
+      "impact": "A rebuilt image can silently pull a different node:22-alpine than the one that was tested. The other two thirds of the original finding (no HEALTHCHECK, no NODE_ENV) are closed and are no longer claimed as open.",
       "exploit_or_repro": "Static read.",
       "blast_radius": "tenant",
-      "remediation": "Pin by digest, add ENV NODE_ENV=production and a HEALTHCHECK against /health.",
-      "effort_hours": 1.5,
+      "remediation": "Run `docker buildx imagetools inspect node:22-alpine` on a host with registry access and replace the tag with the resolved `node:22-alpine@sha256:<digest>`.",
+      "effort_hours": 0.2,
       "mvp_blocking": false,
       "blocks_journey": []
     },
