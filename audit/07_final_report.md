@@ -66,6 +66,14 @@
 ═══════════════════════════════════════════════
 ```
 
+**Measurement provenance.** Every number in this section was measured at commit `4f1f312`. Commits
+after it changed only audit artifacts, documentation and the harness — `git diff 4f1f312..HEAD` over
+`services/auth-api/src`, `services/auth-api/db` and `services/auth-api/test` is empty, so nothing the
+score reads has moved. The battery was re-run at HEAD regardless: 37/37 tests with 0 skipped, line
+coverage 78.34%, harness 46 PASS / 1 PARTIAL / 1 INFO, smoke 31 routes with 0 server errors.
+Re-run `npm test`, `npm run test:coverage`, `npm run harness` and `npm run harness:smoke` if any of
+those four paths change.
+
 **Rubric gap, disclosed rather than papered over.** The specified verdict table has no row for
 `P_GO ≥ 0.85` with `P0 = 0` but `P1 > 2` or journeys not all `VERIFIED_WORKING`. Read literally,
 no row matches. The conservative applicable band is `CONDITIONAL GO`; the exact unlock
