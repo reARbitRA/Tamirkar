@@ -137,3 +137,49 @@ All financial transactions are stored in **Tomans (تومان)** as 64-bit integ
 - `category` (String): Appliance/category code.
 - `title` (String): Persian title.
 - `steps_json` (String): JSON array of required inspection steps, photo checks, and measurements.
+
+## 🗄️ Server-side schema (`services/auth-api/db/`)
+
+The tables above are the Room entities on the device. The API has its own schema, created by
+forward migrations in `db/NNN_*.sql`. The 15 tables below were read from a live database, not from
+the migration files, so this list reflects what actually exists:
+
+```
+customer_devices  escrow_holds        job_evidence          kyc_cases
+ledger_entries    ledger_postings     operational_audit_log otp_challenges
+payment_intents   quote_acceptances   quotes                schema_migrations
+service_orders    technician_profiles users
+```
+
+| Migration | Creates | Reversible |
+|---|---|---|
+| `001_auth.sql` | `users`, `otp_challenges` | **destructive** |
+| `002_platform.sql` | `technician_profiles`, `kyc_cases`, `payment_intents`, `ledger_entries`, `ledger_postings`, `escrow_holds`, `operational_audit_log` | **destructive** |
+| `003_orders_quotes.sql` | `service_orders`, `quotes`, `quote_acceptances`, `job_evidence` | **destructive** |
+| `004_operational_indexes.sql` | indexes only | yes |
+| `005_devices.sql` | `customer_devices` | **destructive** |
+
+The migration filenames do not match their contents — the ledger and payment tables live in
+`002_platform.sql`, not `003_orders_quotes.sql`. Read the file before assuming.
+
+### `customer_devices`
+
+The server-side device passport behind `GET/POST /v1/devices`. Every column is `NOT NULL` with a
+`DEFAULT` and a `CHECK`, so there is no nullable-column handling in the API layer. `health_score` is
+stored rather than derived (0–100, default 100) because the list screen sorts on it.
+
+One partial index: `idx_customer_devices_customer_health (customer_id, health_score) WHERE
+is_active = TRUE`, matching the `health_score ASC` list ordering. There is **no** unique index on
+`(customer_id, serial_number)`, so a duplicate registration is possible.
+
+### Migrations and rollback
+
+`npm run migrate` applies every unapplied `db/NNN_*.sql` inside a single transaction, so a partial
+failure leaves no half-applied state. Every forward migration has a matching
+`db/down/NNN_*.down.sql`, and `npm run migrate:rollback` rolls back **one** migration at a time.
+Rollback is refused with exit code 4 unless `CONFIRM_DESTRUCTIVE_ROLLBACK=yes` is set, because four
+of the five reverse migrations drop customer data (all but `004_operational_indexes`).
+
+Verified against a real database (down 99 → up, executed not asserted): `up` leaves **15** tables
+in `public`; `down 99` returns it to **1**, because the bookkeeping table `schema_migrations`
+survives a rollback while all 14 domain tables are dropped; a subsequent `up` recreates all 15.
